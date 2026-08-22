@@ -9110,11 +9110,20 @@ async function itunesFetch(url){
   if(!res.ok) throw new Error('itunes_http_' + res.status);
   return await res.json();
 }
+async function itunesFetchProxy(url){
+  const cleanUrl = url.replace(/&callback=[^&]*/, '');
+  const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(cleanUrl);
+  const res = await fetch(proxyUrl);
+  if(!res.ok) throw new Error('itunes_proxy_' + res.status);
+  return await res.json();
+}
 async function itunesSearch(term, entity, limit){
   const url = 'https://itunes.apple.com/search?media=music&entity=' + entity + '&limit=' + (limit||8) + '&term=' + encodeURIComponent(term);
   let data = null;
   try{ data = await itunesJsonp(url); }catch(e){
-    try{ data = await itunesFetch(url); }catch(e2){ throw e2; }
+    try{ data = await itunesFetch(url); }catch(e2){
+      try{ data = await itunesFetchProxy(url); }catch(e3){ throw e3; }
+    }
   }
   const results = (data && data.results) || [];
   if(entity === 'song') return results.filter(r=>r.wrapperType==='track' && r.kind!=='music-video');
@@ -9172,7 +9181,9 @@ async function lookupItunesAlbum(collectionId){
   const url = 'https://itunes.apple.com/lookup?id=' + encodeURIComponent(collectionId) + '&entity=song&limit=200';
   let data = null;
   try{ data = await itunesJsonp(url); }catch(e){
-    try{ data = await itunesFetch(url); }catch(e2){ throw e2; }
+    try{ data = await itunesFetch(url); }catch(e2){
+      try{ data = await itunesFetchProxy(url); }catch(e3){ throw e3; }
+    }
   }
   return (data && data.results) || [];
 }
