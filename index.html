@@ -9450,19 +9450,6 @@ async function renderSongSearchResults(query){
     seen.add(key);
     return true;
   });
-  const qLower = q.toLowerCase();
-  unique.sort((a,b)=>{
-    const aTitle = (a.trackName||'').toLowerCase();
-    const aArtist = (a.artistName||'').toLowerCase();
-    const bTitle = (b.trackName||'').toLowerCase();
-    const bArtist = (b.artistName||'').toLowerCase();
-    const aExact = (aTitle.includes(qLower) ? 2 : 0) + (aArtist.includes(qLower) ? 2 : 0);
-    const bExact = (bTitle.includes(qLower) ? 2 : 0) + (bArtist.includes(qLower) ? 2 : 0);
-    if(bExact !== aExact) return bExact - aExact;
-    const aScore = (aTitle.includes(qLower.split(' ')[0]) ? 1 : 0) + (aArtist.includes(qLower.split(' ')[0]) ? 1 : 0);
-    const bScore = (bTitle.includes(qLower.split(' ')[0]) ? 1 : 0) + (bArtist.includes(qLower.split(' ')[0]) ? 1 : 0);
-    return bScore - aScore;
-  });
   songSearchCache = unique;
   wrap.innerHTML = unique.map((t, i)=>`
     <button type="button" class="discover-row" data-track-id="${t.trackId}">
