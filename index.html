@@ -5447,7 +5447,7 @@ function openModal(song){
   document.getElementById('f-credit').value = song?.credit || '';
   currentCoverArt = song?.coverArt || null;
   currentExplicit = song?.explicit || false;
-  currentFav = song?.tier === '★' || false;
+  currentFav = song?.favorited || false;
   currentSongSource = song?.source || null;
   setImagePreview('f-cover', currentCoverArt);
   const expBtn = document.getElementById('f-explicit-btn');
@@ -5480,10 +5480,6 @@ function renderTierPicker(){
     btn.textContent = t;
     btn.addEventListener('click', ()=>{
       currentTier = (currentTier === t) ? null : t;
-      currentFav = currentTier === '★';
-      const favBtn = document.getElementById('modalFavBtn');
-      favBtn.textContent = currentFav ? '♥' : '♡';
-      favBtn.classList.toggle('on', currentFav);
       renderTierPicker();
     });
     el.appendChild(btn);
@@ -5546,6 +5542,7 @@ function handleSave(){
     remindsOf: getSelectedReminds('f'),
     tier: currentTier,
     explicit: currentExplicit,
+    favorited: currentFav,
     source: currentSongSource
   };
   const doSave = ()=>{
@@ -6683,11 +6680,9 @@ document.getElementById('cancelBtn').addEventListener('click', closeModal);
 document.getElementById('saveBtn').addEventListener('click', handleSave);
 document.getElementById('modalFavBtn').addEventListener('click', ()=>{
   currentFav = !currentFav;
-  currentTier = currentFav ? '★' : null;
   const btn = document.getElementById('modalFavBtn');
   btn.textContent = currentFav ? '♥' : '♡';
   btn.classList.toggle('on', currentFav);
-  renderTierPicker();
 });
 document.getElementById('f-explicit-btn').addEventListener('click', ()=>{
   currentExplicit = !currentExplicit;
