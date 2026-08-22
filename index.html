@@ -3421,7 +3421,7 @@
     <div class="modal-actions">
       <button class="btn-cancel" id="spotifyImportStopBtn" style="display:none; margin-right:auto; color:var(--rose); border-color:var(--rose);">Stop</button>
       <button class="btn-cancel" id="spotifyImportPauseBtn" style="display:none;">Pause</button>
-      <button class="btn-cancel" id="spotifyImportCancelBtn">Cancel</button>
+      <button class="btn-cancel" id="spotifyImportCancelBtn">Close</button>
       <button class="btn-save" id="spotifyImportConfirmBtn" disabled>Import tracks</button>
     </div>
   </div>
@@ -6382,57 +6382,49 @@ function parseYouTubePlaylistId(url){
 async function loadYouTubePlaylist(url){
   const playlistId = parseYouTubePlaylistId(url);
   if(!playlistId) throw new Error('Invalid YouTube Music playlist URL');
-  const pageUrl = 'https://music.youtube.com/playlist?list=' + playlistId;
-  const html = await fetchViaProxy(pageUrl);
-  const match = html.match(/var\s+ytInitialData\s*=\s*(\{.+?\});?\s*<\/script>/s);
-  if(!match) throw new Error('Could not parse YouTube Music playlist data. The playlist may be private.');
-  const data = JSON.parse(match[1]);
+  let apiKey = localStorage.getItem('bayoutonefm-youtube-api-key');
+  if(!apiKey){
+    apiKey = prompt('YouTube Data API key required for YouTube Music imports.\n\nGet a free key at: console.cloud.google.com → APIs & Services → Credentials → Create API Key\n\nPaste your key:');
+    if(!apiKey) throw new Error('YouTube Music import requires a YouTube Data API key.');
+    localStorage.setItem('bayoutonefm-youtube-api-key', apiKey.trim());
+  }
+  apiKey = apiKey.trim();
   let playlistName = 'YouTube Music Playlist';
   let coverArt = null;
   let tracks = [];
-  const tabs = data.tabs || [];
-  for(const tab of tabs){
-    const content = tab.tabRenderer && tab.tabRenderer.content;
-    if(!content) continue;
-    const sectionList = content.sectionListRenderer || content.sectionListRenderer;
-    if(!sectionList) continue;
-    const sections = sectionList.contents || [];
-    for(const sec of sections){
-      const grid = sec.musicPlaylistShelfRenderer || sec.itemSectionRenderer;
-      if(!grid) continue;
-      const items = (grid.contents || grid.items || []).map(i => i.musicResponsiveListItemRenderer || i.playlistItemRenderer).filter(Boolean);
-      for(const item of items){
-        const flexCols = item.flexColumns || [];
-        let title = '', artist = '';
-        for(const col of flexCols){
-          const runs = col.musicResponsiveListItemFlexColumnsRenderer && col.musicResponsiveListItemFlexColumnsRenderer.text && col.musicResponsiveListItemFlexColumnsRenderer.text.runs;
-          if(!runs) continue;
-          const text = runs.map(r=>r.text).join('');
-          if(!title && text && !text.includes('•')) title = text;
-          else if(!artist && text) artist = text.split('•')[0].trim();
+  let pageToken = '';
+  do {
+    const apiUrl = 'https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=' + playlistId + '&maxResults=50&key=' + apiKey + (pageToken ? '&pageToken=' + pageToken : '');
+    const resp = await fetch(apiUrl);
+    if(!resp.ok){
+      const err = await resp.json().catch(()=>({}));
+      if(err.error && err.error.code === 404) throw new Error('Playlist not found. Make sure it\'s public or unlisted.');
+      if(err.error && err.error.code === 403) throw new Error('Invalid YouTube API key or quota exceeded. Check your key in console.cloud.google.com.');
+      throw new Error('YouTube API error: ' + (err.error && err.error.message || resp.status));
+    }
+    const data = await resp.json();
+    if(!playlistName || playlistName === 'YouTube Music Playlist'){
+      const listResp = await fetch('https://www.googleapis.com/youtube/v3/playlists?part=snippet&id=' + playlistId + '&key=' + apiKey);
+      if(listResp.ok){
+        const listData = await listResp.json();
+        if(listData.items && listData.items[0]){
+          playlistName = listData.items[0].snippet.title || playlistName;
+          const thumbs = listData.items[0].snippet.thumbnails;
+          if(thumbs) coverArt = (thumbs.high || thumbs.medium || thumbs.default).url;
         }
-        if(title) tracks.push({ title, artists: artist ? [artist] : [], album:'', durationMs:0, coverArt:null });
       }
     }
-    const headerRenderer = tab.tabRenderer && tab.tabRenderer.content && tab.tabRenderer.content.header;
-    if(headerRenderer && headerRenderer.musicImmersiveHeaderRenderer){
-      const h = headerRenderer.musicImmersiveHeaderRenderer;
-      playlistName = (h.title && h.title.runs && h.title.runs.map(r=>r.text).join('')) || playlistName;
-      if(h.thumbnail && h.thumbnail.musicThumbnailRenderer){
-        const thumbs = h.thumbnail.musicThumbnailRenderer.thumbnail && h.thumbnail.musicThumbnailRenderer.thumbnail.thumbnails;
-        if(thumbs && thumbs.length) coverArt = thumbs[thumbs.length-1].url;
-      }
+    for(const item of (data.items || [])){
+      const s = item.snippet;
+      if(!s || !s.title || s.title === 'Deleted video') continue;
+      const title = s.title;
+      const artist = s.videoOwnerChannelTitle || '';
+      const thumb = s.thumbnails && (s.thumbnails.high || s.thumbnails.medium || s.thumbnails.default);
+      tracks.push({ title, artists: artist ? [artist] : [], album:'', durationMs:0, coverArt: thumb ? thumb.url : null });
     }
-  }
-  if(tracks.length === 0){
-    const bodyMatch = html.match(/"playlistVideoRenderer":\{"videoId":"[^"]+","thumbnail":\{[^}]+\},"title":\{"runs":\[\{"text":"([^"]+)"\}\]/g);
-    if(bodyMatch){
-      for(const vm of bodyMatch){
-        const titleM = vm.match(/"title":\{"runs":\[\{"text":"([^"]+)"\}\]/);
-        if(titleM) tracks.push({ title: titleM[1], artists:[], album:'', durationMs:0, coverArt:null });
-      }
-    }
-  }
+    pageToken = data.nextPageToken || '';
+  } while(pageToken);
+  if(tracks.length === 0) throw new Error('No tracks found in this YouTube Music playlist.');
   return { name:playlistName, tracks, coverArt };
 }
 
@@ -8859,7 +8851,7 @@ function updateRemoveExamplesBtn(){
 }
 function removeExamples(){
   if(!hasExampleContent()){
-    toast('No examples to remove!');
+    alert('No examples to remove!');
     return;
   }
   if(!confirm('Remove all example songs and people?')) return;
@@ -8877,7 +8869,7 @@ function removeExamples(){
   render();
   renderPeople();
   updateRemoveExamplesBtn();
-  toast('Removed ' + removedSongs + ' example song' + (removedSongs !== 1 ? 's' : '') + ' and ' + removedPeople + ' example people');
+  alert('Removed ' + removedSongs + ' example song' + (removedSongs !== 1 ? 's' : '') + ' and ' + removedPeople + ' example people');
 }
 document.getElementById('removeExamplesBtn').addEventListener('click', removeExamples);
 </script>
