@@ -2368,6 +2368,9 @@
   .share-note{ font-size:11px; color:rgba(var(--on-paper-rgb),0.78); margin:10px 0 0; text-align:center; font-style:italic; }
   .preview-row{ display:flex; align-items:center; gap:8px; margin-top:2px; }
   .explicit-badge{ display:inline-flex; align-items:center; justify-content:center; width:18px; height:18px; border-radius:3px; background:#e74c3c; color:#fff; font-size:10px; font-weight:700; line-height:1; flex-shrink:0; }
+  .explicit-toggle{ display:inline-flex; align-items:center; justify-content:center; width:20px; height:20px; border-radius:3px; border:1px solid rgba(var(--on-paper-rgb),0.25); background:transparent; color:rgba(var(--on-paper-rgb),0.35); font-family:'IBM Plex Mono', monospace; font-size:10px; font-weight:700; line-height:1; flex-shrink:0; cursor:pointer; transition:all .15s ease; user-select:none; }
+  .explicit-toggle:hover{ border-color:#e74c3c; color:#e74c3c; }
+  .explicit-toggle.on{ background:#e74c3c; border-color:#e74c3c; color:#fff; }
   .preview-btn{
     width:26px; height:26px; border-radius:50%;
     border:1px solid var(--sage);
@@ -4046,7 +4049,7 @@ function songCardHtml(s, clusterCounts){
         </div>
         <div class="tier-row">${renderTierBadge(s.tier)}</div>
         <div class="preview-row">
-          ${s.explicit ? '<span class="explicit-badge" title="Explicit content">E</span>' : ''}
+          <span class="explicit-toggle${s.explicit ? ' on' : ''}" data-explicit-toggle="${escapeAttr(s.id)}" title="Is this song explicit?" role="button" tabindex="0">E</span>
           <button type="button" class="preview-btn" data-preview="${escapeAttr(s.id)}" title="Play a 30-second preview" aria-label="Play 30-second preview">▶</button>
           <span class="preview-hint">30-sec preview</span>
         </div>
@@ -5472,11 +5475,17 @@ function handleSave(){
         if(dz && dz[0] && dz[0].artworkUrl100){
           data.coverArt = upscaleArtwork(dz[0].artworkUrl100);
         }
+        if(dz && dz[0] && typeof dz[0].explicit === 'boolean' && !data.explicit){
+          data.explicit = dz[0].explicit;
+        }
         finishSave(data);
       }).catch(()=>{
         itunesSearch(q, 'song', 1).then(hit=>{
           if(hit && hit[0] && hit[0].artworkUrl100){
             data.coverArt = upscaleArtwork(hit[0].artworkUrl100);
+          }
+          if(hit && hit[0] && hit[0].trackExplicitness === 'explicit' && !data.explicit){
+            data.explicit = true;
           }
           finishSave(data);
         }).catch(()=> finishSave(data));
@@ -5784,6 +5793,21 @@ document.getElementById('grid').addEventListener('click', e=>{
         wishlist = wishlist.filter(w=>w.id!==id);
         saveWishlist();
         renderWishlistGrid();
+      }
+    }
+    return;
+  }
+  const explicitToggle = e.target.closest('[data-explicit-toggle]');
+  if(explicitToggle){
+    const card = explicitToggle.closest('.card');
+    if(card){
+      const songId = explicitToggle.dataset.explicitToggle;
+      const song = songs.find(s=>s.id===songId);
+      if(song){
+        song.explicit = !song.explicit;
+        explicitToggle.classList.toggle('on', song.explicit);
+        save();
+        upsertGlobalSong(song, currentUserId);
       }
     }
     return;
