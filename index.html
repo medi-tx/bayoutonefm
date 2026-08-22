@@ -5455,7 +5455,14 @@ function handleSave(){
           data.coverArt = upscaleArtwork(hit[0].artworkUrl100);
         }
         finishSave(data);
-      }).catch(()=> finishSave(data));
+      }).catch(()=>{
+        deezerSearch(q, 1).then(dz=>{
+          if(dz && dz[0] && dz[0].artworkUrl100){
+            data.coverArt = upscaleArtwork(dz[0].artworkUrl100);
+          }
+          finishSave(data);
+        }).catch(()=> finishSave(data));
+      });
     } else {
       finishSave(data);
     }
@@ -6366,6 +6373,13 @@ async function enrichTracksFromItunes(tracks, listEl, statusEl){
             if(hit.artworkUrl100) t.coverArt = hit.artworkUrl100.replace('100x100', '150x150');
             if(hit.collectionName && !t.album) t.album = hit.collectionName;
             if(hit.primaryGenreName) t.genres = [hit.primaryGenreName];
+          } else {
+            const dzHits = await deezerSearch(term, 1);
+            if(dzHits && dzHits.length){
+              const dz = dzHits[0];
+              if(dz.artworkUrl100) t.coverArt = dz.artworkUrl100;
+              if(dz.collectionName && !t.album) t.album = dz.collectionName;
+            }
           }
         }catch(e){ }
         return idx;
@@ -6438,6 +6452,13 @@ function enrichImportedSongs(clusterId, serviceLabel){
             if(hit.collectionName && !s.album) s.album = hit.collectionName;
             if(hit.primaryGenreName && (!s.genres || s.genres.length === 0)) s.genres = [hit.primaryGenreName];
             if(hit.releaseDate && !s.year) s.year = parseInt(hit.releaseDate.slice(0,4), 10) || null;
+          } else {
+            const dzHits = await deezerSearch(term, 1);
+            if(dzHits && dzHits.length){
+              const dz = dzHits[0];
+              if(dz.artworkUrl100) s.coverArt = dz.artworkUrl100;
+              if(dz.collectionName && !s.album) s.album = dz.collectionName;
+            }
           }
         }catch(e){}
         done++;
@@ -9132,6 +9153,35 @@ async function deezerSearch(q, limit){
     trackViewUrl: r.link || null
   }));
 }
+async function deezerAlbumSearch(q, limit){
+  const url = 'https://api.deezer.com/search/album?q=' + encodeURIComponent(q) + '&limit=' + (limit||8);
+  let data = null;
+  try{
+    data = await new Promise((resolve, reject)=>{
+      const cbName = 'dzAlbCb_' + Math.random().toString(36).slice(2);
+      const script = document.createElement('script');
+      let settled = false;
+      const cleanup = ()=>{ delete window[cbName]; script.remove(); };
+      window[cbName] = (d)=>{ settled = true; cleanup(); resolve(d); };
+      script.onerror = ()=>{ if(!settled){ settled = true; cleanup(); reject(new Error('deezer_alb_jsonp_failed')); } };
+      script.src = url + (url.includes('?') ? '&' : '?') + 'output=jsonp&callback=' + cbName;
+      document.body.appendChild(script);
+      setTimeout(()=>{ if(!settled){ settled = true; cleanup(); reject(new Error('deezer_alb_timeout')); } }, 10000);
+    });
+  }catch(e){
+    const res = await fetch(url);
+    if(!res.ok) throw new Error('deezer_alb_' + res.status);
+    data = await res.json();
+  }
+  return (data.data || []).map(r=>({
+    collectionId: 'dza-' + r.id,
+    collectionName: r.title || 'Untitled album',
+    artistName: (r.artist && r.artist.name) || '',
+    releaseDate: r.release_date || '',
+    primaryGenreName: '',
+    artworkUrl100: r.cover_medium || r.cover_small || null
+  }));
+}
 async function lookupItunesAlbum(collectionId){
   const url = 'https://itunes.apple.com/lookup?id=' + encodeURIComponent(collectionId) + '&entity=song&limit=200';
   let data = null;
@@ -9249,7 +9299,7 @@ async function renderAlbumSearchResults(query){
   }
   if(!albums || albums.length === 0){
     try{
-      albums = await mbSearchAlbums(q);
+      albums = await deezerAlbumSearch(q, 8);
     }catch(e2){}
   }
   if(!albums || albums.length === 0){
@@ -10012,7 +10062,7 @@ document.getElementById('passwordSaveBtn').addEventListener('click', async ()=>{
     let results = [];
     try{ results = await itunesSearch(query, 'song', 8); }catch(e){ results = []; }
     if(!results || results.length === 0){
-      try{ results = await mbSearchSongs(query); }catch(e2){ results = []; }
+      try{ results = await deezerSearch(query, 8); }catch(e2){ results = []; }
     }
     msgSongResultsCache = results || [];
     if(msgSongResultsCache.length === 0){ wrap.innerHTML = '<p class="msg-empty">No songs found.</p>'; return; }
@@ -10313,6 +10363,7 @@ document.getElementById('passwordSaveBtn').addEventListener('click', async ()=>{
     const term = SOTD_RANDOM_TERMS[Math.floor(Math.random() * SOTD_RANDOM_TERMS.length)];
     let rows = [];
     try{ rows = await itunesSearch(term, 'song', 8); }catch(e){ rows = []; }
+    if(rows.length === 0) try{ rows = await deezerSearch(term, 8); }catch(e2){}
     if(rows.length === 0) return null;
     const r = rows[Math.floor(Math.random() * rows.length)];
     return sotdMapItunes(r);
@@ -10346,6 +10397,7 @@ document.getElementById('passwordSaveBtn').addEventListener('click', async ()=>{
       let hits = [];
       if(term){
         try{ hits = await itunesSearch(term, 'song', 5); }catch(e){ hits = []; }
+        if(!hits || hits.length === 0) try{ hits = await deezerSearch(term, 5); }catch(e2){}
       }
       let best = null;
       const wantTitle = String(old.title || '').trim().toLowerCase();
