@@ -2605,7 +2605,7 @@
       <button class="theme-btn" id="statsBtn">📊 Stats</button>
       <button class="theme-btn" id="discoverBtn">🔎 Friends</button>
       <button class="theme-btn" id="themeBtn" style="display:none;">🎨 Theme</button>
-      <a href="songdb.html" class="theme-btn" id="songDbBtn" style="text-decoration:none; display:none;">📀 Song Database</a>
+      <button class="theme-btn" id="songDbBtn">📀 Song Database</button>
       <button class="avatar-btn" id="myProfileBtn" title="My profile"><span id="myAvatarContent">?</span></button>
       <button class="logout-btn" id="logoutBtn">Log out</button>
     </div>
@@ -2860,6 +2860,20 @@
     <div class="modal-actions">
       <button class="btn-cancel" id="notifMarkReadBtn">Mark all read</button>
       <button class="btn-cancel" id="notifCloseBtn">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="songDbInfoOverlay">
+  <div class="modal" style="max-width:420px; text-align:center;">
+    <h3 style="margin-bottom:12px;">📀 Song Database</h3>
+    <p style="font-size:14px; line-height:1.6; margin:0 0 16px;">This is a shared database of every song anyone on bayoutonefm has added. When you add a song, it's saved here so other people can find it instantly — no need to search outside the app.</p>
+    <p style="font-size:14px; line-height:1.6; margin:0 0 16px;">Songs you add help build the library for everyone. The more people use it, the better the search gets.</p>
+    <label style="display:flex; align-items:center; gap:8px; justify-content:center; font-size:13px; color:rgba(var(--on-paper-rgb),0.55); margin-bottom:18px; cursor:pointer;">
+      <input type="checkbox" id="songDbInfoDismiss"> Don't show this again
+    </label>
+    <div class="modal-actions">
+      <button class="btn-save" id="songDbInfoCloseBtn">Got it</button>
     </div>
   </div>
 </div>
@@ -4378,6 +4392,23 @@ document.getElementById('statsCloseBtn').addEventListener('click', ()=>{
 document.getElementById('statsOverlay').addEventListener('click', e=>{
   if(e.target === e.currentTarget) e.currentTarget.classList.remove('open');
 });
+document.getElementById('songDbBtn').addEventListener('click', ()=>{
+  if(localStorage.getItem('bayoutonefm-songdb-info-seen')){
+    window.location.href = 'songdb.html';
+  } else {
+    document.getElementById('songDbInfoOverlay').classList.add('open');
+  }
+});
+document.getElementById('songDbInfoCloseBtn').addEventListener('click', ()=>{
+  if(document.getElementById('songDbInfoDismiss').checked){
+    localStorage.setItem('bayoutonefm-songdb-info-seen', '1');
+  }
+  document.getElementById('songDbInfoOverlay').classList.remove('open');
+  window.location.href = 'songdb.html';
+});
+document.getElementById('songDbInfoOverlay').addEventListener('click', e=>{
+  if(e.target === e.currentTarget) e.currentTarget.classList.remove('open');
+});
 
 /* ---- EXPORT BACKUP ---- */
 document.getElementById('exportBackupBtn').addEventListener('click', ()=>{
@@ -4506,7 +4537,6 @@ document.getElementById('yearReviewOverlay').addEventListener('click', e=>{
 function showAnalyticsExport(){
   if(myProfile && myProfile.username === 'samannleblanc'){
     document.getElementById('exportAnalyticsBtn').style.display = '';
-    document.getElementById('songDbBtn').style.display = '';
     document.getElementById('themeBtn').style.display = '';
   }
 }
