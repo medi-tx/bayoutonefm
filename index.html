@@ -9217,6 +9217,21 @@ async function itunesSearch(term, entity, limit){
   if(entity === 'album') return results.filter(r=>r.wrapperType==='collection');
   return results;
 }
+async function deezerSearch(q, limit){
+  const res = await fetch('https://api.deezer.com/search?q=' + encodeURIComponent(q) + '&limit=' + (limit||25));
+  if(!res.ok) throw new Error('deezer_' + res.status);
+  const data = await res.json();
+  return (data.data || []).map(r=>({
+    trackId: 'dz-' + r.id,
+    trackName: r.title || 'Untitled',
+    artistName: (r.artist && r.artist.name) || '',
+    collectionName: (r.album && r.album.title) || '',
+    releaseDate: '',
+    primaryGenreName: '',
+    artworkUrl100: r.album && r.album.cover_medium ? r.album.cover_medium.replace(/\/\d+x\d+bb/, '/150x150bb') : null,
+    trackViewUrl: r.link || null
+  }));
+}
 async function lookupItunesAlbum(collectionId){
   const url = 'https://itunes.apple.com/lookup?id=' + encodeURIComponent(collectionId) + '&entity=song&limit=200';
   let data = null;
@@ -9418,6 +9433,10 @@ async function renderSongSearchResults(query){
   }catch(e){
     results = null;
   }
+  if(!results || results.length === 0){
+    try{
+      results = await deezerSearch(q, 25);
+    }catch(e2){}
   }
   songSearchCache = results || [];
   if(!results || results.length === 0){
