@@ -10,6 +10,9 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="bayoutonefm">
 <meta name="mobile-web-app-capable" content="yes">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <meta name="theme-color" content="#12141c">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500&family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -2356,6 +2359,7 @@
   .share-actions button{ flex:1; }
   .share-note{ font-size:11px; color:rgba(var(--on-paper-rgb),0.78); margin:10px 0 0; text-align:center; font-style:italic; }
   .preview-row{ display:flex; align-items:center; gap:8px; margin-top:2px; }
+  .explicit-badge{ display:inline-flex; align-items:center; justify-content:center; width:18px; height:18px; border-radius:3px; background:#e74c3c; color:#fff; font-size:10px; font-weight:700; line-height:1; flex-shrink:0; }
   .preview-btn{
     width:26px; height:26px; border-radius:50%;
     border:1px solid var(--sage);
@@ -3407,6 +3411,7 @@ let currentMultiTier = null;
 let clusterFilterId = null;
 let remindsFilterId = null;
 let currentCoverArt = null;
+let currentExplicit = false;
 let currentSongSource = null;
 let currentMultiCoverArt = null;
 let currentWishCoverArt = null;
@@ -4033,6 +4038,7 @@ function songCardHtml(s, clusterCounts){
         </div>
         <div class="tier-row">${renderTierBadge(s.tier)}</div>
         <div class="preview-row">
+          ${s.explicit ? '<span class="explicit-badge" title="Explicit content">E</span>' : ''}
           <button type="button" class="preview-btn" data-preview="${escapeAttr(s.id)}" title="Play a 30-second preview" aria-label="Play 30-second preview">▶</button>
           <span class="preview-hint">30-sec preview</span>
         </div>
@@ -4113,7 +4119,11 @@ function timelineItemHtml(s){
 function renderTimeline(){
   const el = document.getElementById('timeline');
   const empty = document.getElementById('timelineEmptyState');
-  const list = songs.filter(s=>{ if(showArchived){ if(!s.archived) return false; } else { if(s.archived) return false; } return true; });
+  const list = songs.filter(s=>{ if(showArchived){ if(!s.archived) return false; } else { if(s.archived) return false; }     return true;
+  });
+  unique.forEach(t=>{
+    if(typeof t.explicit !== 'boolean') t.explicit = t.trackExplicitness === 'explicit';
+  });
   list.sort((a,b)=> (b.createdAt||0) - (a.createdAt||0));
   if(!list.length){
     el.innerHTML = '';
@@ -5049,10 +5059,10 @@ async function fetchPreviewUrl(song){
     const rows = await itunesSearch(term, 'song', 10) || [];
     const wantTitle = String(song.title||'').trim().toLowerCase();
     const wantArtist = String((song.artists||[])[0]||'').trim().toLowerCase();
-    let hit = rows.find(r=> r.previewUrl && String(r.trackName||'').trim().toLowerCase() === wantTitle);
-    if(!hit) hit = rows.find(r=> r.previewUrl && wantArtist && String(r.artistName||'').trim().toLowerCase() === wantArtist);
+    let hit = rows.find(r=> r.previewUrl && String(r.trackName||'').trim().toLowerCase() === wantTitle && wantArtist && String(r.artistName||'').trim().toLowerCase() === wantArtist);
+    if(!hit) hit = rows.find(r=> r.previewUrl && String(r.trackName||'').trim().toLowerCase() === wantTitle);
+    if(!hit) hit = rows.find(r=> r.previewUrl && wantTitle && String(r.trackName||'').trim().toLowerCase().includes(wantTitle) && wantArtist && String(r.artistName||'').trim().toLowerCase().includes(wantArtist));
     if(!hit) hit = rows.find(r=> r.previewUrl && wantTitle && String(r.trackName||'').trim().toLowerCase().includes(wantTitle));
-    if(!hit) hit = rows.find(r=> r.previewUrl && wantArtist && wantArtist.split(' ').length > 1 && wantArtist.split(' ').some(w => w.length > 2 && String(r.artistName||'').toLowerCase().includes(w)));
     if(!hit) hit = rows.find(r=> r.previewUrl);
     if(hit) url = hit.previewUrl;
   }catch(err){
@@ -5063,8 +5073,9 @@ async function fetchPreviewUrl(song){
       const dzRows = await deezerSearch(term, 10) || [];
       const wantTitle = String(song.title||'').trim().toLowerCase();
       const wantArtist = String((song.artists||[])[0]||'').trim().toLowerCase();
-      let hit = dzRows.find(r=> r.previewUrl && String(r.trackName||'').trim().toLowerCase() === wantTitle);
-      if(!hit) hit = dzRows.find(r=> r.previewUrl && wantArtist && String(r.artistName||'').trim().toLowerCase() === wantArtist);
+      let hit = dzRows.find(r=> r.previewUrl && String(r.trackName||'').trim().toLowerCase() === wantTitle && wantArtist && String(r.artistName||'').trim().toLowerCase() === wantArtist);
+      if(!hit) hit = dzRows.find(r=> r.previewUrl && String(r.trackName||'').trim().toLowerCase() === wantTitle);
+      if(!hit) hit = dzRows.find(r=> r.previewUrl && wantTitle && String(r.trackName||'').trim().toLowerCase().includes(wantTitle) && wantArtist && String(r.artistName||'').trim().includes(wantArtist));
       if(!hit) hit = dzRows.find(r=> r.previewUrl && wantTitle && String(r.trackName||'').trim().toLowerCase().includes(wantTitle));
       if(!hit) hit = dzRows.find(r=> r.previewUrl);
       if(hit) url = hit.previewUrl;
@@ -5359,6 +5370,7 @@ function openModal(song){
   document.getElementById('f-why').value = song?.why || '';
   document.getElementById('f-credit').value = song?.credit || '';
   currentCoverArt = song?.coverArt || null;
+  currentExplicit = song?.explicit || false;
   currentSongSource = song?.source || null;
   setImagePreview('f-cover', currentCoverArt);
   document.getElementById('f-song-search').value = '';
@@ -5445,6 +5457,7 @@ function handleSave(){
     coverArt: currentCoverArt,
     remindsOf: getSelectedReminds('f'),
     tier: currentTier,
+    explicit: currentExplicit,
     source: currentSongSource
   };
   const doSave = ()=>{
@@ -9223,7 +9236,8 @@ async function deezerSearch(q, limit){
     primaryGenreName: '',
     artworkUrl100: r.album && r.album.cover_medium ? r.album.cover_medium.replace(/\/\d+x\d+bb/, '/150x150bb') : null,
     previewUrl: r.preview || null,
-    trackViewUrl: r.link || null
+    trackViewUrl: r.link || null,
+    explicit: r.explicit === true || r.explicit === 1
   }));
 }
 async function deezerAlbumSearch(q, limit){
@@ -9454,7 +9468,7 @@ async function renderSongSearchResults(query){
         artistName: g.artist,
         collectionName: g.album || '',
         artworkUrl100: g.cover_art || '',
-        previewUrl: g.preview_url || '',
+        previewUrl: '',
         releaseDate: g.year ? g.year + '-01-01' : '',
         primaryGenreName: (g.genres && g.genres[0]) || '',
         trackId: 'gs-' + g.id
@@ -9514,6 +9528,7 @@ async function renderSongSearchResults(query){
         <span class="drow-name">${escapeHtml(t.trackName||'Untitled')}</span><br>
         <span class="drow-bio">${escapeHtml(t.artistName||'')}${t.collectionName ? ' · '+escapeHtml(t.collectionName) : ''}</span>
       </span>
+      ${t.explicit ? '<span class="explicit-badge" title="Explicit content">E</span>' : ''}
       <span class="preview-btn" data-preview="songsearch:${i}" title="Play a 30-second preview" aria-label="Play 30-second preview">▶</span>
     </button>
   `).join('');
@@ -9522,6 +9537,7 @@ function selectItunesSong(trackId){
   const t = songSearchCache.find(r=>String(r.trackId)===String(trackId));
   if(!t) return;
   currentSongSource = 'itunes';
+  currentExplicit = !!t.explicit;
   document.getElementById('f-title').value = t.trackName || '';
   document.getElementById('f-artist').value = t.artistName || '';
   document.getElementById('f-album').value = t.collectionName || '';
