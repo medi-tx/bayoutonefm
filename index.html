@@ -6380,52 +6380,7 @@ function parseYouTubePlaylistId(url){
 }
 
 async function loadYouTubePlaylist(url){
-  const playlistId = parseYouTubePlaylistId(url);
-  if(!playlistId) throw new Error('Invalid YouTube Music playlist URL');
-  let apiKey = localStorage.getItem('bayoutonefm-youtube-api-key');
-  if(!apiKey){
-    apiKey = prompt('YouTube Data API key required for YouTube Music imports.\n\nGet a free key at: console.cloud.google.com → APIs & Services → Credentials → Create API Key\n\nPaste your key:');
-    if(!apiKey) throw new Error('YouTube Music import requires a YouTube Data API key.');
-    localStorage.setItem('bayoutonefm-youtube-api-key', apiKey.trim());
-  }
-  apiKey = apiKey.trim();
-  let playlistName = 'YouTube Music Playlist';
-  let coverArt = null;
-  let tracks = [];
-  let pageToken = '';
-  do {
-    const apiUrl = 'https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=' + playlistId + '&maxResults=50&key=' + apiKey + (pageToken ? '&pageToken=' + pageToken : '');
-    const resp = await fetch(apiUrl);
-    if(!resp.ok){
-      const err = await resp.json().catch(()=>({}));
-      if(err.error && err.error.code === 404) throw new Error('Playlist not found. Make sure it\'s public or unlisted.');
-      if(err.error && err.error.code === 403) throw new Error('Invalid YouTube API key or quota exceeded. Check your key in console.cloud.google.com.');
-      throw new Error('YouTube API error: ' + (err.error && err.error.message || resp.status));
-    }
-    const data = await resp.json();
-    if(!playlistName || playlistName === 'YouTube Music Playlist'){
-      const listResp = await fetch('https://www.googleapis.com/youtube/v3/playlists?part=snippet&id=' + playlistId + '&key=' + apiKey);
-      if(listResp.ok){
-        const listData = await listResp.json();
-        if(listData.items && listData.items[0]){
-          playlistName = listData.items[0].snippet.title || playlistName;
-          const thumbs = listData.items[0].snippet.thumbnails;
-          if(thumbs) coverArt = (thumbs.high || thumbs.medium || thumbs.default).url;
-        }
-      }
-    }
-    for(const item of (data.items || [])){
-      const s = item.snippet;
-      if(!s || !s.title || s.title === 'Deleted video') continue;
-      const title = s.title;
-      const artist = s.videoOwnerChannelTitle || '';
-      const thumb = s.thumbnails && (s.thumbnails.high || s.thumbnails.medium || s.thumbnails.default);
-      tracks.push({ title, artists: artist ? [artist] : [], album:'', durationMs:0, coverArt: thumb ? thumb.url : null });
-    }
-    pageToken = data.nextPageToken || '';
-  } while(pageToken);
-  if(tracks.length === 0) throw new Error('No tracks found in this YouTube Music playlist.');
-  return { name:playlistName, tracks, coverArt };
+  throw new Error('Sorry, we don\'t support YouTube Music playlist imports yet.');
 }
 
 async function loadPlaylist(url){
