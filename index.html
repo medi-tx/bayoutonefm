@@ -3967,6 +3967,9 @@ function renderTierBadge(tier){
   if(!tier) return `<span class="tier-badge tier-none">UNRATED</span>`;
   return `<span class="tier-badge tier-${tier}">${tier}</span>`;
 }
+function tierColor(tier){
+  return {'★':'var(--star)',S:'var(--teal)',A:'var(--rose)',B:'var(--lilac)',C:'var(--sage)'}[tier]||'';
+}
 
 function formatAddedDate(ts){
   if(!ts) return '';
@@ -4092,7 +4095,7 @@ function songCardHtml(s, clusterCounts){
           ${s.coverArt ? `<img class="cover-thumb" src="${escapeAttr(s.coverArt)}" loading="lazy" decoding="async">` : ''}
           <div class="title-stack">
             ${s.archived ? '<span class="archived-badge">ARCHIVED</span>' : ''}
-            <p class="track-title">${escapeHtml(s.title||'Untitled')}</p>
+            <p class="track-title" style="${s.tier ? 'color:'+tierColor(s.tier) : ''}">${escapeHtml(s.title||'Untitled')}</p>
             <p class="track-artist">${escapeHtml(formatArtists(s.artists))}${s.album ? ' · '+escapeHtml(s.album) : ''}</p>
           </div>
         </div>
@@ -5418,7 +5421,7 @@ function renderWishlistGrid(){
         <div class="card-top">
           ${s.coverArt ? `<img class="cover-thumb" src="${escapeAttr(s.coverArt)}">` : ''}
           <div class="title-stack">
-            <p class="track-title">${escapeHtml(s.title||'Untitled')}</p>
+            <p class="track-title" style="${s.tier ? 'color:'+tierColor(s.tier) : ''}">${escapeHtml(s.title||'Untitled')}</p>
             <p class="track-artist">${escapeHtml(formatArtists(s.artists))}${s.album ? ' · '+escapeHtml(s.album) : ''}</p>
           </div>
         </div>
@@ -7663,7 +7666,7 @@ function renderFriendGrid(list){
       <div class="card-top">
         ${s.coverArt ? `<img class="cover-thumb" src="${escapeAttr(s.coverArt)}">` : ''}
         <div class="title-stack">
-          <p class="track-title">${escapeHtml(s.title||'Untitled')}</p>
+          <p class="track-title" style="${s.tier ? 'color:'+tierColor(s.tier) : ''}">${escapeHtml(s.title||'Untitled')}</p>
           <p class="track-artist">${escapeHtml(formatArtists(s.artists))}${s.album ? ' · '+escapeHtml(s.album) : ''}</p>
         </div>
       </div>
@@ -7781,7 +7784,7 @@ function renderCompareView(){
       <div class="card-top">
         ${s.coverArt ? `<img class="cover-thumb" src="${escapeAttr(s.coverArt)}">` : ''}
         <div class="title-stack">
-          <p class="track-title">${escapeHtml(s.title||'Untitled')}</p>
+          <p class="track-title" style="${s.tier ? 'color:'+tierColor(s.tier) : ''}">${escapeHtml(s.title||'Untitled')}</p>
           <p class="track-artist">${escapeHtml(formatArtists(s.artists))}${s.album ? ' · '+escapeHtml(s.album) : ''}</p>
         </div>
       </div>
