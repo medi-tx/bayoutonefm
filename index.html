@@ -1005,6 +1005,18 @@
   }
   .modal-fav-btn:hover{ transform:scale(1.15); color:var(--rose); }
   .modal-fav-btn.on{ color:var(--rose); }
+  .explicit-tag-field{ display:flex; align-items:center; gap:10px; }
+  .explicit-modal-btn{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:28px; height:28px; border-radius:4px;
+    border:2px solid rgba(var(--on-paper-rgb),0.25); background:transparent;
+    color:rgba(var(--on-paper-rgb),0.35);
+    font-family:'IBM Plex Mono', monospace; font-size:13px; font-weight:700;
+    cursor:pointer; transition:all .15s ease; flex-shrink:0; line-height:1;
+  }
+  .explicit-modal-btn:hover{ border-color:#e74c3c; color:#e74c3c; }
+  .explicit-modal-btn.on{ background:#e74c3c; border-color:#e74c3c; color:#fff; }
+  .explicit-modal-label{ font-size:13px; color:rgba(var(--on-paper-rgb),0.5); }
   .field{ margin-bottom:14px; }
   .field label{
     display:block;
@@ -2775,6 +2787,11 @@
       <div class="field"><label>Genres (comma-separated)</label><input id="f-genre" type="text" placeholder="e.g. Rock, Funk/Soul"></div>
     </div>
     <div class="field"><label>Mood / tags (comma-separated)</label><input id="f-tags" type="text" placeholder="nostalgic, road trip, late night"></div>
+    <div class="field explicit-tag-field">
+      <label>Explicit Tag</label>
+      <button type="button" id="f-explicit-btn" class="explicit-modal-btn">E</button>
+      <span id="f-explicit-label" class="explicit-modal-label">Not explicit</span>
+    </div>
     <div class="field"><label>Borrowed from / Where I Heard It</label><input id="f-credit" type="text" placeholder="who showed you this, where you first heard it…"></div>
     <div class="field">
       <label>Tier</label>
@@ -5403,6 +5420,10 @@ function openModal(song){
   currentFav = song?.tier === '★' || false;
   currentSongSource = song?.source || null;
   setImagePreview('f-cover', currentCoverArt);
+  const expBtn = document.getElementById('f-explicit-btn');
+  const expLabel = document.getElementById('f-explicit-label');
+  expBtn.classList.toggle('on', currentExplicit);
+  expLabel.textContent = currentExplicit ? 'Explicit' : 'Not explicit';
   document.getElementById('f-song-search').value = '';
   document.getElementById('songSearchResults').style.display = 'none';
   document.getElementById('songSearchResults').innerHTML = '';
@@ -6637,6 +6658,13 @@ document.getElementById('modalFavBtn').addEventListener('click', ()=>{
   btn.textContent = currentFav ? '♥' : '♡';
   btn.classList.toggle('on', currentFav);
   renderTierPicker();
+});
+document.getElementById('f-explicit-btn').addEventListener('click', ()=>{
+  currentExplicit = !currentExplicit;
+  const btn = document.getElementById('f-explicit-btn');
+  const label = document.getElementById('f-explicit-label');
+  btn.classList.toggle('on', currentExplicit);
+  label.textContent = currentExplicit ? 'Explicit' : 'Not explicit';
 });
 document.getElementById('overlay').addEventListener('click', e=>{ if(e.target.id==='overlay') closeModal(); });
 
@@ -9648,6 +9676,10 @@ function selectItunesSong(trackId){
   const cover = t.artworkUrl100 ? upscaleArtwork(t.artworkUrl100) : null;
   currentCoverArt = cover;
   setImagePreview('f-cover', cover);
+  const expBtn = document.getElementById('f-explicit-btn');
+  const expLabel = document.getElementById('f-explicit-label');
+  expBtn.classList.toggle('on', currentExplicit);
+  expLabel.textContent = currentExplicit ? 'Explicit' : 'Not explicit';
   document.getElementById('f-song-search').value = t.trackName || '';
   document.getElementById('songSearchResults').style.display = 'none';
   document.getElementById('songSearchResults').innerHTML = '';
