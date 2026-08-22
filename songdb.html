@@ -869,7 +869,17 @@ document.getElementById('importConfirm').onclick = async function(){
   for(var i = 0; i < toInsert.length; i += batchSize){
     var batch = toInsert.slice(i, i + batchSize);
     var res = await sb.from(TABLE).insert(batch);
-    if(!res.error) inserted += batch.length;
+    if(!res.error){
+      inserted += batch.length;
+      for(var b = 0; b < batch.length; b++){
+        var t = batch[b];
+        sb.rpc('upsert_global_song', {
+          p_title: t.title, p_artist: t.artist, p_album: t.album || '',
+          p_year: t.year || '', p_genres: t.genres || [], p_cover_art: t.cover_art || '',
+          p_preview_url: '', p_explicit: false, p_added_by: t.added_by || null
+        }).catch(function(){});
+      }
+    }
   }
 
   toast('Imported ' + inserted + ' track' + (inserted !== 1 ? 's' : ''));
@@ -967,6 +977,11 @@ document.getElementById('editSave').onclick = async function(){
     this.disabled = false; this.textContent = 'Save Changes';
     return;
   }
+  sb.rpc('upsert_global_song', {
+    p_title: updates.title, p_artist: updates.artist, p_album: updates.album || '',
+    p_year: updates.year || '', p_genres: updates.genres || [], p_cover_art: updates.cover_art || '',
+    p_preview_url: '', p_explicit: false, p_added_by: currentUser ? currentUser.id : null
+  }).catch(function(){});
   var idx = allSongs.findIndex(function(x){ return x.id === editTargetId; });
   if(idx !== -1) Object.assign(allSongs[idx], updates);
   toast('Song updated');
