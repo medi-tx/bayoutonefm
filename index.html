@@ -9601,7 +9601,8 @@ async function renderSongSearchResults(query){
         previewUrl: '',
         releaseDate: g.year ? g.year + '-01-01' : '',
         primaryGenreName: (g.genres && g.genres[0]) || '',
-        trackId: 'gs-' + g.id
+        trackId: 'gs-' + g.id,
+        explicit: g.explicit || false
       }));
     }
   }catch(e){}
