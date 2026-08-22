@@ -3479,8 +3479,8 @@ let currentSongSource = null;
 let currentMultiCoverArt = null;
 let currentWishCoverArt = null;
 let currentPersonPhoto = null;
-const TIERS = ['★','S','A','B','C'];
-const TIER_RANK = { '★':6, S:5, A:4, B:3, C:2 };
+const TIERS = ['S','A','B','C'];
+const TIER_RANK = { S:5, A:4, B:3, C:2 };
 function tierRank(t){ return TIER_RANK[t] || 0; }
 
 function save(){
@@ -4378,7 +4378,7 @@ function openStats(){
   const active = songs.filter(s=>!s.archived);
   document.getElementById('statSongCount').textContent = active.length;
   document.getElementById('statArtistCount').textContent = new Set(active.flatMap(s=>s.artists||[]).map(a=>String(a).trim().toLowerCase())).size;
-  document.getElementById('statFavCount').textContent = active.filter(s=>s.tier==='★').length;
+  document.getElementById('statFavCount').textContent = active.filter(s=>s.favorited).length;
   drawTierChart();
   drawGenreChart();
   drawMonthChart();
@@ -4441,8 +4441,8 @@ function openYearReview(){
   document.getElementById('yrTitle').textContent = `📅 ${year} Year in Review`;
   const yearSongs = songs.filter(s=> s.createdAt && new Date(s.createdAt).getFullYear() === year && !s.archived);
   const total = yearSongs.length;
-  const pinned = yearSongs.filter(s=>s.tier==='★').length;
-  const tiers = { '★':0, S:0, A:0, B:0, C:0 };
+  const pinned = yearSongs.filter(s=>s.favorited).length;
+  const tiers = { S:0, A:0, B:0, C:0 };
   yearSongs.forEach(s=>{ if(s.tier && tiers[s.tier] !== undefined) tiers[s.tier]++; });
   const genreCount = {};
   yearSongs.forEach(s=> (s.genres||[]).forEach(g=>{ genreCount[g] = (genreCount[g]||0)+1; }));
@@ -4511,7 +4511,7 @@ function openYearReview(){
       html += `</div></div>`;
     }
 
-    const topSongs = yearSongs.filter(s=>s.tier && (s.tier==='★'||s.tier==='S'||s.tier==='A')).sort((a,b)=>(b.tier==='★'?1:0)-(a.tier==='★'?1:0) || ({'★':0,S:1,A:2,B:3,C:4}[a.tier]||9)-({'★':0,S:1,A:2,B:3,C:4}[b.tier]||9)).slice(0,10);
+    const topSongs = yearSongs.filter(s=>s.favorited || s.tier==='S'||s.tier==='A').sort((a,b)=>(b.favorited?1:0)-(a.favorited?1:0) || (tierRank(a.tier) - tierRank(b.tier))).slice(0,10);
     if(topSongs.length){
       html += `<div class="yr-section"><div class="yr-section-title">Highlights of ${year}</div><ul class="yr-song-list">`;
       topSongs.forEach((s,i)=>{
@@ -4639,7 +4639,7 @@ function shareTopSongs(list){
     const ra = Object.prototype.hasOwnProperty.call(rank, a.tier) ? rank[a.tier] : 5;
     const rb = Object.prototype.hasOwnProperty.call(rank, b.tier) ? rank[b.tier] : 5;
     if(ra !== rb) return ra - rb;
-    return (b.tier==='★'?1:0) - (a.tier==='★'?1:0);
+    return (b.favorited?1:0) - (a.favorited?1:0);
   }).slice(0, 8);
 }
 function loadCardImage(src){
@@ -4764,7 +4764,7 @@ async function drawShareCard(opts){
   });
   const active = (opts.list || []).filter(s=>!s.archived);
   const artists = new Set(active.flatMap(s=>s.artists||[]).map(a=>String(a).trim().toLowerCase()));
-  const starred = active.filter(s=>s.tier==='★').length;
+  const starred = active.filter(s=>s.favorited).length;
   const statsLine = `${active.length} SONGS  ·  ${artists.size} ARTISTS  ·  ${starred} STARRED`;
   const t = loadTheme();
   ctx.fillStyle = t.paper || 'rgba(238,221,149,0.85)';
@@ -4867,7 +4867,7 @@ async function drawSongShareCard(opts){
     ctx.fillText(cardTruncate(ctx, genresStr, W - 176, ctx.font), W/2, coverY + coverS + 240);
   }
   const tier = s.tier || '';
-  const chipCol = { S: t.teal || '#E63946', A: t.rose || '#2A9D8F', B: t.lilac || '#8E44AD', C: t.sage || '#264653', '★': t.gold || '#d5873f' }[tier] || t.paper || '#d5873f';
+  const chipCol = { S: t.teal || '#E63946', A: t.rose || '#2A9D8F', B: t.lilac || '#8E44AD', C: t.sage || '#264653' }[tier] || t.paper || '#d5873f';
   ctx.fillStyle = chipCol;
   cardRoundRect(ctx, W/2 - 44, coverY + coverS + 262, 88, 48, 12);
   ctx.fill();
@@ -4889,9 +4889,9 @@ async function drawSongShareCard(opts){
 async function drawTierShareCard(opts){
   const W = 1080, PAD = 88, BADGE_W = 60, BADGE_H = 48, COVER_S = 80, COVER_GAP = 14, ROW_GAP = 18;
   const active = dedupeSongsForBoard((opts.list || []).filter(s=>!s.archived));
-  const byTier = { '★':[], S:[], A:[], B:[], C:[] };
+  const byTier = { S:[], A:[], B:[], C:[] };
   active.forEach(s=>{ if(byTier[s.tier]) byTier[s.tier].push(s); });
-  const tiers = ['★','S','A','B','C'];
+  const tiers = ['S','A','B','C'];
   const coversPerRow = Math.floor((W - PAD*2 - BADGE_W - COVER_GAP*2) / (COVER_S + COVER_GAP));
   let totalRows = 0;
   tiers.forEach(t=>{ totalRows += Math.max(1, Math.ceil(byTier[t].length / coversPerRow)); });
@@ -4905,8 +4905,8 @@ async function drawTierShareCard(opts){
   ctx.fillStyle = t.paper ? t.paper + 'B3' : 'rgba(238,221,149,0.7)';
   ctx.font = '500 30px "Space Grotesk", sans-serif';
   ctx.fillText('TIER BOARD', PAD, titleY);
-  const tierColors = { '★': '#d5873f', S: t.teal || '#E63946', A: t.rose || '#2A9D8F', B: t.lilac || '#8E44AD', C: t.sage || '#264653' };
-  const tierTextColors = { '★': t.ink || '#12141c', S: t.paper || '#eedd95', A: t.ink || '#12141c', B: t.ink || '#12141c', C: t.ink || '#12141c' };
+  const tierColors = { S: t.teal || '#E63946', A: t.rose || '#2A9D8F', B: t.lilac || '#8E44AD', C: t.sage || '#264653' };
+  const tierTextColors = { S: t.paper || '#eedd95', A: t.ink || '#12141c', B: t.ink || '#12141c', C: t.ink || '#12141c' };
   const allSongs = tiers.flatMap(t=>byTier[t]);
   const imgs = await Promise.all(allSongs.map(s=>loadCardImage(s.coverArt)));
   const imgMap = {};
@@ -4967,7 +4967,7 @@ async function drawTierShareCard(opts){
     }
   });
   const artists = new Set(active.flatMap(s=>s.artists||[]).map(a=>String(a).trim().toLowerCase()));
-  const statsLine = `${active.length} SONGS  ·  ${artists.size} ARTISTS  ·  ${active.filter(s=>s.tier==='★').length} STARRED`;
+  const statsLine = `${active.length} SONGS  ·  ${artists.size} ARTISTS  ·  ${active.filter(s=>s.favorited).length} STARRED`;
   ctx.fillStyle = 'rgba(238,221,149,0.85)';
   ctx.font = '500 24px "Space Grotesk", sans-serif';
   ctx.textAlign = 'center';
@@ -5332,7 +5332,7 @@ function render(){
   });
 
   list.sort((a,b)=>{
-    if(sortBy === 'pinned') return (b.tier==='★'?1:0) - (a.tier==='★'?1:0) || (tierRank(b.tier) - tierRank(a.tier));
+    if(sortBy === 'pinned') return (b.favorited?1:0) - (a.favorited?1:0) || (tierRank(b.tier) - tierRank(a.tier));
     if(sortBy === 'rating-desc') return tierRank(b.tier) - tierRank(a.tier);
     if(sortBy === 'rating-asc') return tierRank(a.tier) - tierRank(b.tier);
     if(sortBy === 'year-desc') return (parseInt(b.year)||0) - (parseInt(a.year)||0);
@@ -5387,7 +5387,7 @@ function render(){
   const active = songs.filter(s=>!s.archived);
   const archivedCount = songs.filter(s=>s.archived).length;
   const sCount = active.filter(s=>s.tier==='S').length;
-  document.getElementById('stats').innerHTML = `<b>${myFriendsCount}</b> friend${myFriendsCount!==1?'s':''} &nbsp;·&nbsp; <b>${active.length}</b> songs logged &nbsp;·&nbsp; <span style="color:var(--gold)"><b>${active.filter(s=>s.tier==='★').length}</b> ★</span> &nbsp;·&nbsp; <span style="color:var(--teal)"><b>${sCount}</b> S</span> &nbsp;·&nbsp; <span style="color:var(--rose)"><b>${active.filter(s=>s.tier==='A').length}</b> A</span> &nbsp;·&nbsp; <span style="color:var(--lilac)"><b>${active.filter(s=>s.tier==='B').length}</b> B</span> &nbsp;·&nbsp; <span style="color:var(--sage)"><b>${active.filter(s=>s.tier==='C').length}</b> C</span> &nbsp;·&nbsp; <b>${archivedCount}</b> archived`;
+  document.getElementById('stats').innerHTML = `<b>${myFriendsCount}</b> friend${myFriendsCount!==1?'s':''} &nbsp;·&nbsp; <b>${active.length}</b> songs logged &nbsp;·&nbsp; <span style="color:var(--rose)"><b>${active.filter(s=>s.favorited).length}</b> ♥</span> &nbsp;·&nbsp; <span style="color:var(--teal)"><b>${sCount}</b> S</span> &nbsp;·&nbsp; <span style="color:var(--rose)"><b>${active.filter(s=>s.tier==='A').length}</b> A</span> &nbsp;·&nbsp; <span style="color:var(--lilac)"><b>${active.filter(s=>s.tier==='B').length}</b> B</span> &nbsp;·&nbsp; <span style="color:var(--sage)"><b>${active.filter(s=>s.tier==='C').length}</b> C</span> &nbsp;·&nbsp; <b>${archivedCount}</b> archived`;
 
   populateFilters();
   renderStickerSections();
@@ -9284,7 +9284,7 @@ async function loadAppForUser(user){
     delete s.rating;
   });
   songs.forEach(s => {
-    if(s.tier === '★' && !s.favorited) s.favorited = true;
+    if(s.tier === '★') { if(!s.favorited) s.favorited = true; s.tier = null; }
   });
 
   seedPeopleIfEmpty();
@@ -9806,7 +9806,7 @@ function renderMyProfileView(){
   loadMyProfileSotdCount();
 }
 function pinnedSongs(list){
-  return (list || []).filter(s=>s.tier === '★' && !s.archived);
+  return (list || []).filter(s=>s.favorited && !s.archived);
 }
 function obsessedChipHtml(s){
   const cover = s.coverArt
@@ -9860,7 +9860,7 @@ function catalogueBadgeStats(list){
     total: all.length,
     sCount: all.filter(s=>s.tier==='S').length,
     aCount: all.filter(s=>s.tier==='A').length,
-    pinnedCount: all.filter(s=>s.tier==='★').length,
+    pinnedCount: all.filter(s=>s.favorited).length,
     tiersFilled: TIERS.filter(t=>all.some(s=>s.tier===t)).length
   };
 }
