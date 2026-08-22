@@ -9428,7 +9428,15 @@ async function renderSongSearchResults(query){
     wrap.innerHTML = '<p class="profile-empty-note">No matching songs.</p><button type="button" class="discover-row" id="manualAddBtn" style="cursor:pointer;"><span class="drow-name">+ Add it manually</span><span class="drow-bio">Enter the details yourself</span></button>';
     return;
   }
-  wrap.innerHTML = results.map((t, i)=>`
+  const seen = new Set();
+  const unique = results.filter(t=>{
+    const key = (t.trackName||'').toLowerCase().trim() + '|||' + (t.artistName||'').toLowerCase().trim();
+    if(seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+  songSearchCache = unique;
+  wrap.innerHTML = unique.map((t, i)=>`
     <button type="button" class="discover-row" data-track-id="${t.trackId}">
       ${t.artworkUrl100 ? `<img src="${t.artworkUrl100}">` : `<span class="drow-fallback">${escapeHtml((t.trackName||'?').charAt(0).toUpperCase())}</span>`}
       <span>
