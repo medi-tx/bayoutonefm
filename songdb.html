@@ -420,7 +420,7 @@ async function loadPage(){
   else if(sort === 'year-asc'){ sortCol = 'year'; sortAsc = true; }
 
   var query = sb.from(TABLE).select('*', { count: 'exact' }).order(sortCol, { ascending: sortAsc }).range(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE - 1);
-  if(q){ query = query.or('title.ilike.%' + encodeURIComponent(q) + '%,artist.ilike.%' + encodeURIComponent(q) + '%,album.ilike.%' + encodeURIComponent(q) + '%'); }
+  if(q){ query = query.or('title.ilike.*' + q + '*,artist.ilike.*' + q + '*,album.ilike.*' + q + '*'); }
   if(genre){ query = query.contains('genres', [genre]); }
 
   var res = await query;
