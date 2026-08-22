@@ -4086,7 +4086,7 @@ function songCardHtml(s, clusterCounts){
   return `
       <div class="card ${s.archived?'archived':''}${showEx?' example-card':''}" data-id="${s.id}">
         ${showEx ? '<span class="example-badge">EXAMPLE</span>' : ''}
-        <button class="pin-btn ${s.tier==='★'?'pinned':''}" data-action="pin" title="${s.tier==='★'?'Remove from obsessed':'Add to obsessed'}">${s.tier==='★'?'♥':'♡'}</button>
+        <button class="pin-btn ${s.favorited?'pinned':''}" data-action="pin" title="${s.favorited?'Remove from favorites':'Add to favorites'}">${s.favorited?'♥':'♡'}</button>
         <div class="card-top">
           ${s.coverArt ? `<img class="cover-thumb" src="${escapeAttr(s.coverArt)}" loading="lazy" decoding="async">` : ''}
           <div class="title-stack">
@@ -5898,7 +5898,7 @@ document.getElementById('grid').addEventListener('click', e=>{
   const action = btn.dataset.action;
   if(action === 'pin'){
     trackEvent('pin_song');
-    song.tier = (song.tier === '★') ? '' : '★';
+    song.favorited = !song.favorited;
     save(); render();
     if(document.getElementById('feedOverlay').classList.contains('open')) loadFeed();
   } else if(action === 'archive'){
@@ -9290,6 +9290,9 @@ async function loadAppForUser(user){
       else s.tier = null;
     }
     delete s.rating;
+  });
+  songs.forEach(s => {
+    if(s.tier === '★' && !s.favorited) s.favorited = true;
   });
 
   seedPeopleIfEmpty();
