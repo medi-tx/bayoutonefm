@@ -9063,8 +9063,10 @@ function syncToSongDb(song, userId){
     const title = (song.title || '').trim();
     const artist = (song.artists && song.artists[0] || '').trim();
     if(!title) return;
-    sb.from('song_database').select('id').eq('title', title).eq('artist', artist || '').limit(1).then(({data})=>{
-      if(data && data.length > 0) return;
+    console.log('[syncToSongDb] attempting:', title, artist);
+    sb.from('song_database').select('id').eq('title', title).eq('artist', artist || '').limit(1).then(({data, error})=>{
+      if(error){ console.error('[syncToSongDb] select error:', error); return; }
+      if(data && data.length > 0){ console.log('[syncToSongDb] already exists:', title); return; }
       sb.from('song_database').insert({
         title,
         artist: artist || '',
@@ -9074,9 +9076,12 @@ function syncToSongDb(song, userId){
         cover_art: song.coverArt || null,
         source: 'user',
         added_by: userId || null
-      }).catch(()=>{});
-    }).catch(()=>{});
-  }catch(e){}
+      }).then(({error: insErr})=>{
+        if(insErr) console.error('[syncToSongDb] insert error:', insErr);
+        else console.log('[syncToSongDb] inserted:', title);
+      });
+    });
+  }catch(e){ console.error('[syncToSongDb] exception:', e); }
 }
 function syncToSongDbBatch(songsList, userId){
   if(!songsList || !songsList.length) return;
