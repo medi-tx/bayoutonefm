@@ -1887,45 +1887,7 @@
     .stats{ text-align:left; }
   }
 
-  /* AUTH SIDE NOTE */
   .auth-screen{ flex-wrap:wrap; row-gap:10px; }
-  .auth-side-note{
-    max-width:120px;
-    margin-left:14px;
-    padding:12px 10px 10px;
-    background:#f6e58d;
-    color:#4a4326;
-    font-family:'Space Grotesk', sans-serif;
-    font-size:9.5px;
-    line-height:1.4;
-    text-align:left;
-    border-radius:2px;
-    box-shadow:0 6px 12px rgba(0,0,0,0.35), inset 0 0 0 1px rgba(0,0,0,0.03);
-    transform:rotate(-3deg);
-    position:relative;
-  }
-  .auth-side-note::before{
-    content:"";
-    position:absolute;
-    top:-8px; left:50%;
-    width:26px; height:14px;
-    margin-left:-13px;
-    background:rgba(255,255,255,0.55);
-    border:1px solid rgba(0,0,0,0.05);
-    transform:rotate(-4deg);
-    box-shadow:0 1px 2px rgba(0,0,0,0.2);
-  }
-  .auth-side-note .auth-note-signoff{
-    display:block;
-    margin-top:6px;
-    font-family:'Fraunces', serif;
-    font-style:italic;
-    font-size:11px;
-    color:#8a5a1d;
-  }
-  @media (max-width:700px){
-    .auth-side-note{ margin-left:0; margin-top:6px; transform:rotate(-2deg); }
-  }
 
   /* FRIENDS-ONLY MESSAGING */
   .messages-modal{ max-width:760px; padding:0; overflow:hidden; }
@@ -2568,7 +2530,7 @@
     </div>
   </div>
   </div>
-  <p class="auth-side-note">Cataloguex is spelled in such a way to represent the creator of this site's Cajun roots.<span class="auth-note-signoff">Love you Bubba x</span></p>
+  <p style="text-align:center; margin-top:12px; font-family:'Fraunces',serif; font-style:italic; font-size:13px; color:var(--text-dim);">Love you Bubba x</p>
 </div>
 
 <!-- PASSWORD RECOVERY SCREEN (shown when the user arrives from a reset-password email link) -->
@@ -11387,10 +11349,17 @@ window.rejectAnalytics = function(){
   localStorage.setItem(ANALYTICS_CONSENT_KEY, 'rejected');
   analyticsLog = [];
   try{ localStorage.removeItem(ANALYTICS_KEY); }catch(e){}
+  window.trackEvent = function(){};
   document.getElementById('analyticsConsentBanner').style.display = 'none';
+};
+window.saveConsentPrefs = function(){
+  const analyticsOn = document.getElementById('consentAnalyticsToggle').checked;
+  if(analyticsOn){ window.acceptAnalytics(); } else { window.rejectAnalytics(); }
 };
 function showAnalyticsBannerIfNeeded(){
   if(!getAnalyticsConsent()){
+    const toggle = document.getElementById('consentAnalyticsToggle');
+    if(toggle) toggle.checked = false;
     document.getElementById('analyticsConsentBanner').style.display = '';
   }
 }
@@ -11419,14 +11388,28 @@ if(getAnalyticsConsent() === 'rejected'){
     <span class="mp-time">0:00</span>
   </div>
 </div>
-<div id="analyticsConsentBanner" style="display:none; position:fixed; bottom:0; left:0; right:0; background:var(--ink); border-top:1px solid rgba(238,221,149,0.15); padding:16px 24px; z-index:9999; font-family:'Space Grotesk',sans-serif;">
-  <div style="max-width:720px; margin:0 auto; display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
-    <span style="flex:1; min-width:200px; font-size:13px; color:rgba(238,221,149,0.82); line-height:1.5;">
-      We use local-only analytics to improve the app. No data is sent to third parties. You can opt out at any time.
-      <a href="privacy.html" target="_blank" rel="noopener" style="color:var(--teal);">Privacy Policy</a>
-    </span>
-    <button onclick="acceptAnalytics()" style="padding:6px 14px; border-radius:6px; border:1px solid var(--teal); color:var(--teal); background:none; cursor:pointer; font-size:13px; white-space:nowrap;">Accept</button>
-    <button onclick="rejectAnalytics()" style="padding:6px 14px; border-radius:6px; border:1px solid rgba(238,221,149,0.3); color:rgba(238,221,149,0.6); background:none; cursor:pointer; font-size:13px; white-space:nowrap;">Opt out</button>
+<div id="analyticsConsentBanner" style="display:none; position:fixed; bottom:0; left:0; right:0; background:var(--ink); border-top:1px solid rgba(238,221,149,0.15); z-index:9999; font-family:'Space Grotesk',sans-serif; padding:0;">
+  <div style="max-width:720px; margin:0 auto; padding:20px 24px;">
+    <div style="font-size:15px; font-weight:600; color:var(--paper); margin-bottom:6px;">Your privacy matters</div>
+    <div style="font-size:12.5px; color:rgba(238,221,149,0.7); line-height:1.6; margin-bottom:14px;">
+      We use cookies and local storage to keep you signed in, remember your preferences, and understand how the app is used. No data is sold or shared with third parties.
+      <a href="privacy.html" target="_blank" rel="noopener" style="color:var(--teal); text-decoration:underline;">Read our Privacy Policy</a>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:16px;">
+      <label style="display:flex; align-items:center; gap:10px; font-size:12.5px; color:rgba(238,221,149,0.82); cursor:default;">
+        <input type="checkbox" checked disabled style="accent-color:var(--teal); width:15px; height:15px;">
+        <span><strong style="color:var(--paper);">Necessary</strong> — Required for sign-in, preferences, and core features. Always active.</span>
+      </label>
+      <label style="display:flex; align-items:center; gap:10px; font-size:12.5px; color:rgba(238,221,149,0.82); cursor:pointer;">
+        <input type="checkbox" id="consentAnalyticsToggle" style="accent-color:var(--teal); width:15px; height:15px; cursor:pointer;">
+        <span><strong style="color:var(--paper);">Analytics</strong> — Helps us understand which features people use. All data stays on your device.</span>
+      </label>
+    </div>
+    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+      <button onclick="rejectAnalytics()" style="padding:7px 16px; border-radius:6px; border:1px solid rgba(238,221,149,0.25); color:rgba(238,221,149,0.6); background:none; cursor:pointer; font-size:12.5px;">Reject all</button>
+      <button onclick="saveConsentPrefs()" style="padding:7px 16px; border-radius:6px; border:1px solid rgba(238,221,149,0.25); color:rgba(238,221,149,0.8); background:none; cursor:pointer; font-size:12.5px;">Save preferences</button>
+      <button onclick="acceptAnalytics()" style="padding:7px 16px; border-radius:6px; border:1px solid var(--teal); color:var(--ink); background:var(--teal); cursor:pointer; font-size:12.5px; font-weight:600;">Accept all</button>
+    </div>
   </div>
 </div>
 <div id="toastWrap" class="toast-wrap"></div>
