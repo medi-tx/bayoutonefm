@@ -5060,10 +5060,8 @@ async function fetchPreviewUrl(song){
     const wantTitle = String(song.title||'').trim().toLowerCase();
     const wantArtist = String((song.artists||[])[0]||'').trim().toLowerCase();
     let hit = rows.find(r=> r.previewUrl && String(r.trackName||'').trim().toLowerCase() === wantTitle && wantArtist && String(r.artistName||'').trim().toLowerCase() === wantArtist);
-    if(!hit) hit = rows.find(r=> r.previewUrl && String(r.trackName||'').trim().toLowerCase() === wantTitle);
     if(!hit) hit = rows.find(r=> r.previewUrl && wantTitle && String(r.trackName||'').trim().toLowerCase().includes(wantTitle) && wantArtist && String(r.artistName||'').trim().toLowerCase().includes(wantArtist));
-    if(!hit) hit = rows.find(r=> r.previewUrl && wantTitle && String(r.trackName||'').trim().toLowerCase().includes(wantTitle));
-    if(!hit) hit = rows.find(r=> r.previewUrl);
+    if(!hit) hit = rows.find(r=> r.previewUrl && String(r.trackName||'').trim().toLowerCase() === wantTitle && wantArtist && wantArtist.split(' ').some(w => w.length > 2 && String(r.artistName||'').toLowerCase().includes(w)));
     if(hit) url = hit.previewUrl;
   }catch(err){
     url = null;
@@ -5074,10 +5072,9 @@ async function fetchPreviewUrl(song){
       const wantTitle = String(song.title||'').trim().toLowerCase();
       const wantArtist = String((song.artists||[])[0]||'').trim().toLowerCase();
       let hit = dzRows.find(r=> r.previewUrl && String(r.trackName||'').trim().toLowerCase() === wantTitle && wantArtist && String(r.artistName||'').trim().toLowerCase() === wantArtist);
-      if(!hit) hit = dzRows.find(r=> r.previewUrl && String(r.trackName||'').trim().toLowerCase() === wantTitle);
       if(!hit) hit = dzRows.find(r=> r.previewUrl && wantTitle && String(r.trackName||'').trim().toLowerCase().includes(wantTitle) && wantArtist && String(r.artistName||'').trim().includes(wantArtist));
-      if(!hit) hit = dzRows.find(r=> r.previewUrl && wantTitle && String(r.trackName||'').trim().toLowerCase().includes(wantTitle));
-      if(!hit) hit = dzRows.find(r=> r.previewUrl);
+      if(!hit) hit = dzRows.find(r=> r.previewUrl && String(r.trackName||'').trim().toLowerCase() === wantTitle && wantArtist && wantArtist.split(' ').some(w => w.length > 2 && String(r.artistName||'').toLowerCase().includes(w)));
+      if(hit) url = hit.previewUrl;
       if(hit) url = hit.previewUrl;
     }catch(e2){}
   }
