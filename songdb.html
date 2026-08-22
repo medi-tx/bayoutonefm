@@ -52,6 +52,8 @@ CREATE POLICY "Authenticated update" ON song_database FOR UPDATE USING (auth.rol
 body{margin:0;background:var(--ink);background-image:radial-gradient(circle at 15% 20%,rgba(253,159,28,0.10),transparent 40%),radial-gradient(circle at 85% 75%,rgba(39,45,130,0.08),transparent 40%);color:var(--text-on-ink);font-family:'Space Grotesk',sans-serif;min-height:100vh;}
 .wrap{max-width:1100px;margin:0 auto;padding:40px 24px 100px;}
 header{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:20px;margin-bottom:36px;border-bottom:1px solid rgba(238,221,149,0.15);padding-bottom:24px;}
+.back-btn{background:transparent;border:1px solid rgba(238,221,149,0.25);color:rgba(238,221,149,0.6);padding:6px 14px;border-radius:6px;cursor:pointer;font-family:'Space Grotesk',sans-serif;font-size:13px;transition:all .15s ease;}
+.back-btn:hover{border-color:#eedd95;color:#eedd95;}
 h1{font-family:'Fraunces',serif;font-weight:700;font-style:italic;font-size:clamp(32px,5vw,52px);margin:0;letter-spacing:-0.5px;color:var(--on-ink);}
 h1 .side-a{font-family:'IBM Plex Mono',monospace;font-style:normal;font-size:13px;display:block;letter-spacing:3px;color:var(--gold);margin-bottom:6px;}
 .stats{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text-dim);text-align:right;line-height:1.6;}
@@ -173,6 +175,7 @@ select{cursor:pointer;}
 <!-- MAIN APP -->
 <div class="wrap" id="appWrap" style="display:none;">
   <header>
+    <button class="back-btn" onclick="window.location.href='index.html'" title="Back to catalogue">← Back</button>
     <h1><span class="side-a">SHARED SONG FACTS</span>Song Database</h1>
     <div class="stats" id="stats"></div>
     <div class="header-actions">
