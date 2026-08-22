@@ -9218,9 +9218,25 @@ async function itunesSearch(term, entity, limit){
   return results;
 }
 async function deezerSearch(q, limit){
-  const res = await fetch('https://api.deezer.com/search?q=' + encodeURIComponent(q) + '&limit=' + (limit||25));
-  if(!res.ok) throw new Error('deezer_' + res.status);
-  const data = await res.json();
+  const url = 'https://api.deezer.com/search?q=' + encodeURIComponent(q) + '&limit=' + (limit||25);
+  let data = null;
+  try{
+    data = await new Promise((resolve, reject)=>{
+      const cbName = 'dzCb_' + Math.random().toString(36).slice(2);
+      const script = document.createElement('script');
+      let settled = false;
+      const cleanup = ()=>{ delete window[cbName]; script.remove(); };
+      window[cbName] = (d)=>{ settled = true; cleanup(); resolve(d); };
+      script.onerror = ()=>{ if(!settled){ settled = true; cleanup(); reject(new Error('deezer_jsonp_failed')); } };
+      script.src = url + (url.includes('?') ? '&' : '?') + 'output=jsonp&callback=' + cbName;
+      document.body.appendChild(script);
+      setTimeout(()=>{ if(!settled){ settled = true; cleanup(); reject(new Error('deezer_timeout')); } }, 10000);
+    });
+  }catch(e){
+    const res = await fetch(url);
+    if(!res.ok) throw new Error('deezer_' + res.status);
+    data = await res.json();
+  }
   return (data.data || []).map(r=>({
     trackId: 'dz-' + r.id,
     trackName: r.title || 'Untitled',
