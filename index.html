@@ -5183,6 +5183,18 @@ async function fetchPreviewUrl(song){
   }catch(err){
     url = null;
   }
+  if(!url){
+    try{
+      const dzRows = await deezerSearch(term, 10) || [];
+      const wantTitle = String(song.title||'').trim().toLowerCase();
+      const wantArtist = String((song.artists||[])[0]||'').trim().toLowerCase();
+      let hit = dzRows.find(r=> r.previewUrl && String(r.trackName||'').trim().toLowerCase() === wantTitle);
+      if(!hit) hit = dzRows.find(r=> r.previewUrl && wantArtist && String(r.artistName||'').trim().toLowerCase() === wantArtist);
+      if(!hit) hit = dzRows.find(r=> r.previewUrl && wantTitle && String(r.trackName||'').trim().toLowerCase().includes(wantTitle));
+      if(!hit) hit = dzRows.find(r=> r.previewUrl);
+      if(hit) url = hit.previewUrl;
+    }catch(e2){}
+  }
   if(url) previewCache[id] = url;
   if(url && id === 'sotd' && typeof window.sotdPersistPreview === 'function') window.sotdPersistPreview(url);
   return url;
