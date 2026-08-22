@@ -2760,7 +2760,7 @@
     <div class="field">
       <label>Search for a Song</label>
       <input type="text" id="f-song-search" placeholder="Search song title or artist…" autocomplete="off">
-      <div class="discover-list" id="songSearchResults" style="display:none; margin-top:6px;"></div>
+      <div class="discover-list" id="songSearchResults" style="display:none; margin-top:6px; max-height:320px; overflow-y:auto;"></div>
     </div>
     <div class="field"><label>Title</label><input id="f-title" type="text"></div>
     <div class="two-col">
@@ -9414,7 +9414,7 @@ async function renderSongSearchResults(query){
   wrap.innerHTML = '<p class="profile-empty-note">Searching…</p>';
   let results;
   try{
-    results = await itunesSearch(q, 'song', 8);
+    results = await itunesSearch(q, 'song', 25);
   }catch(e){
     results = null;
   }
