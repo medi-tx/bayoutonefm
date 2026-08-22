@@ -7550,6 +7550,7 @@ function renderFriendGrid(list){
       </div>
       <div class="tier-row">${renderTierBadge(s.tier)}</div>
       <div class="preview-row">
+        ${s.explicit ? '<span class="explicit-badge" title="Explicit content">E</span>' : ''}
         <button type="button" class="preview-btn" data-preview="${escapeAttr(s.id)}" title="Play a 30-second preview" aria-label="Play 30-second preview">▶</button>
         <span class="preview-hint">30-sec preview</span>
       </div>
@@ -10097,6 +10098,7 @@ document.getElementById('passwordSaveBtn').addEventListener('click', async ()=>{
         <span class="msg-song-artist">${escapeHtml(song.artist || '')}</span>
         <span class="msg-song-album">${escapeHtml(song.album || '')}</span>
       </span>
+      ${song.explicit ? '<span class="explicit-badge" title="Explicit content">E</span>' : ''}
       <span class="preview-btn" data-preview="msg:${escapeAttr(msgId)}" title="Play a 30-second preview" aria-label="Play 30-second preview">▶</span>
     </a>`;
   }
@@ -10191,6 +10193,7 @@ document.getElementById('passwordSaveBtn').addEventListener('click', async ()=>{
           <span class="msg-song-result-title">${escapeHtml(r.trackName || 'Unknown')}</span>
           <span class="msg-song-result-artist">${artist}</span>
         </span>
+        ${r.explicit ? '<span class="explicit-badge" title="Explicit content">E</span>' : ''}
         <span class="preview-btn" data-preview="msgrec:${i}" title="Play a 30-second preview" aria-label="Play 30-second preview">▶</span>
       </button>`;
     }).join('');
@@ -10206,7 +10209,8 @@ document.getElementById('passwordSaveBtn').addEventListener('click', async ()=>{
       genre: r.primaryGenreName || '',
       cover: r.artworkUrl100 ? upscaleArtwork(r.artworkUrl100) : null,
       url: r.trackViewUrl || '',
-      previewUrl: r.previewUrl || ''
+      previewUrl: r.previewUrl || '',
+      explicit: r.explicit || false
     });
     document.getElementById('msgSongOverlay').classList.remove('open');
   }
@@ -10493,7 +10497,8 @@ document.getElementById('passwordSaveBtn').addEventListener('click', async ()=>{
       genre: r.primaryGenreName || '',
       cover: upscaleArtwork(r.artworkUrl100),
       url: r.trackViewUrl || '',
-      previewUrl: r.previewUrl || ''
+      previewUrl: r.previewUrl || '',
+      explicit: r.explicit || false
     };
   }
   let sotdMigrationDone = false;
@@ -10673,6 +10678,7 @@ document.getElementById('passwordSaveBtn').addEventListener('click', async ()=>{
           <div class="sotd-artist">${escapeHtml(sotdSong.artist || '')}</div>
         </div>
         <div class="sotd-preview">
+          ${sotdSong.explicit ? '<span class="explicit-badge" title="Explicit content">E</span>' : ''}
           <button type="button" class="preview-btn" data-preview="sotd" title="Play a 30-second preview" aria-label="Play 30-second preview">▶</button>
           <span class="preview-hint">30-sec preview</span>
         </div>
@@ -11251,7 +11257,7 @@ function feedCardHtml(entry){
   const tierBadge = s.tier ? renderTierBadge(s.tier) : '';
   const feedPreviewId = 'feed:' + (s.id || Math.random().toString(36).slice(2));
   feedSongCache[feedPreviewId] = { id: feedPreviewId, title: s.title || 'Untitled', artists: s.artists || [], previewUrl: s.previewUrl || '' };
-  const previewBtn = s.source === 'itunes' ? `<button type="button" class="preview-btn" data-preview="${escapeAttr(feedPreviewId)}" title="Play a 30-second preview" aria-label="Play 30-second preview">▶</button>` : '';
+  const previewBtn = s.source === 'itunes' ? `${s.explicit ? '<span class="explicit-badge" title="Explicit content">E</span>' : ''}<button type="button" class="preview-btn" data-preview="${escapeAttr(feedPreviewId)}" title="Play a 30-second preview" aria-label="Play 30-second preview">▶</button>` : '';
   const why = s.why ? `<div class="feed-card-why">"${escapeHtml(s.why)}"</div>` : '';
   const reminds = (s.remindsOf && s.remindsOf.length)
     ? `<div class="feed-card-reminds">reminds me of <span>${s.remindsOf.map(id=>{
