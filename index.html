@@ -5084,7 +5084,7 @@ function prefetchPreviews(songList){
     const s = todo[idx++];
     fetchPreviewUrl(s).catch(()=>{}).then(()=> next());
   }
-  const concurrency = Math.min(5, todo.length);
+  const concurrency = Math.min(2, todo.length);
   for(let i = 0; i < concurrency; i++) next();
 }
 function stopPreview(){
@@ -5450,15 +5450,15 @@ function handleSave(){
   const doSave = ()=>{
     if(!data.coverArt && (data.title || data.artists.length)){
       const q = [data.title, data.artists[0]].filter(Boolean).join(' ');
-      itunesSearch(q, 'song', 1).then(hit=>{
-        if(hit && hit[0] && hit[0].artworkUrl100){
-          data.coverArt = upscaleArtwork(hit[0].artworkUrl100);
+      deezerSearch(q, 1).then(dz=>{
+        if(dz && dz[0] && dz[0].artworkUrl100){
+          data.coverArt = upscaleArtwork(dz[0].artworkUrl100);
         }
         finishSave(data);
       }).catch(()=>{
-        deezerSearch(q, 1).then(dz=>{
-          if(dz && dz[0] && dz[0].artworkUrl100){
-            data.coverArt = upscaleArtwork(dz[0].artworkUrl100);
+        itunesSearch(q, 'song', 1).then(hit=>{
+          if(hit && hit[0] && hit[0].artworkUrl100){
+            data.coverArt = upscaleArtwork(hit[0].artworkUrl100);
           }
           finishSave(data);
         }).catch(()=> finishSave(data));
@@ -6350,13 +6350,13 @@ function renderPlaylistTrackList(listEl, tracks){
 
 async function enrichTracksFromItunes(tracks, listEl, statusEl){
   const startTime = Date.now();
-  const BATCH_SIZE = 5;
-  const BATCH_DELAY = 200;
+  const BATCH_SIZE = 3;
+  const BATCH_DELAY = 600;
   const totalBatches = Math.ceil(tracks.length / BATCH_SIZE);
   const initialEtaSec = Math.round(totalBatches * (BATCH_DELAY / 1000) + totalBatches * 0.3);
   const initialEtaStr = fmtTime(initialEtaSec);
-  if(statusEl) statusEl.textContent = `Fetching artwork from iTunes… 0/${tracks.length} · ~${initialEtaStr} estimated`;
-  importProgressState = { active: true, label: 'Fetching artwork from iTunes…', done: 0, total: tracks.length, startTime, statusEl };
+  if(statusEl) statusEl.textContent = `Fetching artwork… 0/${tracks.length} · ~${initialEtaStr} estimated`;
+  importProgressState = { active: true, label: 'Fetching artwork…', done: 0, total: tracks.length, startTime, statusEl };
   startImportProgressTimer();
   for(let batchNum = 0; batchNum < totalBatches; batchNum++){
     const i = batchNum * BATCH_SIZE;
@@ -6367,18 +6367,19 @@ async function enrichTracksFromItunes(tracks, listEl, statusEl){
       batch.push((async ()=>{
         const term = t.title + ' ' + (t.artists[0] || '');
         try{
-          const hits = await itunesSearch(term, 'song', 1);
-          if(hits && hits.length){
-            const hit = hits[0];
-            if(hit.artworkUrl100) t.coverArt = hit.artworkUrl100.replace('100x100', '150x150');
-            if(hit.collectionName && !t.album) t.album = hit.collectionName;
-            if(hit.primaryGenreName) t.genres = [hit.primaryGenreName];
+          const dzHits = await deezerSearch(term, 1);
+          if(dzHits && dzHits.length){
+            const dz = dzHits[0];
+            if(dz.artworkUrl100) t.coverArt = dz.artworkUrl100;
+            if(dz.collectionName && !t.album) t.album = dz.collectionName;
+            if(dz.primaryGenreName) t.genres = [dz.primaryGenreName];
           } else {
-            const dzHits = await deezerSearch(term, 1);
-            if(dzHits && dzHits.length){
-              const dz = dzHits[0];
-              if(dz.artworkUrl100) t.coverArt = dz.artworkUrl100;
-              if(dz.collectionName && !t.album) t.album = dz.collectionName;
+            const hits = await itunesSearch(term, 'song', 1);
+            if(hits && hits.length){
+              const hit = hits[0];
+              if(hit.artworkUrl100) t.coverArt = hit.artworkUrl100.replace('100x100', '150x150');
+              if(hit.collectionName && !t.album) t.album = hit.collectionName;
+              if(hit.primaryGenreName) t.genres = [hit.primaryGenreName];
             }
           }
         }catch(e){ }
@@ -6433,8 +6434,8 @@ function enrichImportedSongs(clusterId, serviceLabel){
   const toEnrich = songs.filter(s => s.clusterId === clusterId && !s.coverArt);
   if(toEnrich.length === 0) return;
   let done = 0;
-  const BATCH = 5;
-  const DELAY = 300;
+  const BATCH = 3;
+  const DELAY = 600;
   const total = toEnrich.length;
   const startTime = Date.now();
   async function enrichLoop(){
@@ -6445,19 +6446,20 @@ function enrichImportedSongs(clusterId, serviceLabel){
         if(abort.aborted) return;
         const term = s.title + ' ' + (s.artists[0] || '');
         try{
-          const hits = await itunesSearch(term, 'song', 1);
-          if(hits && hits.length){
-            const hit = hits[0];
-            if(hit.artworkUrl100) s.coverArt = hit.artworkUrl100.replace('100x100', '150x150');
-            if(hit.collectionName && !s.album) s.album = hit.collectionName;
-            if(hit.primaryGenreName && (!s.genres || s.genres.length === 0)) s.genres = [hit.primaryGenreName];
-            if(hit.releaseDate && !s.year) s.year = parseInt(hit.releaseDate.slice(0,4), 10) || null;
+          const dzHits = await deezerSearch(term, 1);
+          if(dzHits && dzHits.length){
+            const dz = dzHits[0];
+            if(dz.artworkUrl100) s.coverArt = dz.artworkUrl100;
+            if(dz.collectionName && !s.album) s.album = dz.collectionName;
+            if(dz.primaryGenreName && (!s.genres || s.genres.length === 0)) s.genres = [dz.primaryGenreName];
           } else {
-            const dzHits = await deezerSearch(term, 1);
-            if(dzHits && dzHits.length){
-              const dz = dzHits[0];
-              if(dz.artworkUrl100) s.coverArt = dz.artworkUrl100;
-              if(dz.collectionName && !s.album) s.album = dz.collectionName;
+            const hits = await itunesSearch(term, 'song', 1);
+            if(hits && hits.length){
+              const hit = hits[0];
+              if(hit.artworkUrl100) s.coverArt = hit.artworkUrl100.replace('100x100', '150x150');
+              if(hit.collectionName && !s.album) s.album = hit.collectionName;
+              if(hit.primaryGenreName && (!s.genres || s.genres.length === 0)) s.genres = [hit.primaryGenreName];
+              if(hit.releaseDate && !s.year) s.year = parseInt(hit.releaseDate.slice(0,4), 10) || null;
             }
           }
         }catch(e){}
@@ -9290,13 +9292,13 @@ async function renderAlbumSearchResults(query){
   wrap.innerHTML = '<p class="profile-empty-note">Searching…</p>';
   let albums;
   try{
-    albums = await itunesSearch(q, 'album', 8);
+    albums = await deezerAlbumSearch(q, 8);
   }catch(e){
     albums = null;
   }
   if(!albums || albums.length === 0){
     try{
-      albums = await deezerAlbumSearch(q, 8);
+      albums = await itunesSearch(q, 'album', 8);
     }catch(e2){}
   }
   if(!albums || albums.length === 0){
@@ -9376,16 +9378,16 @@ async function renderSongSearchResults(query){
   wrap.innerHTML = '<p class="profile-empty-note">Searching…</p>';
   let results;
   try{
-    results = await itunesSearch(q, 'song', 25);
+    results = await deezerSearch(q, 25);
   }catch(e){
-    console.error('iTunes search failed:', e);
+    console.error('Deezer search failed:', e);
     results = null;
   }
   if(!results || results.length === 0){
     try{
-      results = await deezerSearch(q, 25);
+      results = await itunesSearch(q, 'song', 25);
     }catch(e2){
-      console.error('Deezer search failed:', e2);
+      console.error('iTunes search failed:', e2);
     }
   }
   songSearchCache = results || [];
@@ -10057,9 +10059,9 @@ document.getElementById('passwordSaveBtn').addEventListener('click', async ()=>{
     if(!query.trim()){ wrap.innerHTML = '<p class="msg-empty">Search to find a song to recommend.</p>'; return; }
     wrap.innerHTML = '<p class="msg-empty">Searching…</p>';
     let results = [];
-    try{ results = await itunesSearch(query, 'song', 8); }catch(e){ results = []; }
+    try{ results = await deezerSearch(query, 8); }catch(e){ results = []; }
     if(!results || results.length === 0){
-      try{ results = await deezerSearch(query, 8); }catch(e2){ results = []; }
+      try{ results = await itunesSearch(query, 'song', 8); }catch(e2){ results = []; }
     }
     msgSongResultsCache = results || [];
     if(msgSongResultsCache.length === 0){ wrap.innerHTML = '<p class="msg-empty">No songs found.</p>'; return; }
@@ -10359,8 +10361,8 @@ document.getElementById('passwordSaveBtn').addEventListener('click', async ()=>{
   async function sotdRandomSong(){
     const term = SOTD_RANDOM_TERMS[Math.floor(Math.random() * SOTD_RANDOM_TERMS.length)];
     let rows = [];
-    try{ rows = await itunesSearch(term, 'song', 8); }catch(e){ rows = []; }
-    if(rows.length === 0) try{ rows = await deezerSearch(term, 8); }catch(e2){}
+    try{ rows = await deezerSearch(term, 8); }catch(e){ rows = []; }
+    if(rows.length === 0) try{ rows = await itunesSearch(term, 'song', 8); }catch(e2){}
     if(rows.length === 0) return null;
     const r = rows[Math.floor(Math.random() * rows.length)];
     return sotdMapItunes(r);
@@ -10393,8 +10395,8 @@ document.getElementById('passwordSaveBtn').addEventListener('click', async ()=>{
       const term = [old.title, old.artist].filter(Boolean).join(' ');
       let hits = [];
       if(term){
-        try{ hits = await itunesSearch(term, 'song', 5); }catch(e){ hits = []; }
-        if(!hits || hits.length === 0) try{ hits = await deezerSearch(term, 5); }catch(e2){}
+        try{ hits = await deezerSearch(term, 5); }catch(e){ hits = []; }
+        if(!hits || hits.length === 0) try{ hits = await itunesSearch(term, 'song', 5); }catch(e2){}
       }
       let best = null;
       const wantTitle = String(old.title || '').trim().toLowerCase();
@@ -10944,9 +10946,9 @@ document.getElementById('passwordSaveBtn').addEventListener('click', async ()=>{
     searchState[date] = { term, loading: true };
     renderScheduler();
     try{
-      let results = await itunesSearch(term, 'song', 6);
+      let results = await deezerSearch(term, 6);
       if(!results || results.length === 0){
-        results = await deezerSearch(term, 6);
+        results = await itunesSearch(term, 'song', 6);
       }
       searchState[date] = { term, results: results || [] };
       if(!results || results.length === 0){
