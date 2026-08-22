@@ -8915,6 +8915,7 @@ async function upsertGlobalSong(song, userId){
       genres: song.genres || [],
       cover_art: song.coverArt || '',
       preview_url: song.previewUrl || '',
+      explicit: song.explicit || false,
       added_by: userId || null
     }, { onConflict: 'title,artist' });
   }catch(e){ console.error('global_songs upsert failed:', e); }
@@ -8930,10 +8931,46 @@ function upsertGlobalSongBatch(songsList, userId){
     genres: s.genres || [],
     cover_art: s.coverArt || '',
     preview_url: s.previewUrl || '',
+    explicit: s.explicit || false,
     added_by: userId || null
   }));
   if(!rows.length) return;
   sb.from('global_songs').upsert(rows, { onConflict: 'title,artist' }).then(()=>{}).catch(e=> console.error('global_songs batch upsert failed:', e));
+}
+
+function enrichExplicitStatus(){
+  const missingExplicit = songs.filter(s => typeof s.explicit === 'undefined' && s.title && s.artists && s.artists[0]).slice(0, 200);
+  if(!missingExplicit.length) return;
+  const BATCH = 2;
+  const DELAY = 1000;
+  let i = 0;
+  function nextBatch(){
+    if(i >= missingExplicit.length) return;
+    const batch = missingExplicit.slice(i, i + BATCH);
+    i += BATCH;
+    Promise.all(batch.map(s => {
+      const term = (s.title||'') + ' ' + (s.artists[0]||'');
+      return deezerSearch(term, 1).then(results => {
+        if(!results || !results.length) return null;
+        const r = results[0];
+        const tMatch = (r.trackName||'').trim().toLowerCase() === (s.title||'').trim().toLowerCase();
+        const aMatch = (r.artistName||'').trim().toLowerCase() === (s.artists[0]||'').trim().toLowerCase();
+        if(tMatch && aMatch) return { idx: songs.indexOf(s), explicit: !!r.explicit };
+        return null;
+      }).catch(()=> null);
+    })).then(results => {
+      let changed = false;
+      results.filter(Boolean).forEach(r => {
+        if(r.idx > -1 && typeof songs[r.idx].explicit === 'undefined'){
+          songs[r.idx].explicit = r.explicit;
+          changed = true;
+        }
+      });
+      if(changed) save();
+      setTimeout(nextBatch, DELAY);
+    }).catch(()=> setTimeout(nextBatch, DELAY));
+  }
+  nextBatch();
 }
 
 async function searchGlobalSongs(query, limit = 25){
@@ -9138,6 +9175,7 @@ async function loadAppForUser(user){
 
   seedPeopleIfEmpty();
   seedIfEmpty();
+  enrichExplicitStatus();
   const [friendRows, profiles] = await Promise.all([fetchMyFriendRows(), fetchAllProfiles()]);
   allProfilesCache = profiles;
   processFriendRows(friendRows);
