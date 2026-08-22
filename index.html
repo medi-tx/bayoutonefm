@@ -9029,35 +9029,27 @@ async function upsertGlobalSong(song, userId){
     const title = (song.title || '').trim();
     const artist = (song.artists && song.artists[0] || '').trim();
     if(!title || !artist) return;
-    await sb.from('global_songs').upsert({
-      title,
-      artist,
-      album: (song.album || '').trim(),
-      year: (song.year || '').toString().trim(),
-      genres: song.genres || [],
-      cover_art: song.coverArt || '',
-      preview_url: song.previewUrl || '',
-      explicit: song.explicit || false,
-      added_by: userId || null
-    }, { onConflict: 'title,artist' });
+    await sb.rpc('upsert_global_song', {
+      p_title: title,
+      p_artist: artist,
+      p_album: (song.album || '').trim(),
+      p_year: (song.year || '').toString().trim(),
+      p_genres: song.genres || [],
+      p_cover_art: song.coverArt || '',
+      p_preview_url: song.previewUrl || '',
+      p_explicit: song.explicit || false,
+      p_added_by: userId || null
+    });
   }catch(e){ console.error('global_songs upsert failed:', e); }
 }
 
 function upsertGlobalSongBatch(songsList, userId){
   if(!songsList || !songsList.length) return;
-  const rows = songsList.filter(s => s && s.title && s.artists && s.artists[0]).map(s => ({
-    title: (s.title || '').trim(),
-    artist: (s.artists[0] || '').trim(),
-    album: (s.album || '').trim(),
-    year: (s.year || '').toString().trim(),
-    genres: s.genres || [],
-    cover_art: s.coverArt || '',
-    preview_url: s.previewUrl || '',
-    explicit: s.explicit || false,
-    added_by: userId || null
-  }));
+  const rows = songsList.filter(s => s && s.title && s.artists && s.artists[0]);
   if(!rows.length) return;
-  sb.from('global_songs').upsert(rows, { onConflict: 'title,artist' }).then(()=>{}).catch(e=> console.error('global_songs batch upsert failed:', e));
+  rows.forEach(s => {
+    upsertGlobalSong(s, userId);
+  });
 }
 
 function enrichExplicitStatus(){
