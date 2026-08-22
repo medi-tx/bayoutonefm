@@ -8939,10 +8939,10 @@ function upsertGlobalSongBatch(songsList, userId){
 }
 
 function enrichExplicitStatus(){
-  const missingExplicit = songs.filter(s => typeof s.explicit === 'undefined' && s.title && s.artists && s.artists[0]).slice(0, 200);
+  const missingExplicit = songs.filter(s => typeof s.explicit === 'undefined' && s.title && s.artists && s.artists[0]).slice(0, 100);
   if(!missingExplicit.length) return;
-  const BATCH = 2;
-  const DELAY = 1000;
+  const BATCH = 3;
+  const DELAY = 500;
   let i = 0;
   function nextBatch(){
     if(i >= missingExplicit.length) return;
@@ -8950,13 +8950,10 @@ function enrichExplicitStatus(){
     i += BATCH;
     Promise.all(batch.map(s => {
       const term = (s.title||'') + ' ' + (s.artists[0]||'');
-      return deezerSearch(term, 1).then(results => {
+      return deezerSearch(term, 3).then(results => {
         if(!results || !results.length) return null;
-        const r = results[0];
-        const tMatch = (r.trackName||'').trim().toLowerCase() === (s.title||'').trim().toLowerCase();
-        const aMatch = (r.artistName||'').trim().toLowerCase() === (s.artists[0]||'').trim().toLowerCase();
-        if(tMatch && aMatch) return { idx: songs.indexOf(s), explicit: !!r.explicit };
-        return null;
+        const r = results.find(x => (x.trackName||'').trim().toLowerCase() === (s.title||'').trim().toLowerCase() && (x.artistName||'').trim().toLowerCase() === (s.artists[0]||'').trim().toLowerCase());
+        return r ? { idx: songs.indexOf(s), explicit: !!r.explicit } : null;
       }).catch(()=> null);
     })).then(results => {
       let changed = false;
@@ -8964,6 +8961,7 @@ function enrichExplicitStatus(){
         if(r.idx > -1 && typeof songs[r.idx].explicit === 'undefined'){
           songs[r.idx].explicit = r.explicit;
           changed = true;
+          if(r.explicit) upsertGlobalSong(songs[r.idx], currentUserId);
         }
       });
       if(changed) save();
