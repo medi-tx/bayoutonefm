@@ -985,7 +985,26 @@
     font-weight:600;
     font-size:24px;
     margin:0 0 20px;
+    position:relative;
+    padding-right:36px;
   }
+  .modal-fav-btn{
+    position:absolute;
+    top:0;
+    right:0;
+    width:30px;
+    height:30px;
+    border:none;
+    background:transparent;
+    color:rgba(var(--on-paper-rgb),0.3);
+    font-size:22px;
+    cursor:pointer;
+    transition:color .15s ease, transform .15s ease;
+    line-height:1;
+    padding:0;
+  }
+  .modal-fav-btn:hover{ transform:scale(1.15); color:var(--rose); }
+  .modal-fav-btn.on{ color:var(--rose); }
   .field{ margin-bottom:14px; }
   .field label{
     display:block;
@@ -2733,6 +2752,7 @@
 <div class="overlay" id="overlay">
   <div class="modal">
     <h3 id="modalTitle">Add a song</h3>
+    <button type="button" id="modalFavBtn" class="modal-fav-btn" title="Add to favorites">♡</button>
     <div class="field">
       <label>Artwork</label>
       <div class="cover-upload">
@@ -3423,6 +3443,7 @@ let clusterFilterId = null;
 let remindsFilterId = null;
 let currentCoverArt = null;
 let currentExplicit = false;
+let currentFav = false;
 let currentSongSource = null;
 let currentMultiCoverArt = null;
 let currentWishCoverArt = null;
@@ -5379,6 +5400,7 @@ function openModal(song){
   document.getElementById('f-credit').value = song?.credit || '';
   currentCoverArt = song?.coverArt || null;
   currentExplicit = song?.explicit || false;
+  currentFav = song?.tier === '★' || false;
   currentSongSource = song?.source || null;
   setImagePreview('f-cover', currentCoverArt);
   document.getElementById('f-song-search').value = '';
@@ -5387,6 +5409,9 @@ function openModal(song){
   renderRemindsPicker('f', song?.remindsOf || []);
   currentTier = song?.tier || null;
   renderTierPicker();
+  const favBtn = document.getElementById('modalFavBtn');
+  favBtn.textContent = currentFav ? '♥' : '♡';
+  favBtn.classList.toggle('on', currentFav);
   document.getElementById('overlay').classList.add('open');
   document.getElementById('f-song-search').focus();
 }
@@ -5404,6 +5429,10 @@ function renderTierPicker(){
     btn.textContent = t;
     btn.addEventListener('click', ()=>{
       currentTier = (currentTier === t) ? null : t;
+      currentFav = currentTier === '★';
+      const favBtn = document.getElementById('modalFavBtn');
+      favBtn.textContent = currentFav ? '♥' : '♡';
+      favBtn.classList.toggle('on', currentFav);
       renderTierPicker();
     });
     el.appendChild(btn);
@@ -6601,6 +6630,14 @@ document.getElementById('spotifyImportConfirmBtn').addEventListener('click', ()=
 });
 document.getElementById('cancelBtn').addEventListener('click', closeModal);
 document.getElementById('saveBtn').addEventListener('click', handleSave);
+document.getElementById('modalFavBtn').addEventListener('click', ()=>{
+  currentFav = !currentFav;
+  currentTier = currentFav ? '★' : null;
+  const btn = document.getElementById('modalFavBtn');
+  btn.textContent = currentFav ? '♥' : '♡';
+  btn.classList.toggle('on', currentFav);
+  renderTierPicker();
+});
 document.getElementById('overlay').addEventListener('click', e=>{ if(e.target.id==='overlay') closeModal(); });
 
 
