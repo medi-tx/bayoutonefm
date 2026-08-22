@@ -5615,6 +5615,7 @@ function finishSave(data){
     if(idx > -1) updateGlobalSong(songs[idx]);
   } else {
     upsertGlobalSong(data, currentUserId);
+    syncToSongDb(data, currentUserId);
   }
   closeModal();
   render();
@@ -6658,7 +6659,8 @@ document.getElementById('spotifyImportConfirmBtn').addEventListener('click', ()=
     const doImportSave = ()=>{
       songs = [...newSongs, ...songs];
       save();
-      upsertGlobalSongBatch(newSongs, currentUserId);
+    upsertGlobalSongBatch(newSongs, currentUserId);
+    syncToSongDbBatch(newSongs, currentUserId);
       playlistImportedTracks = [];
       playlistImportInProgress = false;
       stopImportProgressTimer();
@@ -9054,6 +9056,31 @@ function upsertGlobalSongBatch(songsList, userId){
   rows.forEach(s => {
     upsertGlobalSong(s, userId);
   });
+}
+
+function syncToSongDb(song, userId){
+  try{
+    const title = (song.title || '').trim();
+    const artist = (song.artists && song.artists[0] || '').trim();
+    if(!title) return;
+    sb.from('song_database').select('id').eq('title', title).eq('artist', artist || '').limit(1).then(({data})=>{
+      if(data && data.length > 0) return;
+      sb.from('song_database').insert({
+        title,
+        artist: artist || '',
+        album: (song.album || '').trim(),
+        year: (song.year || '').toString().trim(),
+        genres: song.genres || [],
+        cover_art: song.coverArt || null,
+        source: 'user',
+        added_by: userId || null
+      }).catch(()=>{});
+    }).catch(()=>{});
+  }catch(e){}
+}
+function syncToSongDbBatch(songsList, userId){
+  if(!songsList || !songsList.length) return;
+  songsList.forEach(s => syncToSongDb(s, userId));
 }
 
 function enrichExplicitStatus(){
