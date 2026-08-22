@@ -8947,10 +8947,10 @@ function upsertGlobalSongBatch(songsList, userId){
 }
 
 function enrichExplicitStatus(){
-  const missingExplicit = songs.filter(s => typeof s.explicit === 'undefined' && s.title && s.artists && s.artists[0]).slice(0, 100);
+  const missingExplicit = songs.filter(s => typeof s.explicit === 'undefined' && s.title && s.artists && s.artists[0]);
   if(!missingExplicit.length) return;
   const BATCH = 3;
-  const DELAY = 500;
+  const DELAY = 800;
   let i = 0;
   function nextBatch(){
     if(i >= missingExplicit.length) return;
@@ -8969,7 +8969,6 @@ function enrichExplicitStatus(){
         if(r.idx > -1 && typeof songs[r.idx].explicit === 'undefined'){
           songs[r.idx].explicit = r.explicit;
           changed = true;
-          if(r.explicit) upsertGlobalSong(songs[r.idx], currentUserId);
         }
       });
       if(changed) save();
