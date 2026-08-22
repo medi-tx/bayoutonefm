@@ -9418,10 +9418,6 @@ async function renderSongSearchResults(query){
   }catch(e){
     results = null;
   }
-  if(!results || results.length === 0){
-    try{
-      results = await mbSearchSongs(q);
-    }catch(e2){}
   }
   songSearchCache = results || [];
   if(!results || results.length === 0){
