@@ -3410,7 +3410,7 @@
   <div class="modal" style="max-width:560px;">
     <h3>Import Playlist</h3>
     <div class="field">
-      <label>Playlist URL (Spotify, Apple Music, or Tidal)</label>
+      <label>Playlist URL (Spotify, Apple Music, Tidal, or YouTube Music)</label>
       <input type="text" id="spotify-url-input" placeholder="Paste a Spotify, Apple Music, Tidal, or YouTube Music playlist URL…" autocomplete="off">
     </div>
     <div id="spotifyImportResults" style="display:none; margin-top:12px;">
@@ -3419,6 +3419,8 @@
     </div>
     <div id="spotifyImportError" style="display:none; margin-top:8px;"></div>
     <div class="modal-actions">
+      <button class="btn-cancel" id="spotifyImportStopBtn" style="display:none; margin-right:auto; color:var(--rose); border-color:var(--rose);">Stop</button>
+      <button class="btn-cancel" id="spotifyImportPauseBtn" style="display:none;">Pause</button>
       <button class="btn-cancel" id="spotifyImportCancelBtn">Cancel</button>
       <button class="btn-save" id="spotifyImportConfirmBtn" disabled>Import tracks</button>
     </div>
@@ -6096,6 +6098,25 @@ document.getElementById('addMusicSpotifyBtn').addEventListener('click', ()=>{
 document.getElementById('spotifyImportCancelBtn').addEventListener('click', ()=>{
   document.getElementById('spotifyImportOverlay').classList.remove('open');
 });
+document.getElementById('spotifyImportStopBtn').addEventListener('click', ()=>{
+  playlistImportedTracks = [];
+  playlistImportInProgress = false;
+  playlistImportUrl = null;
+  playlistImportLoadedUrl = null;
+  stopImportProgressTimer();
+  document.getElementById('spotify-url-input').value = '';
+  document.getElementById('spotifyImportResults').style.display = 'none';
+  document.getElementById('spotifyImportError').style.display = 'none';
+  document.getElementById('spotifyImportConfirmBtn').disabled = true;
+  document.getElementById('spotifyImportStopBtn').style.display = 'none';
+  document.getElementById('spotifyImportPauseBtn').style.display = 'none';
+});
+document.getElementById('spotifyImportPauseBtn').addEventListener('click', ()=>{
+  if(importProgressState){
+    importProgressState.paused = !importProgressState.paused;
+    document.getElementById('spotifyImportPauseBtn').textContent = importProgressState.paused ? 'Resume' : 'Pause';
+  }
+});
 document.getElementById('spotifyImportOverlay').addEventListener('click', e=>{
   if(e.target.id === 'spotifyImportOverlay') document.getElementById('spotifyImportOverlay').classList.remove('open');
 });
@@ -6442,6 +6463,9 @@ async function loadPlaylist(url){
   playlistImportService = service;
   playlistImportUrl = url;
   playlistImportInProgress = true;
+  document.getElementById('spotifyImportStopBtn').style.display = '';
+  document.getElementById('spotifyImportPauseBtn').style.display = '';
+  document.getElementById('spotifyImportPauseBtn').textContent = 'Pause';
   const serviceLabel = service === 'spotify' ? 'Spotify' : service === 'apple' ? 'Apple Music' : service === 'youtube' ? 'YouTube Music' : 'Tidal';
   listEl.innerHTML = `<p class="profile-empty-note">Connecting to ${serviceLabel}…</p>`;
   resultsEl.style.display = 'block';
@@ -6497,6 +6521,8 @@ async function loadPlaylist(url){
 
     if(!tracks || !tracks.length){
       listEl.innerHTML = '<p class="profile-empty-note">No tracks found in this playlist.</p>';
+      document.getElementById('spotifyImportStopBtn').style.display = 'none';
+      document.getElementById('spotifyImportPauseBtn').style.display = 'none';
       return;
     }
 
@@ -6504,6 +6530,8 @@ async function loadPlaylist(url){
     playlistImportLoadedUrl = url;
     playlistImportInProgress = true;
     stopImportProgressTimer();
+    document.getElementById('spotifyImportStopBtn').style.display = 'none';
+    document.getElementById('spotifyImportPauseBtn').style.display = 'none';
     const serviceLabel = service === 'spotify' ? 'Spotify' : service === 'apple' ? 'Apple Music' : service === 'youtube' ? 'YouTube Music' : 'Tidal';
     infoEl.innerHTML = `
       ${coverArt ? `<img src="${escapeAttr(coverArt)}" style="width:48px;height:48px;border-radius:6px;object-fit:cover;">` : ''}
@@ -6518,6 +6546,8 @@ async function loadPlaylist(url){
   }catch(e){
     playlistImportInProgress = false;
     stopImportProgressTimer();
+    document.getElementById('spotifyImportStopBtn').style.display = 'none';
+    document.getElementById('spotifyImportPauseBtn').style.display = 'none';
     listEl.innerHTML = '';
     errEl.style.display = 'block';
     errEl.innerHTML = `<p class="profile-empty-note">${escapeHtml(e.message || 'Could not load this playlist.')}</p>`;
@@ -6556,6 +6586,7 @@ async function enrichTracksFromItunes(tracks, listEl, statusEl){
   importProgressState = { active: true, label: 'Fetching artwork…', done: 0, total: tracks.length, startTime, statusEl };
   startImportProgressTimer();
   for(let batchNum = 0; batchNum < totalBatches; batchNum++){
+    while(importProgressState && importProgressState.paused){ await new Promise(r=>setTimeout(r, 200)); }
     const i = batchNum * BATCH_SIZE;
     const batch = [];
     for(let j = 0; j < BATCH_SIZE && i + j < tracks.length; j++){
