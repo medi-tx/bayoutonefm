@@ -721,6 +721,9 @@
     border-top:3px solid var(--lilac);
     box-shadow:0 8px 20px rgba(0,0,0,0.25);
     transition: transform .18s ease, box-shadow .18s ease;
+    overflow:hidden;
+    word-wrap:break-word;
+    overflow-wrap:break-word;
   }
   .card:hover{ transform:translateY(-3px); box-shadow:0 14px 28px rgba(201,160,220,0.18), 0 14px 28px rgba(122,139,106,0.14), 0 14px 28px rgba(0,0,0,0.25); }
   .card.archived{ opacity:0.6; }
@@ -791,11 +794,16 @@
     font-size:20px;
     line-height:1.2;
     margin:0 0 2px;
+    overflow-wrap:break-word;
+    word-wrap:break-word;
+    hyphens:auto;
   }
   .track-artist{
     font-size:14px;
     color: rgba(var(--on-paper-rgb),0.9);
     margin:0;
+    overflow-wrap:break-word;
+    word-wrap:break-word;
   }
   .meta-row{
     font-family:'IBM Plex Mono', monospace;
@@ -806,7 +814,7 @@
     gap:6px 10px;
     padding-right:26px;
   }
-  .meta-row span{ white-space:nowrap; }
+  .meta-row span{ white-space:normal; word-wrap:break-word; }
   .meta-row span.meta-genres{ white-space:normal; }
 
   .tags{
