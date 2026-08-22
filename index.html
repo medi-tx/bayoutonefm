@@ -8460,7 +8460,7 @@ document.getElementById('stickerWipOkBtn').addEventListener('click', ()=>{
 document.getElementById('stickerWipOverlay').addEventListener('click', e=>{
   if(e.target.id === 'stickerWipOverlay') document.getElementById('stickerWipOverlay').classList.remove('open');
 });
-document.getElementById('editStickersBtn').addEventListener('click', ()=>{
+document.getElementById('editStickersBtn')?.addEventListener('click', ()=>{
   trackEvent('open_stickers');
   if(!localStorage.getItem('bayoutonefm-sticker-wip-dismissed')){
     document.getElementById('stickerWipOverlay').classList.add('open');
@@ -8858,6 +8858,10 @@ function updateRemoveExamplesBtn(){
   btn.style.display = (!gone && hasAny && !showArchived && !viewingWishlist) ? '' : 'none';
 }
 function removeExamples(){
+  if(!hasExampleContent()){
+    toast('No examples to remove!');
+    return;
+  }
   if(!confirm('Remove all example songs and people?')) return;
   trackEvent('remove_examples');
   const removedSongs = songs.filter(s=>s.isSeedExample).length;
