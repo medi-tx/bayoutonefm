@@ -5502,6 +5502,12 @@ function finishSave(data){
     songs.unshift({ id: uid(), pinned:false, createdAt: Date.now(), ...data });
   }
   save();
+  if(editingId){
+    const idx = songs.findIndex(s=>s.id===editingId);
+    if(idx > -1) updateGlobalSong(songs[idx]);
+  } else {
+    upsertGlobalSong(data, currentUserId);
+  }
   closeModal();
   render();
   if(document.getElementById('feedOverlay').classList.contains('open')) loadFeed();
@@ -5698,6 +5704,7 @@ function handleMultiSave(){
     trackEvent('save_album', { count: newSongs.length });
     songs = [...newSongs, ...songs];
     save();
+    upsertGlobalSongBatch(newSongs, currentUserId);
     closeMultiModal();
     render();
     if(document.getElementById('feedOverlay').classList.contains('open')) loadFeed();
@@ -6528,6 +6535,7 @@ document.getElementById('spotifyImportConfirmBtn').addEventListener('click', ()=
     const doImportSave = ()=>{
       songs = [...newSongs, ...songs];
       save();
+      upsertGlobalSongBatch(newSongs, currentUserId);
       playlistImportedTracks = [];
       playlistImportInProgress = false;
       stopImportProgressTimer();
@@ -8883,6 +8891,67 @@ async function ensureUserRow(userId){
   if(error) console.error('Error creating your data row:', error);
 }
 
+async function upsertGlobalSong(song, userId){
+  try{
+    const title = (song.title || '').trim();
+    const artist = (song.artists && song.artists[0] || '').trim();
+    if(!title || !artist) return;
+    await sb.from('global_songs').upsert({
+      title,
+      artist,
+      album: (song.album || '').trim(),
+      year: (song.year || '').toString().trim(),
+      genres: song.genres || [],
+      cover_art: song.coverArt || '',
+      preview_url: song.previewUrl || '',
+      added_by: userId || null
+    }, { onConflict: 'title,artist' });
+  }catch(e){ console.error('global_songs upsert failed:', e); }
+}
+
+function upsertGlobalSongBatch(songsList, userId){
+  if(!songsList || !songsList.length) return;
+  const rows = songsList.filter(s => s && s.title && s.artists && s.artists[0]).map(s => ({
+    title: (s.title || '').trim(),
+    artist: (s.artists[0] || '').trim(),
+    album: (s.album || '').trim(),
+    year: (s.year || '').toString().trim(),
+    genres: s.genres || [],
+    cover_art: s.coverArt || '',
+    preview_url: s.previewUrl || '',
+    added_by: userId || null
+  }));
+  if(!rows.length) return;
+  sb.from('global_songs').upsert(rows, { onConflict: 'title,artist' }).then(()=>{}).catch(e=> console.error('global_songs batch upsert failed:', e));
+}
+
+async function searchGlobalSongs(query, limit = 25){
+  try{
+    const { data, error } = await sb.rpc('search_global_songs', { search_term: query, result_limit: limit });
+    if(error){
+      const { data: fallback } = await sb.from('global_songs').select('*').or(`title.ilike.%${query}%,artist.ilike.%${query}%`).limit(limit);
+      return fallback || [];
+    }
+    return data || [];
+  }catch(e){ return []; }
+}
+
+async function updateGlobalSong(song){
+  try{
+    const title = (song.title || '').trim();
+    const artist = (song.artists && song.artists[0] || '').trim();
+    if(!title || !artist) return;
+    const updates = {};
+    if(song.year) updates.year = song.year.toString().trim();
+    if(song.genres && song.genres.length) updates.genres = song.genres;
+    if(song.album) updates.album = song.album.trim();
+    if(song.coverArt) updates.cover_art = song.coverArt;
+    if(song.previewUrl) updates.preview_url = song.previewUrl;
+    if(Object.keys(updates).length === 0) return;
+    await sb.from('global_songs').update(updates).eq('title', title).ilike('artist', artist);
+  }catch(e){ console.error('global_songs update failed:', e); }
+}
+
 function syncToSupabase(){
   if(!currentUserId) return;
   clearTimeout(syncTimer);
@@ -9378,10 +9447,27 @@ async function renderSongSearchResults(query){
   wrap.innerHTML = '<p class="profile-empty-note">Searching…</p>';
   let results;
   try{
-    results = await deezerSearch(q, 25);
-  }catch(e){
-    console.error('Deezer search failed:', e);
-    results = null;
+    const globalResults = await searchGlobalSongs(q, 25);
+    if(globalResults && globalResults.length){
+      results = globalResults.map(g => ({
+        trackName: g.title,
+        artistName: g.artist,
+        collectionName: g.album || '',
+        artworkUrl100: g.cover_art || '',
+        previewUrl: g.preview_url || '',
+        releaseDate: g.year ? g.year + '-01-01' : '',
+        primaryGenreName: (g.genres && g.genres[0]) || '',
+        trackId: 'gs-' + g.id
+      }));
+    }
+  }catch(e){}
+  if(!results || results.length === 0){
+    try{
+      results = await deezerSearch(q, 25);
+    }catch(e){
+      console.error('Deezer search failed:', e);
+      results = null;
+    }
   }
   if(!results || results.length === 0){
     try{
@@ -9401,6 +9487,20 @@ async function renderSongSearchResults(query){
     if(seen.has(key)) return false;
     seen.add(key);
     return true;
+  });
+  const qWords = q.toLowerCase().split(/\s+/).filter(w=>w.length > 1);
+  unique.sort((a,b)=>{
+    const aT = (a.trackName||'').toLowerCase();
+    const aA = (a.artistName||'').toLowerCase();
+    const bT = (b.trackName||'').toLowerCase();
+    const bA = (b.artistName||'').toLowerCase();
+    const aArtistMatch = qWords.some(w=> aA.includes(w)) ? 1 : 0;
+    const bArtistMatch = qWords.some(w=> bA.includes(w)) ? 1 : 0;
+    const aTitleMatch = qWords.some(w=> aT.includes(w)) ? 1 : 0;
+    const bTitleMatch = qWords.some(w=> bT.includes(w)) ? 1 : 0;
+    const aScore = aArtistMatch * 2 + aTitleMatch;
+    const bScore = bArtistMatch * 2 + bTitleMatch;
+    return bScore - aScore;
   });
   songSearchCache = unique;
   wrap.innerHTML = unique.map((t, i)=>`
