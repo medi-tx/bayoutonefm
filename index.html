@@ -9245,6 +9245,7 @@ async function deezerSearch(q, limit){
     releaseDate: '',
     primaryGenreName: '',
     artworkUrl100: r.album && r.album.cover_medium ? r.album.cover_medium.replace(/\/\d+x\d+bb/, '/150x150bb') : null,
+    previewUrl: r.preview || null,
     trackViewUrl: r.link || null
   }));
 }
@@ -9447,12 +9448,15 @@ async function renderSongSearchResults(query){
   try{
     results = await itunesSearch(q, 'song', 25);
   }catch(e){
+    console.error('iTunes search failed:', e);
     results = null;
   }
   if(!results || results.length === 0){
     try{
       results = await deezerSearch(q, 25);
-    }catch(e2){}
+    }catch(e2){
+      console.error('Deezer search failed:', e2);
+    }
   }
   songSearchCache = results || [];
   if(!results || results.length === 0){
