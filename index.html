@@ -99,6 +99,7 @@
     font-size:12px;
     display:block;
     letter-spacing:3px;
+    color:#eedd95;
     color:var(--rose);
     margin-bottom:10px;
   }
@@ -279,6 +280,7 @@
     font-size:13px;
     display:block;
     letter-spacing:3px;
+    color:#eedd95;
     color:var(--sage);
     margin-bottom:6px;
   }
@@ -2500,7 +2502,7 @@
 <!-- AUTH SCREEN -->
 <div id="authScreen" class="auth-screen">
   <div class="auth-screen-inner">
-  <div class="auth-logo-row"><span style="font-family:'Fraunces',serif; font-style:italic; font-weight:700; color:var(--gold); font-size:28px;">bayoutonefm ♪</span></div>
+  <div class="auth-logo-row"><span style="font-family:'Fraunces',serif; font-style:italic; font-weight:700; color:#eedd95; font-size:28px;">bayoutonefm ♪</span></div>
   <div class="auth-card">
     <div id="loginFields">
       <h1 class="auth-title"><span class="side-a">bayoutonefm</span>Sign in to your cataloguex</h1>
@@ -2536,7 +2538,7 @@
 <!-- PASSWORD RECOVERY SCREEN (shown when the user arrives from a reset-password email link) -->
 <div id="recoveryScreen" class="auth-screen" style="display:none;">
   <div class="auth-screen-inner">
-  <div class="auth-logo-row"><span style="font-family:'Fraunces',serif; font-style:italic; font-weight:700; color:var(--gold); font-size:28px;">bayoutonefm ♪</span></div>
+  <div class="auth-logo-row"><span style="font-family:'Fraunces',serif; font-style:italic; font-weight:700; color:#eedd95; font-size:28px;">bayoutonefm ♪</span></div>
   <div class="auth-card">
     <h1 class="auth-title"><span class="side-a">bayoutonefm</span>Set a new password</h1>
     <p class="auth-sub">Choose a new password for your account.</p>
@@ -2577,7 +2579,7 @@
 
   <header>
     <div class="header-brand">
-      <h1 style="margin:0;"><span style="font-family:'Fraunces',serif; font-style:italic; font-weight:700; color:var(--gold); font-size:22px; display:block; margin-bottom:6px;">bayoutonefm ♪</span><span class="side-a">SIDE A · PERSONAL MIXTAPE</span><span style="color:var(--teal);">Your Music Cataloguex</span></h1>
+      <h1 style="margin:0;"><span style="font-family:'Fraunces',serif; font-style:italic; font-weight:700; color:#eedd95; font-size:22px; display:block; margin-bottom:6px;">bayoutonefm ♪</span><span class="side-a">SIDE A · PERSONAL MIXTAPE</span><span style="color:var(--teal);">Your Music Cataloguex</span></h1>
     </div>
     <div class="stats" id="stats"></div>
     <div class="header-actions">
@@ -2668,7 +2670,7 @@
 <div class="wrap" id="friendWrap" style="display:none;">
   <header>
     <div class="header-brand">
-      <span style="font-family:'Fraunces',serif; font-style:italic; font-weight:700; color:var(--gold); font-size:18px;">bayoutonefm ♪</span>
+      <span style="font-family:'Fraunces',serif; font-style:italic; font-weight:700; color:#eedd95; font-size:18px;">bayoutonefm ♪</span>
       <button type="button" class="back-btn" id="friendBackBtn">← Back to my cataloguex</button>
     </div>
   </header>
@@ -2987,7 +2989,7 @@
       <input type="text" id="friend-username-search" placeholder="Search by username…" autocomplete="off">
     </div>
     <p class="profile-empty-note" id="discoverBlockedNote" style="display:none;">🔒 Friend requests are turned off for this account — you can't add or accept friends right now.</p>
-    <p class="theme-section-label" id="discoverListLabel">People on bayoutonefm</p>
+    <p class="theme-section-label" id="discoverListLabel">People on <span style="color:#eedd95">bayoutonefm</span></p>
     <div class="discover-list" id="discoverList"></div>
     <div class="modal-actions">
       <button class="btn-cancel" id="discoverCloseBtn">Close</button>
@@ -4636,7 +4638,7 @@ async function drawShareCard(opts){
 
   ctx.fillStyle = '#b4b9f3';
   ctx.font = '700 42px "Space Grotesk", sans-serif';
-  ctx.fillText('bayoutonefm', 88, 142);
+  ctx.fillStyle='#eedd95'; ctx.fillText('bayoutonefm', 88, 142);
   ctx.fillStyle = 'rgba(238,221,149,0.8)';
   ctx.font = '600 28px "Space Grotesk", sans-serif';
   ctx.fillText('CATALOGUEX CARD', 88, 190);
@@ -4713,7 +4715,7 @@ async function drawShareCard(opts){
   ctx.fillStyle = 'rgba(238,221,149,0.4)';
   ctx.font = '500 20px "Space Grotesk", sans-serif';
   const now = new Date();
-  ctx.fillText('Join bayoutonefm today to share your own music', W/2, H - 96);
+  ctx.fillStyle='#eedd95'; ctx.fillText('Join bayoutonefm today to share your own music', W/2, H - 96);
   ctx.textAlign = 'left';
 }
 function cardWrapText(ctx, text, maxW, font){
@@ -4746,7 +4748,7 @@ function cardBase(ctx, W, H, username){
   ctx.beginPath(); ctx.arc(W*0.08, H*0.92, 280, 0, Math.PI*2); ctx.fill();
   ctx.fillStyle = t.gold || '#b4b9f3';
   ctx.font = '700 42px "Space Grotesk", sans-serif';
-  ctx.fillText('bayoutonefm', 88, 142);
+  ctx.fillStyle='#eedd95'; ctx.fillText('bayoutonefm', 88, 142);
   ctx.fillStyle = t.paper || 'rgba(238,221,149,0.8)';
   ctx.font = '600 28px "Space Grotesk", sans-serif';
   ctx.fillText('CATALOGUEX CARD', 88, 190);
@@ -4822,7 +4824,7 @@ async function drawSongShareCard(opts){
   ctx.fillStyle = t.paper ? t.paper + '66' : 'rgba(238,221,149,0.4)';
   ctx.font = '500 20px "Space Grotesk", sans-serif';
   const now = new Date();
-  ctx.fillText('Join bayoutonefm today to share your own music', W/2, H - 96);
+  ctx.fillStyle='#eedd95'; ctx.fillText('Join bayoutonefm today to share your own music', W/2, H - 96);
   ctx.textAlign = 'left';
 }
 async function drawTierShareCard(opts){
@@ -4914,7 +4916,7 @@ async function drawTierShareCard(opts){
   ctx.fillStyle = 'rgba(238,221,149,0.4)';
   ctx.font = '500 20px "Space Grotesk", sans-serif';
   const now = new Date();
-  ctx.fillText('Join bayoutonefm today to share your own music', W/2, H - 96);
+  ctx.fillStyle='#eedd95'; ctx.fillText('Join bayoutonefm today to share your own music', W/2, H - 96);
   ctx.textAlign = 'left';
 }
 async function openShareCard(opts){
