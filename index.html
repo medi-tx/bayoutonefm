@@ -10895,7 +10895,10 @@ document.getElementById('passwordSaveBtn').addEventListener('click', async ()=>{
     searchState[date] = { term, loading: true };
     renderScheduler();
     try{
-      const results = await itunesSearch(term, 'song', 6);
+      let results = await itunesSearch(term, 'song', 6);
+      if(!results || results.length === 0){
+        results = await deezerSearch(term, 6);
+      }
       searchState[date] = { term, results: results || [] };
       if(!results || results.length === 0){
         searchState[date].error = 'No songs found — try a different search.';
