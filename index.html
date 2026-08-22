@@ -3410,8 +3410,8 @@
   <div class="modal" style="max-width:560px;">
     <h3>Import Playlist</h3>
     <div class="field">
-      <label>Playlist URL (Spotify, Apple Music, Tidal, or YouTube Music)</label>
-      <input type="text" id="spotify-url-input" placeholder="Paste a Spotify, Apple Music, Tidal, or YouTube Music playlist URL…" autocomplete="off">
+      <label>Playlist URL (Spotify, Apple Music, or Tidal)</label>
+      <input type="text" id="spotify-url-input" placeholder="Paste a Spotify, Apple Music, or Tidal playlist URL…" autocomplete="off">
     </div>
     <div id="spotifyImportResults" style="display:none; margin-top:12px;">
       <div id="spotifyPlaylistInfo" style="display:flex; gap:12px; align-items:center; margin-bottom:12px;"></div>
@@ -6444,7 +6444,7 @@ async function loadPlaylist(url){
   const service = detectPlaylistService(url);
   if(!service){
     errEl.style.display = 'block';
-    errEl.innerHTML = '<p class="profile-empty-note">Please paste a Spotify, Apple Music, Tidal, or YouTube Music playlist URL.</p>';
+    errEl.innerHTML = '<p class="profile-empty-note">Please paste a Spotify, Apple Music, or Tidal playlist URL.</p>';
     return;
   }
 
