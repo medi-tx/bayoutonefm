@@ -2590,7 +2590,7 @@
       <button class="theme-btn" id="leaderboardBtn">🏆 Leaderboards</button>
       <button class="theme-btn" id="statsBtn">📊 Stats</button>
       <button class="theme-btn" id="discoverBtn">🔎 Friends</button>
-      <button class="theme-btn" id="themeBtn">🎨 Theme</button>
+      <button class="theme-btn" id="themeBtn" style="display:none;">🎨 Theme</button>
       <a href="songdb.html" class="theme-btn" id="songDbBtn" style="text-decoration:none; display:none;">📀 Song Database</a>
       <button class="avatar-btn" id="myProfileBtn" title="My profile"><span id="myAvatarContent">?</span></button>
       <button class="logout-btn" id="logoutBtn">Log out</button>
@@ -3735,6 +3735,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
   });
 
   document.getElementById('themeBtn').addEventListener('click', ()=>{
+    if(!myProfile || myProfile.username !== 'samannleblanc') return;
     trackEvent('open_theme');
     applyTheme(loadTheme());
     renderThemeColorGrid();
@@ -4479,6 +4480,7 @@ function showAnalyticsExport(){
   if(myProfile && myProfile.username === 'samannleblanc'){
     document.getElementById('exportAnalyticsBtn').style.display = '';
     document.getElementById('songDbBtn').style.display = '';
+    document.getElementById('themeBtn').style.display = '';
   }
 }
 /* ---- SONG OF THE DAY: WEEKLY SCHEDULER (samannleblanc only) ---- */
