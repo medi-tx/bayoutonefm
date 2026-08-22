@@ -9123,9 +9123,17 @@ async function itunesSearch(term, entity, limit){
 }
 async function deezerSearch(q, limit){
   const url = 'https://api.deezer.com/search?q=' + encodeURIComponent(q) + '&limit=' + (limit||25);
-  const res = await fetch(url);
-  if(!res.ok) throw new Error('deezer_' + res.status);
-  const data = await res.json();
+  const data = await new Promise((resolve, reject)=>{
+    const cbName = 'dzCb_' + Math.random().toString(36).slice(2);
+    const script = document.createElement('script');
+    let settled = false;
+    const cleanup = ()=>{ delete window[cbName]; script.remove(); };
+    window[cbName] = (d)=>{ settled = true; cleanup(); resolve(d); };
+    script.onerror = ()=>{ if(!settled){ settled = true; cleanup(); reject(new Error('deezer_jsonp_failed')); } };
+    script.src = 'https://api.deezer.com/search?q=' + encodeURIComponent(q) + '&limit=' + (limit||25) + '&output=jsonp&callback=' + cbName;
+    document.body.appendChild(script);
+    setTimeout(()=>{ if(!settled){ settled = true; cleanup(); reject(new Error('deezer_timeout')); } }, 10000);
+  });
   return (data.data || []).map(r=>({
     trackId: 'dz-' + r.id,
     trackName: r.title || 'Untitled',
@@ -9140,9 +9148,17 @@ async function deezerSearch(q, limit){
 }
 async function deezerAlbumSearch(q, limit){
   const url = 'https://api.deezer.com/search/album?q=' + encodeURIComponent(q) + '&limit=' + (limit||8);
-  const res = await fetch(url);
-  if(!res.ok) throw new Error('deezer_alb_' + res.status);
-  const data = await res.json();
+  const data = await new Promise((resolve, reject)=>{
+    const cbName = 'dzAlbCb_' + Math.random().toString(36).slice(2);
+    const script = document.createElement('script');
+    let settled = false;
+    const cleanup = ()=>{ delete window[cbName]; script.remove(); };
+    window[cbName] = (d)=>{ settled = true; cleanup(); resolve(d); };
+    script.onerror = ()=>{ if(!settled){ settled = true; cleanup(); reject(new Error('deezer_alb_jsonp_failed')); } };
+    script.src = 'https://api.deezer.com/search/album?q=' + encodeURIComponent(q) + '&limit=' + (limit||8) + '&output=jsonp&callback=' + cbName;
+    document.body.appendChild(script);
+    setTimeout(()=>{ if(!settled){ settled = true; cleanup(); reject(new Error('deezer_alb_timeout')); } }, 10000);
+  });
   return (data.data || []).map(r=>({
     collectionId: 'dza-' + r.id,
     collectionName: r.title || 'Untitled album',
