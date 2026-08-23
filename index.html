@@ -9374,10 +9374,20 @@ async function loadAppForUser(user){
   await ensureUserRow(user.id);
   const remote = await fetchUserData(user.id);
   songs = (remote && remote.songs) || [];
+  if(examplesRemoved()){
+    const before = songs.length;
+    songs = songs.filter(s=>!s.isSeedExample);
+    if(songs.length !== before) console.warn('Stripped ' + (before - songs.length) + ' example songs from Supabase data');
+  }
   // Sync localStorage to match Supabase (Supabase is source of truth)
   localStorage.setItem(STORAGE_KEY, JSON.stringify(songs));
   prefetchPreviews(songs);
   people = (remote && remote.people) || [];
+  if(examplesRemoved()){
+    const before = people.length;
+    people = people.filter(p=>!String(p.id||'').startsWith('ex-'));
+    if(people.length !== before) savePeople();
+  }
   wishlist = (remote && remote.wishlist) || [];
 
   const songTitles = new Set(songs.map(s => normalizeTitle(s.title)));
