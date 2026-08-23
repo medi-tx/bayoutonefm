@@ -240,33 +240,79 @@ document.addEventListener('DOMContentLoaded', ()=>{
   renderThemePresets();
 
   const CB_THEME_KEY = 'song-journal-colorblind-theme';
-  const CB_PRESET = { ink:'#14151A', paper:'#F7F5F0', gold:'#F5F5F0', teal:'#C2C2C2', rose:'#8C8C8C', lilac:'#565656', sage:'#1A1A1A', paperElevated:'#FFFFFF', border:'rgba(200,200,200,0.5)' };
+  const CB_TYPE_KEY = 'song-journal-colorblind-type';
+  const CB_PRESETS = {
+    protan: { ink:'#14151A', paper:'#F4F1EA', gold:'#E69F00', teal:'#0072B2', rose:'#D55E00', lilac:'#CC79A7', sage:'#56B4E9', paperElevated:'#FFFFFF', border:'rgba(200,200,200,0.5)' },
+    deutan: { ink:'#14151A', paper:'#F4F1EA', gold:'#E69F00', teal:'#0072B2', rose:'#009E73', lilac:'#CC79A7', sage:'#56B4E9', paperElevated:'#FFFFFF', border:'rgba(200,200,200,0.5)' },
+    tritan: { ink:'#14151A', paper:'#F4F1EA', gold:'#D95F02', teal:'#E7298A', rose:'#1B9E77', lilac:'#7570B3', sage:'#66A61E', paperElevated:'#FFFFFF', border:'rgba(200,200,200,0.5)' },
+    mono:   { ink:'#0A0A0A', paper:'#F2F2F2', gold:'#C8C8C8', teal:'#404040', rose:'#707070', lilac:'#9A9A9A', sage:'#585858', paperElevated:'#FFFFFF', border:'rgba(160,160,160,0.5)' },
+  };
   const cbToggle = document.getElementById('cbToggle');
+  const cbTypes = document.getElementById('cbTypes');
   function syncCbToggle(on){
     cbToggle.dataset.cb = on ? 'on' : 'off';
     cbToggle.setAttribute('aria-checked', on ? 'true' : 'false');
   }
+  function applyCbType(type){
+    const preset = CB_PRESETS[type] || CB_PRESETS.protan;
+    applyTheme(preset);
+    saveTheme(preset);
+    if(cbTypes){
+      Array.from(cbTypes.querySelectorAll('.cb-type-btn')).forEach(b=>{
+        b.setAttribute('aria-pressed', b.dataset.cbType === type ? 'true' : 'false');
+      });
+    }
+    localStorage.setItem(CB_TYPE_KEY, type);
+  }
+  if(cbTypes){
+    Object.keys(CB_PRESETS).forEach(type=>{
+      const btn = cbTypes.querySelector('[data-cb-type="' + type + '"]');
+      const sw = btn && btn.querySelector('.cb-swatch');
+      if(sw){
+        ['gold','rose','teal','lilac','sage'].forEach(k=>{
+          const dot = document.createElement('span');
+          dot.className = 'cb-dot';
+          dot.style.background = CB_PRESETS[type][k];
+          sw.appendChild(dot);
+        });
+      }
+    });
+  }
   const cbSaved = localStorage.getItem(CB_THEME_KEY) === 'on';
-  syncCbToggle(cbSaved);
-  if(cbSaved) applyTheme(CB_PRESET);
+  if(cbSaved){
+    syncCbToggle(true);
+    if(cbTypes) cbTypes.style.display = '';
+    applyCbType(localStorage.getItem(CB_TYPE_KEY) || 'protan');
+  } else {
+    syncCbToggle(false);
+    if(cbTypes) cbTypes.style.display = 'none';
+  }
   cbToggle.addEventListener('click', ()=>{
     const on = cbToggle.dataset.cb !== 'on';
     syncCbToggle(on);
     if(on){
-      localStorage.setItem(CB_THEME_KEY, 'on');
       if(!localStorage.getItem(CB_THEME_KEY + '-prev')){
         localStorage.setItem(CB_THEME_KEY + '-prev', JSON.stringify(loadTheme()));
       }
-      applyTheme(CB_PRESET);
-      saveTheme(CB_PRESET);
+      localStorage.setItem(CB_THEME_KEY, 'on');
+      if(cbTypes) cbTypes.style.display = '';
+      applyCbType(localStorage.getItem(CB_TYPE_KEY) || 'protan');
     } else {
       localStorage.removeItem(CB_THEME_KEY);
+      if(cbTypes) cbTypes.style.display = 'none';
       const prev = JSON.parse(localStorage.getItem(CB_THEME_KEY + '-prev') || 'null') || DEFAULT_THEME;
       localStorage.removeItem(CB_THEME_KEY + '-prev');
       applyTheme(prev);
       saveTheme(prev);
     }
   });
+  if(cbTypes){
+    cbTypes.addEventListener('click', e=>{
+      const btn = e.target.closest('.cb-type-btn');
+      if(!btn) return;
+      applyCbType(btn.dataset.cbType);
+    });
+  }
 
   document.getElementById('themeBtn').addEventListener('click', ()=>{
     if(!myProfile || myProfile.username !== 'samannleblanc') return;
@@ -305,6 +351,10 @@ document.addEventListener('DOMContentLoaded', ()=>{
   const themeResetBtn = document.getElementById('themeResetBtn');
   themeResetBtn.addEventListener('click', ()=>{
     localStorage.removeItem(CB_THEME_KEY);
+    localStorage.removeItem(CB_TYPE_KEY);
+    localStorage.removeItem(CB_THEME_KEY + '-prev');
+    syncCbToggle(false);
+    if(cbTypes) cbTypes.style.display = 'none';
     applyTheme(DEFAULT_THEME);
     saveTheme(DEFAULT_THEME);
     renderThemeColorGrid();

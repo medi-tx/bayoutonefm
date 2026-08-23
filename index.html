@@ -1564,6 +1564,11 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
   .cb-toggle::after{ content:''; position:absolute; top:3px; left:3px; width:18px; height:18px; border-radius:50%; background:var(--on-paper); transition:transform .2s; }
   .cb-toggle[data-cb="on"]{ background:var(--teal); }
   .cb-toggle[data-cb="on"]::after{ transform:translateX(20px); }
+  .cb-types{ display:flex; flex-wrap:wrap; gap:6px; padding:2px 0 6px; }
+  .cb-type-btn{ flex:1 1 auto; min-width:120px; display:flex; align-items:center; gap:7px; padding:8px 10px; font-family:inherit; font-size:12px; font-weight:600; cursor:pointer; color:var(--on-paper); background:rgba(var(--on-paper-rgb),0.05); border:1px solid var(--border); border-radius:8px; }
+  .cb-type-btn[aria-pressed="true"]{ background:var(--teal); color:var(--on-ink); border-color:var(--teal); }
+  .cb-swatch{ display:inline-flex; gap:2px; }
+  .cb-dot{ width:9px; height:9px; border-radius:50%; display:inline-block; border:1px solid rgba(0,0,0,0.25); }
   .theme-color-grid{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px; }
   .theme-color-field{ display:flex; align-items:center; gap:8px; background:var(--paper-2); border:1px solid var(--border); border-radius:8px; padding:6px 10px; }
   .theme-color-field label{ font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--on-paper); opacity:.7; min-width:52px; }
@@ -3356,6 +3361,13 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
       <button type="button" class="cb-toggle" id="cbToggle" role="switch" aria-checked="false" data-cb="off"></button>
     </div>
 
+    <div class="cb-types" id="cbTypes" style="display:none;" role="group" aria-label="Color blindness type">
+      <button type="button" class="cb-type-btn" data-cb-type="protan" aria-pressed="false"><span class="cb-swatch"></span>Protanopia</button>
+      <button type="button" class="cb-type-btn" data-cb-type="deutan" aria-pressed="false"><span class="cb-swatch"></span>Deuteranopia</button>
+      <button type="button" class="cb-type-btn" data-cb-type="tritan" aria-pressed="false"><span class="cb-swatch"></span>Tritanopia</button>
+      <button type="button" class="cb-type-btn" data-cb-type="mono" aria-pressed="false"><span class="cb-swatch"></span>Monochrome</button>
+    </div>
+
     <p class="theme-section-label">Presets</p>
     <div class="theme-presets" id="themePresets"></div>
 
@@ -3912,33 +3924,79 @@ document.addEventListener('DOMContentLoaded', ()=>{
   renderThemePresets();
 
   const CB_THEME_KEY = 'song-journal-colorblind-theme';
-  const CB_PRESET = { ink:'#14151A', paper:'#F7F5F0', gold:'#F5F5F0', teal:'#C2C2C2', rose:'#8C8C8C', lilac:'#565656', sage:'#1A1A1A', paperElevated:'#FFFFFF', border:'rgba(200,200,200,0.5)' };
+  const CB_TYPE_KEY = 'song-journal-colorblind-type';
+  const CB_PRESETS = {
+    protan: { ink:'#14151A', paper:'#F4F1EA', gold:'#E69F00', teal:'#0072B2', rose:'#D55E00', lilac:'#CC79A7', sage:'#56B4E9', paperElevated:'#FFFFFF', border:'rgba(200,200,200,0.5)' },
+    deutan: { ink:'#14151A', paper:'#F4F1EA', gold:'#E69F00', teal:'#0072B2', rose:'#009E73', lilac:'#CC79A7', sage:'#56B4E9', paperElevated:'#FFFFFF', border:'rgba(200,200,200,0.5)' },
+    tritan: { ink:'#14151A', paper:'#F4F1EA', gold:'#D95F02', teal:'#E7298A', rose:'#1B9E77', lilac:'#7570B3', sage:'#66A61E', paperElevated:'#FFFFFF', border:'rgba(200,200,200,0.5)' },
+    mono:   { ink:'#0A0A0A', paper:'#F2F2F2', gold:'#C8C8C8', teal:'#404040', rose:'#707070', lilac:'#9A9A9A', sage:'#585858', paperElevated:'#FFFFFF', border:'rgba(160,160,160,0.5)' },
+  };
   const cbToggle = document.getElementById('cbToggle');
+  const cbTypes = document.getElementById('cbTypes');
   function syncCbToggle(on){
     cbToggle.dataset.cb = on ? 'on' : 'off';
     cbToggle.setAttribute('aria-checked', on ? 'true' : 'false');
   }
+  function applyCbType(type){
+    const preset = CB_PRESETS[type] || CB_PRESETS.protan;
+    applyTheme(preset);
+    saveTheme(preset);
+    if(cbTypes){
+      Array.from(cbTypes.querySelectorAll('.cb-type-btn')).forEach(b=>{
+        b.setAttribute('aria-pressed', b.dataset.cbType === type ? 'true' : 'false');
+      });
+    }
+    localStorage.setItem(CB_TYPE_KEY, type);
+  }
+  if(cbTypes){
+    Object.keys(CB_PRESETS).forEach(type=>{
+      const btn = cbTypes.querySelector('[data-cb-type="' + type + '"]');
+      const sw = btn && btn.querySelector('.cb-swatch');
+      if(sw){
+        ['gold','rose','teal','lilac','sage'].forEach(k=>{
+          const dot = document.createElement('span');
+          dot.className = 'cb-dot';
+          dot.style.background = CB_PRESETS[type][k];
+          sw.appendChild(dot);
+        });
+      }
+    });
+  }
   const cbSaved = localStorage.getItem(CB_THEME_KEY) === 'on';
-  syncCbToggle(cbSaved);
-  if(cbSaved) applyTheme(CB_PRESET);
+  if(cbSaved){
+    syncCbToggle(true);
+    if(cbTypes) cbTypes.style.display = '';
+    applyCbType(localStorage.getItem(CB_TYPE_KEY) || 'protan');
+  } else {
+    syncCbToggle(false);
+    if(cbTypes) cbTypes.style.display = 'none';
+  }
   cbToggle.addEventListener('click', ()=>{
     const on = cbToggle.dataset.cb !== 'on';
     syncCbToggle(on);
     if(on){
-      localStorage.setItem(CB_THEME_KEY, 'on');
       if(!localStorage.getItem(CB_THEME_KEY + '-prev')){
         localStorage.setItem(CB_THEME_KEY + '-prev', JSON.stringify(loadTheme()));
       }
-      applyTheme(CB_PRESET);
-      saveTheme(CB_PRESET);
+      localStorage.setItem(CB_THEME_KEY, 'on');
+      if(cbTypes) cbTypes.style.display = '';
+      applyCbType(localStorage.getItem(CB_TYPE_KEY) || 'protan');
     } else {
       localStorage.removeItem(CB_THEME_KEY);
+      if(cbTypes) cbTypes.style.display = 'none';
       const prev = JSON.parse(localStorage.getItem(CB_THEME_KEY + '-prev') || 'null') || DEFAULT_THEME;
       localStorage.removeItem(CB_THEME_KEY + '-prev');
       applyTheme(prev);
       saveTheme(prev);
     }
   });
+  if(cbTypes){
+    cbTypes.addEventListener('click', e=>{
+      const btn = e.target.closest('.cb-type-btn');
+      if(!btn) return;
+      applyCbType(btn.dataset.cbType);
+    });
+  }
 
   document.getElementById('themeBtn').addEventListener('click', ()=>{
     if(!myProfile || myProfile.username !== 'samannleblanc') return;
@@ -3977,6 +4035,10 @@ document.addEventListener('DOMContentLoaded', ()=>{
   const themeResetBtn = document.getElementById('themeResetBtn');
   themeResetBtn.addEventListener('click', ()=>{
     localStorage.removeItem(CB_THEME_KEY);
+    localStorage.removeItem(CB_TYPE_KEY);
+    localStorage.removeItem(CB_THEME_KEY + '-prev');
+    syncCbToggle(false);
+    if(cbTypes) cbTypes.style.display = 'none';
     applyTheme(DEFAULT_THEME);
     saveTheme(DEFAULT_THEME);
     renderThemeColorGrid();
