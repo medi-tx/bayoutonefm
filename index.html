@@ -2773,6 +2773,10 @@
       <div class="cover-upload">
         <img id="f-cover-preview" class="cover-preview" style="display:none;">
         <div id="f-cover-empty" class="cover-preview-empty"></div>
+        <div class="cover-upload-btns">
+          <label>Upload photo<input type="file" accept="image/*" id="f-cover-file" style="display:none;"></label>
+          <button type="button" class="cover-remove-btn" id="f-cover-remove" style="display:none;">Remove photo</button>
+        </div>
       </div>
     </div>
     <div class="field">
@@ -6601,23 +6605,27 @@ async function enrichTracksFromItunes(tracks, listEl, statusEl){
 }
 
 let enrichClusterAbort = null;
+let enrichGlobalAbort = null;
 function enrichImportedSongs(clusterId, serviceLabel){
   if(enrichClusterAbort) enrichClusterAbort.aborted = true;
   const abort = { aborted: false };
   enrichClusterAbort = abort;
   const toEnrich = songs.filter(s => s.clusterId === clusterId && !s.coverArt);
-  if(toEnrich.length === 0) return;
+  enrichSongsFromSearch(toEnrich, abort, 50);
+}
+function enrichSongsFromSearch(toEnrich, abort, saveEvery){
+  if(!toEnrich.length) return;
   let done = 0;
   const BATCH = 3;
   const DELAY = 600;
   const total = toEnrich.length;
-  const startTime = Date.now();
+  saveEvery = saveEvery || 50;
   async function enrichLoop(){
     for(let i = 0; i < toEnrich.length; i += BATCH){
-      if(abort.aborted) return;
+      if(abort && abort.aborted) return;
       const batch = toEnrich.slice(i, i + BATCH);
       await Promise.all(batch.map(async (s) => {
-        if(abort.aborted) return;
+        if(abort && abort.aborted) return;
         const term = s.title + ' ' + (s.artists[0] || '');
         try{
           const dzHits = await deezerSearch(term, 1);
@@ -6639,7 +6647,7 @@ function enrichImportedSongs(clusterId, serviceLabel){
         }catch(e){}
         done++;
       }));
-      if(done % 50 === 0 || done === total){
+      if(done % saveEvery === 0 || done === total){
         save();
         render();
       }
@@ -6650,6 +6658,19 @@ function enrichImportedSongs(clusterId, serviceLabel){
   }
   enrichLoop();
 }
+function enrichAllMissingArtwork(){
+  if(enrichGlobalAbort) enrichGlobalAbort.aborted = true;
+  const abort = { aborted: false };
+  enrichGlobalAbort = abort;
+  const toEnrich = songs.filter(s => !s.archived && !s.coverArt && s.title);
+  if(toEnrich.length === 0) return;
+  enrichSongsFromSearch(toEnrich, abort, 20);
+}
+document.addEventListener('visibilitychange', ()=>{
+  if(!document.hidden && enrichGlobalAbort && enrichGlobalAbort.aborted){
+    enrichAllMissingArtwork();
+  }
+});
 let spotifyUrlDebounce = null;
 document.getElementById('spotify-url-input').addEventListener('input', e=>{
   clearTimeout(spotifyUrlDebounce);
@@ -8119,6 +8140,7 @@ document.getElementById('filterGenre').addEventListener('change', ()=>{ trackEve
 document.getElementById('filterMood').addEventListener('change', ()=>{ trackEvent('filter_mood'); render(); });
 document.getElementById('sortBy').addEventListener('change', ()=>{ trackEvent('sort_changed'); render(); });
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeModal(); });
+bindCoverInput('f-cover-file', 'f-cover', v=>currentCoverArt=v);
 
 bindCoverInput('p-photo-file', 'p-photo', v=>currentPersonPhoto=v);
 
@@ -9381,6 +9403,7 @@ async function loadAppForUser(user){
   updateViewUI();
   await loadStickers();
   render();
+  enrichAllMissingArtwork();
 
   const accepted = await ensureTermsAccepted(user);
   if(!accepted) return; // user chose to log out instead of accepting
