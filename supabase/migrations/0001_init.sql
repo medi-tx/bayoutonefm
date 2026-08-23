@@ -84,6 +84,8 @@ create table if not exists public.global_songs (
 alter table public.global_songs enable row level security;
 drop policy if exists "global_songs_select" on public.global_songs;
 create policy "global_songs_select" on public.global_songs for select to authenticated using (true);
+drop policy if exists "global_songs_update" on public.global_songs;
+create policy "global_songs_update" on public.global_songs for update to authenticated using (true);
 
 create or replace function public.upsert_global_song(
   p_title text, p_artist text,
