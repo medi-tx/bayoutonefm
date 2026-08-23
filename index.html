@@ -6013,6 +6013,7 @@ function showToast(msg, duration){
 let playlistImportedTracks = [];
 let playlistImportService = 'spotify';
 let playlistImportUrl = null;
+let playlistImportName = '';
 let playlistImportInProgress = false;
 let playlistImportLoadedUrl = null;
 let importProgressTimer = null;
@@ -6087,6 +6088,7 @@ document.getElementById('spotifyImportCancelBtn').addEventListener('click', func
     document.getElementById('spotifyImportConfirmBtn').disabled = true;
     document.getElementById('spotify-url-input').value = '';
     document.getElementById('importModalTitle').textContent = 'Import Playlist';
+    playlistImportName = '';
     this.textContent = 'Close';
     return;
   }
@@ -6482,6 +6484,7 @@ async function loadPlaylist(url){
       </div>`;
     renderPlaylistTrackList(listEl, tracks);
     document.getElementById('importModalTitle').textContent = playlistName;
+    playlistImportName = playlistName;
     confirmBtn.disabled = false;
     document.getElementById('spotifyImportCancelBtn').textContent = 'Cancel';
     playlistImportInProgress = false;
@@ -6680,7 +6683,7 @@ document.getElementById('spotifyImportConfirmBtn').addEventListener('click', ()=
       pinned: false,
       createdAt: now,
       clusterId,
-      clusterName: serviceLabel + ' Import',
+      clusterName: playlistImportName || (serviceLabel + ' Import'),
       title: t.title,
       artists: t.artists || [],
       album: t.album || '',
