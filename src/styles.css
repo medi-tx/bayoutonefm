@@ -776,7 +776,7 @@
     transition: color .15s ease, transform .15s ease;
     z-index:2;
   }
-  .pin-btn.pinned{ color:var(--teal); transform:scale(1.1); position:relative; }
+  .pin-btn.pinned{ color:var(--teal); transform:scale(1.1); }
   body.cb-on .pin-btn.pinned{ outline:2px solid var(--ink); outline-offset:2px; }
   body.cb-on .pin-btn.pinned::after{
     content:'✓'; position:absolute; top:-6px; right:-6px;
