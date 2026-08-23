@@ -5243,6 +5243,8 @@ async function togglePreview(id){
   if(!song) song = songs.find(s=>s.id === id) || (currentFriendSongs||[]).find(s=>s.id === id);
   if(!song) return;
   if(nowPlayingId && nowPlayingId !== id) setPreviewBtnState(nowPlayingId, 'idle');
+  previewFailed.delete(id);
+  previewInflight.delete(id);
   if(playPreviewNow(id, song)) return;
   setPreviewBtnState(id, 'loading');
   const url = await fetchPreviewUrl(song);
