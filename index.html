@@ -3408,9 +3408,49 @@
       <button type="button" class="add-music-option" id="addMusicAlbumBtn">+ Album</button>
       <button type="button" class="add-music-option" id="addMusicSongBtn">+ Song</button>
       <button type="button" class="add-music-option" id="addMusicSpotifyBtn">+ Playlist</button>
+      <button type="button" class="add-music-option" id="addMusicListenBtn">+ Listen</button>
     </div>
     <div class="modal-actions">
       <button class="btn-cancel" id="addMusicCancelBtn">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="listenOverlay">
+  <div class="modal" style="max-width:460px;">
+    <h3>🎧 Identify a song</h3>
+    <p class="auth-sub" style="margin-bottom:14px;">Play the song out loud, hit listen, and we'll figure out what it is.</p>
+
+    <div id="listenTokenSetup" style="display:none;">
+      <div class="field">
+        <label>AudD API token <a href="https://dashboard.audd.io/" target="_blank" rel="noopener" style="color:var(--rose); font-size:11px;">(get one free here ↗)</a></label>
+        <input type="text" id="listenTokenInput" placeholder="Paste your AudD api_token…" autocomplete="off">
+      </div>
+      <button class="add-btn auth-submit" id="listenTokenSaveBtn">Save token</button>
+      <p style="font-size:11px; color:var(--text-dim); margin-top:8px;">Shazam doesn't offer a public API, so identification runs on AudD — the closest alternative. Your token is stored only in this browser.</p>
+    </div>
+
+    <div id="listenMain" style="display:none; text-align:center;">
+      <button type="button" id="listenMicBtn" title="Listen for a song" style="width:96px;height:96px;border-radius:50%;border:none;background:radial-gradient(circle at 35% 30%, var(--rose), #7c2d3e);color:#fff;font-size:40px;cursor:pointer;margin:10px auto;display:block;">🎤</button>
+      <p id="listenStatus" style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text-dim);margin:12px 0 6px;">Tap the mic to start listening</p>
+      <div id="listenResultCard" style="display:none; text-align:left; border:1px solid rgba(var(--on-paper-rgb),0.18); border-radius:12px; padding:12px; margin:12px 0;">
+        <div style="display:flex; gap:12px; align-items:center;">
+          <img id="listenResultArt" src="" alt="" style="width:72px;height:72px;border-radius:8px;object-fit:cover;background:#222;">
+          <div style="min-width:0;">
+            <b id="listenResultTitle" style="display:block;"></b>
+            <span id="listenResultArtist" style="font-size:12px;color:var(--text-dim);"></span><br>
+            <span id="listenResultAlbum" style="font-size:11px;color:var(--text-dim);"></span>
+          </div>
+        </div>
+        <div class="modal-actions" style="margin-top:12px;">
+          <button class="btn-cancel" id="listenRetryBtn">Try again</button>
+          <button class="btn-save" id="listenAddBtn">+ Add to cataloguex</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-cancel" id="listenCloseBtn">Close</button>
     </div>
   </div>
 </div>
@@ -6042,6 +6082,171 @@ document.getElementById('addMusicCancelBtn').addEventListener('click', ()=>{
 });
 document.getElementById('addMusicOverlay').addEventListener('click', e=>{
   if(e.target.id === 'addMusicOverlay') document.getElementById('addMusicOverlay').classList.remove('open');
+});
+
+/* ---- LISTEN: identify a song playing out loud (AudD.io) ---- */
+const AUDD_TOKEN_KEY = 'bayoutonefm-audd-token';
+let listenMediaStream = null;
+let listenRecorder = null;
+let listenChunks = [];
+let listenTimer = null;
+
+function listenToken(){
+  try{ return localStorage.getItem(AUDD_TOKEN_KEY) || ''; }catch(e){ return ''; }
+}
+function openListenOverlay(){
+  trackEvent('open_listen');
+  const hasToken = !!listenToken();
+  document.getElementById('listenTokenSetup').style.display = hasToken ? 'none' : '';
+  document.getElementById('listenMain').style.display = hasToken ? '' : 'none';
+  document.getElementById('listenResultCard').style.display = 'none';
+  document.getElementById('listenStatus').textContent = 'Tap the mic to start listening';
+  document.getElementById('listenMicBtn').textContent = '🎤';
+  document.getElementById('listenOverlay').classList.add('open');
+}
+function closeListenOverlay(){
+  stopListenRecording(true);
+  document.getElementById('listenOverlay').classList.remove('open');
+}
+document.getElementById('addMusicListenBtn').addEventListener('click', ()=>{
+  document.getElementById('addMusicOverlay').classList.remove('open');
+  openListenOverlay();
+});
+document.getElementById('listenCloseBtn').addEventListener('click', closeListenOverlay);
+document.getElementById('listenOverlay').addEventListener('click', e=>{
+  if(e.target.id === 'listenOverlay') closeListenOverlay();
+});
+document.getElementById('listenTokenSaveBtn').addEventListener('click', ()=>{
+  const val = document.getElementById('listenTokenInput').value.trim();
+  if(!val){ alert('Paste your AudD api_token first.'); return; }
+  localStorage.setItem(AUDD_TOKEN_KEY, val);
+  document.getElementById('listenTokenSetup').style.display = 'none';
+  document.getElementById('listenMain').style.display = '';
+});
+function stopListenRecording(silent){
+  clearTimeout(listenTimer);
+  listenTimer = null;
+  if(listenRecorder && listenRecorder.state !== 'inactive'){
+    try{ listenRecorder.ondataavailable = null; listenRecorder.onstop = null; }catch(e){}
+    try{ listenRecorder.stop(); }catch(e){}
+  }
+  listenRecorder = null;
+  listenChunks = [];
+  if(listenMediaStream){
+    listenMediaStream.getTracks().forEach(t=>t.stop());
+    listenMediaStream = null;
+  }
+  const btn = document.getElementById('listenMicBtn');
+  btn.textContent = '🎤';
+  if(!silent){
+    // status text is set by the caller
+  }
+}
+async function identifyWithAudd(blob){
+  const form = new FormData();
+  form.append('api_token', listenToken());
+  form.append('audio', blob, 'clip.webm');
+  form.append('return', 'apple_music,spotify');
+  const res = await fetch('https://api.audd.io/', { method:'POST', body: form });
+  if(!res.ok) throw new Error('audd_http_' + res.status);
+  return await res.json();
+}
+async function runListen(){
+  const status = document.getElementById('listenStatus');
+  const micBtn = document.getElementById('listenMicBtn');
+  if(listenRecorder && listenRecorder.state === 'recording'){
+    stopListenRecording(false);
+    status.textContent = 'Tap the mic to start listening';
+    return;
+  }
+  document.getElementById('listenResultCard').style.display = 'none';
+  if(!navigator.mediaDevices || !window.MediaRecorder){
+    status.textContent = 'Your browser can\'t record audio — try Chrome or Safari.';
+    return;
+  }
+  try{
+    status.textContent = 'Asking for microphone…';
+    listenMediaStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation:false, noiseSuppression:false, autoGainControl:false } });
+  }catch(err){
+    status.textContent = 'Microphone blocked. Allow mic access and try again.';
+    return;
+  }
+  listenChunks = [];
+  try{
+    listenRecorder = new MediaRecorder(listenMediaStream);
+  }catch(e){
+    stopListenRecording(true);
+    status.textContent = 'Couldn\'t start recording in this browser.';
+    return;
+  }
+  listenRecorder.ondataavailable = e=>{ if(e.data && e.data.size) listenChunks.push(e.data); };
+  listenRecorder.onerror = ()=>{ stopListenRecording(true); status.textContent = 'Recording error — try again.'; };
+  micBtn.textContent = '⏹';
+  let secs = 7;
+  status.textContent = 'Listening… play the song! (' + secs + ')';
+  listenTimer = setInterval(()=>{
+    secs--;
+    if(secs > 0){
+      status.textContent = 'Listening… play the song! (' + secs + ')';
+      return;
+    }
+    clearInterval(listenTimer);
+    listenTimer = null;
+    const blob = new Blob(listenChunks, { type: (listenRecorder && listenRecorder.mimeType) || 'audio/webm' });
+    finishListen(blob);
+  }, 1000);
+  listenRecorder.start();
+}
+async function finishListen(blob){
+  const status = document.getElementById('listenStatus');
+  const micBtn = document.getElementById('listenMicBtn');
+  stopListenRecording(true);
+  status.textContent = 'Identifying…';
+  micBtn.textContent = '⏳';
+  try{
+    const data = await identifyWithAudd(blob);
+    const r = data && data.result;
+    if(!r || !r.title){
+      status.textContent = 'Couldn\'t catch it. Move closer to the speaker and try again.';
+      micBtn.textContent = '🎤';
+      return;
+    }
+    const am = r.apple_music || {};
+    document.getElementById('listenResultTitle').textContent = r.title;
+    document.getElementById('listenResultArtist').textContent = r.artist || '';
+    document.getElementById('listenResultAlbum').textContent = r.album || '';
+    const art = am.artworkUrl100 || '';
+    const artEl = document.getElementById('listenResultArt');
+    artEl.src = art ? art.replace(/\/\d+x\d+/, '/300x300') : '';
+    artEl.style.display = art ? '' : 'none';
+    window._listenHit = {
+      title: r.title,
+      artists: [r.artist].filter(Boolean),
+      album: r.album || '',
+      year: (r.release_date || '').slice(0,4) || '',
+      coverArt: art ? art.replace('/100x100','/300x300') : ''
+    };
+    status.textContent = 'Found it!';
+    micBtn.textContent = '✅';
+    document.getElementById('listenResultCard').style.display = '';
+  }catch(err){
+    console.error('AudD error:', err);
+    status.textContent = 'Identification failed — check your connection or token.';
+    micBtn.textContent = '🎤';
+  }
+}
+document.getElementById('listenMicBtn').addEventListener('click', runListen);
+document.getElementById('listenRetryBtn').addEventListener('click', ()=>{
+  document.getElementById('listenResultCard').style.display = 'none';
+  document.getElementById('listenMicBtn').textContent = '🎤';
+  document.getElementById('listenStatus').textContent = 'Tap the mic to start listening';
+});
+document.getElementById('listenAddBtn').addEventListener('click', ()=>{
+  const hit = window._listenHit;
+  if(!hit) return;
+  trackEvent('add_song_listen');
+  closeListenOverlay();
+  openModal(hit);
 });
 
 /* ---- TOAST NOTIFICATIONS ---- */
