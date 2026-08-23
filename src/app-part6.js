@@ -2,11 +2,6 @@
 /* =========================================================
    SUPABASE AUTH + CLOUD SYNC
    ========================================================= */
-const SUPABASE_URL = 'https://aaqlnjdooeydtaihhdia.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-window.sb = sb;
-
 let authMode = 'login'; // 'login' or 'signup'
 // Bump this string any time the Terms of Service / Privacy Policy materially change —
 // it forces every user (even ones who already accepted an older version) to re-consent.

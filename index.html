@@ -30,6 +30,11 @@
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#12141c">
 <script>
+const SUPABASE_URL = 'https://aaqlnjdooeydtaihhdia.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+window.sb = sb;
+
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
       navigator.serviceWorker.register('sw.js').catch(function () {});
@@ -9380,11 +9385,6 @@ document.getElementById('removeExamplesBtn').addEventListener('click', removeExa
 /* =========================================================
    SUPABASE AUTH + CLOUD SYNC
    ========================================================= */
-const SUPABASE_URL = 'https://aaqlnjdooeydtaihhdia.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-window.sb = sb;
-
 let authMode = 'login'; // 'login' or 'signup'
 // Bump this string any time the Terms of Service / Privacy Policy materially change —
 // it forces every user (even ones who already accepted an older version) to re-consent.
