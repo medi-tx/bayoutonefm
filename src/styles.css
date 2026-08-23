@@ -430,7 +430,8 @@
     flex-shrink:0;
   }
   .cluster-edit-toggle-btn:hover{ border-color:var(--rose); color:var(--rose); }
-  .cluster-edit-toggle-btn.active{ background:var(--rose); border-color:var(--rose); color:var(--ink); outline:2px solid var(--ink); outline-offset:2px; }
+  .cluster-edit-toggle-btn.active{ background:var(--rose); border-color:var(--rose); color:var(--ink); }
+  body.cb-on .cluster-edit-toggle-btn.active{ outline:2px solid var(--ink); outline-offset:2px; }
   .cluster-delete-btn{
     background:none;
     border:1px solid rgba(190,50,75,0.4);
@@ -570,6 +571,8 @@
     background:var(--rose);
     color:var(--ink);
     border-color:var(--rose);
+  }
+  body.cb-on .add-btn.secondary.active{
     outline:2px solid var(--ink);
     outline-offset:2px;
   }
@@ -588,6 +591,8 @@
     background:var(--rose);
     color:var(--ink);
     border-color:var(--rose);
+  }
+  body.cb-on .controls .add-btn.secondary.active{
     outline:2px solid var(--ink);
     outline-offset:2px;
   }
@@ -1240,8 +1245,8 @@
   }
   .person-card:hover .person-photo, .person-card:hover .person-photo-fallback{ border-color:var(--rose); transform:translateY(-2px); }
   .person-card.active .person-photo, .person-card.active .person-photo-fallback{ border-color:var(--rose); }
-  .person-card.active{ outline:2px solid var(--ink); outline-offset:2px; }
-  .person-card.active::after{
+  body.cb-on .person-card.active{ outline:2px solid var(--ink); outline-offset:2px; }
+  body.cb-on .person-card.active::after{
     content:'✓'; position:absolute; top:8px; right:8px;
     width:20px; height:20px; border-radius:50%;
     display:flex; align-items:center; justify-content:center;
@@ -1998,8 +2003,9 @@
     color:var(--on-paper); text-align:left; cursor:pointer; font-family:inherit;
   }
   .msg-friend-item:hover{ background:rgba(var(--on-paper-rgb),0.06); }
-  .msg-friend-item.active{ background:rgba(var(--on-paper-rgb),0.1); outline:2px solid var(--ink); outline-offset:-2px; }
-  .msg-friend-item.active::after{
+  .msg-friend-item.active{ background:rgba(var(--on-paper-rgb),0.1); }
+  body.cb-on .msg-friend-item.active{ outline:2px solid var(--ink); outline-offset:-2px; }
+  body.cb-on .msg-friend-item.active::after{
     content:'✓'; position:absolute; top:8px; right:8px;
     width:18px; height:18px; border-radius:50%;
     display:flex; align-items:center; justify-content:center;
