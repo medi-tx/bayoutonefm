@@ -11588,7 +11588,7 @@ async function loadFeed(){
         .map(s=>({ song:s, who: p?.username || 'friend', profile: p }));
     }catch(e){ return []; }
   }));
-  const all = [...results.flat()].sort((a,b)=>(b.song.createdAt||0)-(a.song.createdAt||0)).slice(0,80);
+  const all = [...results.flat()].sort((a,b)=>(b.song.createdAt||0)-(a.song.createdAt||0));
   const friendEntries = all;
   if(friendEntries.length > 0){
     try{
@@ -11611,8 +11611,8 @@ async function loadFeed(){
   const windowLabel = mixtapeDays === 7 ? 'week' : 'month';
   const friendCount = results.flat().length;
   const friendNote = friendCount === 0 ? ' · No friends have added songs yet' : ' · '+friendCount+' from '+friendIds.length+' friend'+(friendIds.length===1?'':'s');
-  if(countEl) countEl.textContent = `${all.length} song${all.length===1?'':'s'} in the last ${windowLabel}${friendNote}`;
   if(all.length === 0){
+    if(countEl) countEl.textContent = `0 songs in the last ${windowLabel}${friendNote}`;
     list.innerHTML = '<div class="feed-empty">Nothing new in the last ' + (mixtapeDays===7?'7 days':'30 days') + ' yet. Add some music or tell a friend to!</div>';
     return;
   }
@@ -11635,7 +11635,9 @@ async function loadFeed(){
     const tb = b._cluster ? (b.when||0) : (b.song?.createdAt||0);
     return tb - ta;
   });
-  list.innerHTML = grouped.map(e=> e._cluster ? feedImportCardHtml(e.clusterName, e.entries, e.who, e.profile, e.ownerId, e.when) : feedCardHtml(e)).join('');
+  if(countEl) countEl.textContent = `${grouped.length} item${grouped.length===1?'':'s'} (${all.length} song${all.length===1?'':'s'}) in the last ${windowLabel}${friendNote}`;
+  const displayed = grouped.slice(0, 80);
+  list.innerHTML = displayed.map(e=> e._cluster ? feedImportCardHtml(e.clusterName, e.entries, e.who, e.profile, e.ownerId, e.when) : feedCardHtml(e)).join('');
   list.__feedData = all;
 }
   
