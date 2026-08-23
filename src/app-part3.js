@@ -261,6 +261,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
   function syncCbToggle(on){
     cbToggle.dataset.cb = on ? 'on' : 'off';
     cbToggle.setAttribute('aria-checked', on ? 'true' : 'false');
+    document.body.classList.toggle('cb-on', on);
   }
   function applyCbType(type){
     const preset = CB_PRESETS[type] || CB_PRESETS.protan;
