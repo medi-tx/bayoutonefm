@@ -75,7 +75,7 @@ document.getElementById('myObsessedStrip').addEventListener('click', e=>{
     setTimeout(()=>card.classList.remove('obsessed-flash'), 2600);
   }
 });
-function catalogueBadgeStats(list){
+function cataloguexBadgeStats(list){
   const all = list || [];
   return {
     total: all.length,
@@ -102,7 +102,7 @@ function badgeDefs(){
   ];
 }
 function badgeChipsHtml(list){
-  const c = catalogueBadgeStats(list);
+  const c = cataloguexBadgeStats(list);
   return badgeDefs().map(b=>{
     const earned = b.check(c);
     return `<span class="badge-chip${earned ? '' : ' locked'}" title="${escapeAttr(b.label)}${earned ? '' : ' — not yet earned'}">${b.icon} ${escapeHtml(b.label)}</span>`;
@@ -196,13 +196,13 @@ document.getElementById('importDataBtn').addEventListener('click', ()=>{
 document.getElementById('importDataFile').addEventListener('change', async (e)=>{
   const file = e.target.files && e.target.files[0];
   if(!file){ return; }
-  if(!confirm('Importing a backup will MERGE it with your current catalogue (matched by id, keeping the newer version of each song/person). Nothing is deleted. Continue?')){
+  if(!confirm('Importing a backup will MERGE it with your current cataloguex (matched by id, keeping the newer version of each song/person). Nothing is deleted. Continue?')){
     e.target.value = ''; return;
   }
   try{
     const text = await file.text();
     const data = JSON.parse(text);
-    const incomingSongs = data.catalogue || data.songs || [];
+    const incomingSongs = data.cataloguex || data.songs || [];
     const incomingPeople = data.people || [];
     const incomingWish = data.wishlist || [];
     if(!Array.isArray(incomingSongs)) throw new Error('No songs found in this backup file.');
@@ -214,7 +214,7 @@ document.getElementById('importDataFile').addEventListener('change', async (e)=>
     if(typeof saveWishlist === 'function') saveWishlist();
     syncToSupabase();
     if(typeof render === 'function') render();
-    alert('Backup imported and merged. ' + songs.length + ' songs now in your catalogue (' + (songs.length - before) + ' added).');
+    alert('Backup imported and merged. ' + songs.length + ' songs now in your cataloguex (' + (songs.length - before) + ' added).');
   }catch(err){
     console.error(err);
     alert('Could not import backup: ' + err.message);
@@ -229,7 +229,7 @@ document.getElementById('exportDataBtn').addEventListener('click', async ()=>{
     app: 'Tonic.fm',
     user: { id: window.currentUserId, email: (sb.auth.currentUser && sb.auth.currentUser.email) || '' },
     profile: myProfile || {},
-    catalogue: songs || [],
+    cataloguex: songs || [],
     people: people || [],
     wishlist: wishlist || [],
     settings: { theme: loadTheme(), customThemes: loadCustomThemes() }

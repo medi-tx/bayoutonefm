@@ -2674,7 +2674,7 @@
   </div>
 
   <div class="controls">
-    <input type="text" id="search" placeholder="Search title, artist, or album…" aria-label="Search your catalogue">
+    <input type="text" id="search" placeholder="Search title, artist, or album…" aria-label="Search your cataloguex">
     <select id="filterGenre" aria-label="Filter by genre"><option value="">All genres</option></select>
     <select id="filterMood" aria-label="Filter by mood or tag"><option value="">All moods/tags</option></select>
     <select id="sortBy" aria-label="Sort songs">
@@ -2694,7 +2694,7 @@
     <button class="add-btn secondary" id="viewClustersBtn">View Stacks</button>
     <button class="add-btn" id="openAddMusic">+ Add Music</button>
     <button class="add-btn secondary" id="removeExamplesBtn">✕ Remove examples</button>
-    <button class="add-btn secondary danger" id="resetCatalogueBtn" title="Reset your cataloguex back to the built-in examples">⚠ Reset cataloguex</button>
+    <button class="add-btn secondary danger" id="resetCataloguexBtn" title="Reset your cataloguex back to the built-in examples">⚠ Reset cataloguex</button>
     <button class="add-btn" id="openWish" style="display:none;">+ Add song</button>
   </div>
 
@@ -2963,7 +2963,7 @@
 
 <div class="overlay" id="dupOverlay">
   <div class="modal dup-modal">
-    <h3 id="dupTitle">⚠️ Already in your catalogue</h3>
+    <h3 id="dupTitle">⚠️ Already in your cataloguex</h3>
     <div id="dupBody"></div>
     <div class="modal-actions">
       <button class="btn-cancel" id="dupCancelBtn">Cancel</button>
@@ -3162,7 +3162,7 @@
     <p class="profile-sotd-count" id="otherProfileSotdCount" style="display:none;"></p>
     <div class="profile-actions">
       <button type="button" id="otherProfileFriendBtn">+ Add friend</button>
-      <button type="button" id="otherProfileCatalogueBtn" style="display:none;">View cataloguex →</button>
+      <button type="button" id="otherProfileCataloguexBtn" style="display:none;">View cataloguex →</button>
     </div>
     <div class="modal-actions">
       <button class="btn-cancel" id="otherProfileCloseBtn">Close</button>
@@ -5446,7 +5446,7 @@ function stopPreview(){
 function markPlayed(song){
   if(!song || !song.id) return;
   const idx = songs.findIndex(s=>s.id === song.id);
-  if(idx === -1) return; // only record plays for real catalogue songs
+  if(idx === -1) return; // only record plays for real cataloguex songs
   songs[idx].lastPlayed = Date.now();
   save();
   syncToSupabase();
@@ -5784,11 +5784,11 @@ function showDupModal(duplicates, onConfirm){
   const body = document.getElementById('dupBody');
   const showCount = Math.min(duplicates.length, 50);
   document.getElementById('dupTitle').textContent = duplicates.length === 1
-    ? '⚠️ Already in your catalogue'
-    : `⚠️ ${duplicates.length} songs already in your catalogue`;
+    ? '⚠️ Already in your cataloguex'
+    : `⚠️ ${duplicates.length} songs already in your cataloguex`;
   body.innerHTML = '<p class="dup-body">' + (duplicates.length === 1
-    ? 'This song is already in your catalogue. Add it again?'
-    : `${duplicates.length} songs are already in your catalogue. Add them again?`) + '</p>' +
+    ? 'This song is already in your cataloguex. Add it again?'
+    : `${duplicates.length} songs are already in your cataloguex. Add them again?`) + '</p>' +
     duplicates.slice(0, showCount).map(s=>{
       const cover = s.coverArt
         ? `<img src="${escapeAttr(s.coverArt)}" alt="Album cover">`
@@ -5862,7 +5862,7 @@ function handleSave(){
 }
 function finishSave(data){
   trackEvent(editingId ? 'edit_song' : 'add_song_single');
-  const oldStats = catalogueBadgeStats(songs);
+  const oldStats = cataloguexBadgeStats(songs);
   const oldBadges = new Set(badgeDefs().filter(b=>b.check(oldStats)).map(b=>b.id));
   if(editingId){
     const idx = songs.findIndex(s=>s.id===editingId);
@@ -5894,7 +5894,7 @@ function finishSave(data){
   closeModal();
   render();
   if(document.getElementById('feedOverlay').classList.contains('open')) loadFeed();
-  const newStats = catalogueBadgeStats(songs);
+  const newStats = cataloguexBadgeStats(songs);
   badgeDefs().forEach(b=>{
     if(!oldBadges.has(b.id) && b.check(newStats)){
       sendNotif(currentUserId, 'badge', 'You earned a badge: ' + b.icon + ' ' + b.label);
@@ -6206,7 +6206,7 @@ function updateViewUI(){
   document.getElementById('openCluster').style.display = otherMode ? 'none' : '';
   document.getElementById('viewClustersBtn').style.display = otherMode ? 'none' : '';
   updateRemoveExamplesBtn();
-  document.getElementById('resetCatalogueBtn').style.display = otherMode ? 'none' : '';
+  document.getElementById('resetCataloguexBtn').style.display = otherMode ? 'none' : '';
   document.getElementById('openWish').style.display = viewingWishlist ? '' : 'none';
   document.getElementById('peopleSection').style.display = viewingWishlist ? 'none' : '';
   document.getElementById('filterGenre').style.display = (viewingWishlist || viewingTierBoard || viewingTimeline) ? 'none' : '';
@@ -7280,7 +7280,7 @@ document.getElementById('spotifyImportConfirmBtn').addEventListener('click', ()=
         const importedCount = newSongs.length;
         const skippedList = dupes.slice(0, 5).map(d => `"${d.title}"`).join(', ');
         const moreText = dupes.length > 5 ? ` and ${dupes.length - 5} more` : '';
-        showToast(`Imported ${importedCount} new song${importedCount === 1 ? '' : 's'}. Skipped ${dupes.length} already in your catalogue: ${skippedList}${moreText}`);
+        showToast(`Imported ${importedCount} new song${importedCount === 1 ? '' : 's'}. Skipped ${dupes.length} already in your cataloguex: ${skippedList}${moreText}`);
       }
     };
     doImportSave();
@@ -7876,7 +7876,7 @@ function updateOtherProfileFriendBtn(userId){
   else if(isRequested) btnLabel = 'Requested';
   btn.disabled = btnDisabled;
   btn.textContent = btnLabel;
-  const catBtn = document.getElementById('otherProfileCatalogueBtn');
+  const catBtn = document.getElementById('otherProfileCataloguexBtn');
   if(isFriend && p && p.username){
     catBtn.style.display = '';
     catBtn.dataset.username = p.username;
@@ -7884,13 +7884,13 @@ function updateOtherProfileFriendBtn(userId){
     catBtn.style.display = 'none';
   }
 }
-document.getElementById('otherProfileCatalogueBtn').addEventListener('click', ()=>{
-  trackEvent('view_friend_catalogue');
-  const username = document.getElementById('otherProfileCatalogueBtn').dataset.username;
+document.getElementById('otherProfileCataloguexBtn').addEventListener('click', ()=>{
+  trackEvent('view_friend_cataloguex');
+  const username = document.getElementById('otherProfileCataloguexBtn').dataset.username;
   if(!username) return;
   document.getElementById('otherProfileOverlay').classList.remove('open');
   document.getElementById('discoverOverlay').classList.remove('open');
-  goToFriendCatalogue(username);
+  goToFriendCataloguex(username);
 });
 document.getElementById('otherProfileFriendBtn').addEventListener('click', async ()=>{
   trackEvent('add_friend_from_profile');
@@ -7945,10 +7945,10 @@ function usernameFromRoute(){
   const m = location.hash.match(/^#\/u\/([^/?#]+)/);
   return m ? decodeURIComponent(m[1]) : null;
 }
-function goToFriendCatalogue(username){
+function goToFriendCataloguex(username){
   location.hash = '/u/' + encodeURIComponent(username);
 }
-function closeFriendCatalogue(){
+function closeFriendCataloguex(){
   document.getElementById('friendWrap').style.display = 'none';
   document.getElementById('appWrap').style.display = '';
   var sl = document.getElementById('stickerLayer');
@@ -7964,7 +7964,7 @@ document.getElementById('friendBackBtn').addEventListener('click', ()=>{
     return;
   }
   history.pushState('', document.title, location.pathname + location.search);
-  closeFriendCatalogue();
+  closeFriendCataloguex();
 });
 
 async function fetchProfileByUsername(username){
@@ -8173,7 +8173,7 @@ async function loadFriendLeaderboard(){
   });
   const nameFor = id => { if(id === currentUserId) return 'you'; const p = allProfilesCache.find(x=>x.user_id===id); return p ? p.username : 'someone'; };
   const rows = [];
-  if(mostProlific) rows.push({ emoji:'🎧', title:'Most Prolific', name:nameFor(mostProlific.id), detail:`${mostProlific.songs.length} tracks catalogued` });
+  if(mostProlific) rows.push({ emoji:'🎧', title:'Most Prolific', name:nameFor(mostProlific.id), detail:`${mostProlific.songs.length} tracks cataloguexd` });
   if(pickiest) rows.push({ emoji:'🔥', title:'Pickiest Curator', name:nameFor(pickiest.id), detail:`${Math.round(pickiest.ratio*100)}% S-tier picks` });
   if(twin) rows.push({ emoji:'🧬', title:'Your Taste Twin', name:nameFor(twin.id), detail:`${twin.percent}% match with you` });
   if(!rows.length){ list.innerHTML = '<p class="profile-empty-note">Not enough data yet — add a few tracks and check back!</p>'; return; }
@@ -8518,7 +8518,7 @@ function updateFriendAddBtn(userId, p){
     if(!ok) return;
   };
 }
-async function openFriendCatalogue(username){
+async function openFriendCataloguex(username){
   document.getElementById('appWrap').style.display = 'none';
   document.getElementById('friendWrap').style.display = '';
   var sl = document.getElementById('stickerLayer');
@@ -8569,7 +8569,7 @@ async function openFriendCatalogue(username){
   if(!isSelf) renderTasteMatch(songs, friendSongs);
 }
 
-async function openPublicCatalogue(username){
+async function openPublicCataloguex(username){
   document.getElementById('appWrap').style.display = 'none';
   document.getElementById('friendWrap').style.display = '';
   var sl = document.getElementById('stickerLayer');
@@ -8639,11 +8639,11 @@ document.getElementById('friendObsessedStrip').addEventListener('click', e=>{
 function checkRoute(){
   const username = usernameFromRoute();
   if(username && currentUserId){
-    openFriendCatalogue(username);
+    openFriendCataloguex(username);
   } else if(username && !currentUserId){
-    openPublicCatalogue(username);
+    openPublicCataloguex(username);
   } else if(!username && document.getElementById('friendWrap').style.display !== 'none'){
-    closeFriendCatalogue();
+    closeFriendCataloguex();
   }
 }
 window.addEventListener('hashchange', checkRoute);
@@ -9775,7 +9775,7 @@ async function doSync(attempt, startRevision){
     if(JSON.stringify(payload).length < 900000){
       await pushUserData(payload);
     } else {
-      // Large catalogue: save people+wishlist first, then merge songs with remote
+      // Large cataloguex: save people+wishlist first, then merge songs with remote
       await pushUserData({ user_id: currentUserId, people, wishlist, updated_at: updated });
       const { data: existing } = await sb.from('user_data').select('songs').eq('user_id', currentUserId).maybeSingle();
       const remoteOnly = (((existing && existing.songs) || [])).filter(s => !localIds.has(s.id));
@@ -9844,8 +9844,8 @@ function syncToSupabase(){
 
 let currentUserId = null;
 window.currentUserId = currentUserId;
-window.resetCatalogue = async function(){
-  console.log('Resetting catalogue for user:', currentUserId);
+window.resetCataloguex = async function(){
+  console.log('Resetting cataloguex for user:', currentUserId);
   localStorage.removeItem(STORAGE_KEY);
   localStorage.removeItem(PEOPLE_KEY);
   localStorage.removeItem(WISHLIST_KEY);
@@ -9952,7 +9952,7 @@ async function loadAppForUser(user){
     return true;
   });
   if(wishlistBefore !== wishlist.length){
-    console.warn(`Cleaned ${wishlistBefore - wishlist.length} catalogue songs from wishlist`);
+    console.warn(`Cleaned ${wishlistBefore - wishlist.length} cataloguex songs from wishlist`);
     syncToSupabase();
   }
 
@@ -10414,8 +10414,8 @@ document.getElementById('songSearchResults').addEventListener('click', e=>{
   selectItunesSong(row.dataset.trackId);
 });
 
-document.getElementById('resetCatalogueBtn').addEventListener('click', ()=>{
-  trackEvent('reset_catalogue');
+document.getElementById('resetCataloguexBtn').addEventListener('click', ()=>{
+  trackEvent('reset_cataloguex');
   const ok = confirm("Reset your cataloguex back to the built-in examples? This will delete every song and person you've added, along with all the details you've put in — tiers, notes, tags, and everything else. This can't be undone.");
   if(!ok) return;
   songs = [];
@@ -10460,7 +10460,7 @@ sb.auth.getSession().then(({ data: { session } })=>{
   } else {
     const username = usernameFromRoute();
     if(username){
-      openPublicCatalogue(username);
+      openPublicCataloguex(username);
     } else {
       showAuthScreen();
     }
@@ -10546,7 +10546,7 @@ document.getElementById('myObsessedStrip').addEventListener('click', e=>{
     setTimeout(()=>card.classList.remove('obsessed-flash'), 2600);
   }
 });
-function catalogueBadgeStats(list){
+function cataloguexBadgeStats(list){
   const all = list || [];
   return {
     total: all.length,
@@ -10573,7 +10573,7 @@ function badgeDefs(){
   ];
 }
 function badgeChipsHtml(list){
-  const c = catalogueBadgeStats(list);
+  const c = cataloguexBadgeStats(list);
   return badgeDefs().map(b=>{
     const earned = b.check(c);
     return `<span class="badge-chip${earned ? '' : ' locked'}" title="${escapeAttr(b.label)}${earned ? '' : ' — not yet earned'}">${b.icon} ${escapeHtml(b.label)}</span>`;
@@ -10667,13 +10667,13 @@ document.getElementById('importDataBtn').addEventListener('click', ()=>{
 document.getElementById('importDataFile').addEventListener('change', async (e)=>{
   const file = e.target.files && e.target.files[0];
   if(!file){ return; }
-  if(!confirm('Importing a backup will MERGE it with your current catalogue (matched by id, keeping the newer version of each song/person). Nothing is deleted. Continue?')){
+  if(!confirm('Importing a backup will MERGE it with your current cataloguex (matched by id, keeping the newer version of each song/person). Nothing is deleted. Continue?')){
     e.target.value = ''; return;
   }
   try{
     const text = await file.text();
     const data = JSON.parse(text);
-    const incomingSongs = data.catalogue || data.songs || [];
+    const incomingSongs = data.cataloguex || data.songs || [];
     const incomingPeople = data.people || [];
     const incomingWish = data.wishlist || [];
     if(!Array.isArray(incomingSongs)) throw new Error('No songs found in this backup file.');
@@ -10685,7 +10685,7 @@ document.getElementById('importDataFile').addEventListener('change', async (e)=>
     if(typeof saveWishlist === 'function') saveWishlist();
     syncToSupabase();
     if(typeof render === 'function') render();
-    alert('Backup imported and merged. ' + songs.length + ' songs now in your catalogue (' + (songs.length - before) + ' added).');
+    alert('Backup imported and merged. ' + songs.length + ' songs now in your cataloguex (' + (songs.length - before) + ' added).');
   }catch(err){
     console.error(err);
     alert('Could not import backup: ' + err.message);
@@ -10700,7 +10700,7 @@ document.getElementById('exportDataBtn').addEventListener('click', async ()=>{
     app: 'Tonic.fm',
     user: { id: window.currentUserId, email: (sb.auth.currentUser && sb.auth.currentUser.email) || '' },
     profile: myProfile || {},
-    catalogue: songs || [],
+    cataloguex: songs || [],
     people: people || [],
     wishlist: wishlist || [],
     settings: { theme: loadTheme(), customThemes: loadCustomThemes() }

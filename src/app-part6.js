@@ -397,7 +397,7 @@ async function doSync(attempt, startRevision){
     if(JSON.stringify(payload).length < 900000){
       await pushUserData(payload);
     } else {
-      // Large catalogue: save people+wishlist first, then merge songs with remote
+      // Large cataloguex: save people+wishlist first, then merge songs with remote
       await pushUserData({ user_id: currentUserId, people, wishlist, updated_at: updated });
       const { data: existing } = await sb.from('user_data').select('songs').eq('user_id', currentUserId).maybeSingle();
       const remoteOnly = (((existing && existing.songs) || [])).filter(s => !localIds.has(s.id));
@@ -466,8 +466,8 @@ function syncToSupabase(){
 
 let currentUserId = null;
 window.currentUserId = currentUserId;
-window.resetCatalogue = async function(){
-  console.log('Resetting catalogue for user:', currentUserId);
+window.resetCataloguex = async function(){
+  console.log('Resetting cataloguex for user:', currentUserId);
   localStorage.removeItem(STORAGE_KEY);
   localStorage.removeItem(PEOPLE_KEY);
   localStorage.removeItem(WISHLIST_KEY);
@@ -574,7 +574,7 @@ async function loadAppForUser(user){
     return true;
   });
   if(wishlistBefore !== wishlist.length){
-    console.warn(`Cleaned ${wishlistBefore - wishlist.length} catalogue songs from wishlist`);
+    console.warn(`Cleaned ${wishlistBefore - wishlist.length} cataloguex songs from wishlist`);
     syncToSupabase();
   }
 
@@ -1036,8 +1036,8 @@ document.getElementById('songSearchResults').addEventListener('click', e=>{
   selectItunesSong(row.dataset.trackId);
 });
 
-document.getElementById('resetCatalogueBtn').addEventListener('click', ()=>{
-  trackEvent('reset_catalogue');
+document.getElementById('resetCataloguexBtn').addEventListener('click', ()=>{
+  trackEvent('reset_cataloguex');
   const ok = confirm("Reset your cataloguex back to the built-in examples? This will delete every song and person you've added, along with all the details you've put in — tiers, notes, tags, and everything else. This can't be undone.");
   if(!ok) return;
   songs = [];
@@ -1082,7 +1082,7 @@ sb.auth.getSession().then(({ data: { session } })=>{
   } else {
     const username = usernameFromRoute();
     if(username){
-      openPublicCatalogue(username);
+      openPublicCataloguex(username);
     } else {
       showAuthScreen();
     }

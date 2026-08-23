@@ -1836,7 +1836,7 @@ function stopPreview(){
 function markPlayed(song){
   if(!song || !song.id) return;
   const idx = songs.findIndex(s=>s.id === song.id);
-  if(idx === -1) return; // only record plays for real catalogue songs
+  if(idx === -1) return; // only record plays for real cataloguex songs
   songs[idx].lastPlayed = Date.now();
   save();
   syncToSupabase();
@@ -2174,11 +2174,11 @@ function showDupModal(duplicates, onConfirm){
   const body = document.getElementById('dupBody');
   const showCount = Math.min(duplicates.length, 50);
   document.getElementById('dupTitle').textContent = duplicates.length === 1
-    ? '⚠️ Already in your catalogue'
-    : `⚠️ ${duplicates.length} songs already in your catalogue`;
+    ? '⚠️ Already in your cataloguex'
+    : `⚠️ ${duplicates.length} songs already in your cataloguex`;
   body.innerHTML = '<p class="dup-body">' + (duplicates.length === 1
-    ? 'This song is already in your catalogue. Add it again?'
-    : `${duplicates.length} songs are already in your catalogue. Add them again?`) + '</p>' +
+    ? 'This song is already in your cataloguex. Add it again?'
+    : `${duplicates.length} songs are already in your cataloguex. Add them again?`) + '</p>' +
     duplicates.slice(0, showCount).map(s=>{
       const cover = s.coverArt
         ? `<img src="${escapeAttr(s.coverArt)}" alt="Album cover">`
@@ -2252,7 +2252,7 @@ function handleSave(){
 }
 function finishSave(data){
   trackEvent(editingId ? 'edit_song' : 'add_song_single');
-  const oldStats = catalogueBadgeStats(songs);
+  const oldStats = cataloguexBadgeStats(songs);
   const oldBadges = new Set(badgeDefs().filter(b=>b.check(oldStats)).map(b=>b.id));
   if(editingId){
     const idx = songs.findIndex(s=>s.id===editingId);
@@ -2284,7 +2284,7 @@ function finishSave(data){
   closeModal();
   render();
   if(document.getElementById('feedOverlay').classList.contains('open')) loadFeed();
-  const newStats = catalogueBadgeStats(songs);
+  const newStats = cataloguexBadgeStats(songs);
   badgeDefs().forEach(b=>{
     if(!oldBadges.has(b.id) && b.check(newStats)){
       sendNotif(currentUserId, 'badge', 'You earned a badge: ' + b.icon + ' ' + b.label);
@@ -2596,7 +2596,7 @@ function updateViewUI(){
   document.getElementById('openCluster').style.display = otherMode ? 'none' : '';
   document.getElementById('viewClustersBtn').style.display = otherMode ? 'none' : '';
   updateRemoveExamplesBtn();
-  document.getElementById('resetCatalogueBtn').style.display = otherMode ? 'none' : '';
+  document.getElementById('resetCataloguexBtn').style.display = otherMode ? 'none' : '';
   document.getElementById('openWish').style.display = viewingWishlist ? '' : 'none';
   document.getElementById('peopleSection').style.display = viewingWishlist ? 'none' : '';
   document.getElementById('filterGenre').style.display = (viewingWishlist || viewingTierBoard || viewingTimeline) ? 'none' : '';
@@ -3670,7 +3670,7 @@ document.getElementById('spotifyImportConfirmBtn').addEventListener('click', ()=
         const importedCount = newSongs.length;
         const skippedList = dupes.slice(0, 5).map(d => `"${d.title}"`).join(', ');
         const moreText = dupes.length > 5 ? ` and ${dupes.length - 5} more` : '';
-        showToast(`Imported ${importedCount} new song${importedCount === 1 ? '' : 's'}. Skipped ${dupes.length} already in your catalogue: ${skippedList}${moreText}`);
+        showToast(`Imported ${importedCount} new song${importedCount === 1 ? '' : 's'}. Skipped ${dupes.length} already in your cataloguex: ${skippedList}${moreText}`);
       }
     };
     doImportSave();

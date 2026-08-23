@@ -197,7 +197,7 @@ function updateOtherProfileFriendBtn(userId){
   else if(isRequested) btnLabel = 'Requested';
   btn.disabled = btnDisabled;
   btn.textContent = btnLabel;
-  const catBtn = document.getElementById('otherProfileCatalogueBtn');
+  const catBtn = document.getElementById('otherProfileCataloguexBtn');
   if(isFriend && p && p.username){
     catBtn.style.display = '';
     catBtn.dataset.username = p.username;
@@ -205,13 +205,13 @@ function updateOtherProfileFriendBtn(userId){
     catBtn.style.display = 'none';
   }
 }
-document.getElementById('otherProfileCatalogueBtn').addEventListener('click', ()=>{
-  trackEvent('view_friend_catalogue');
-  const username = document.getElementById('otherProfileCatalogueBtn').dataset.username;
+document.getElementById('otherProfileCataloguexBtn').addEventListener('click', ()=>{
+  trackEvent('view_friend_cataloguex');
+  const username = document.getElementById('otherProfileCataloguexBtn').dataset.username;
   if(!username) return;
   document.getElementById('otherProfileOverlay').classList.remove('open');
   document.getElementById('discoverOverlay').classList.remove('open');
-  goToFriendCatalogue(username);
+  goToFriendCataloguex(username);
 });
 document.getElementById('otherProfileFriendBtn').addEventListener('click', async ()=>{
   trackEvent('add_friend_from_profile');
@@ -266,10 +266,10 @@ function usernameFromRoute(){
   const m = location.hash.match(/^#\/u\/([^/?#]+)/);
   return m ? decodeURIComponent(m[1]) : null;
 }
-function goToFriendCatalogue(username){
+function goToFriendCataloguex(username){
   location.hash = '/u/' + encodeURIComponent(username);
 }
-function closeFriendCatalogue(){
+function closeFriendCataloguex(){
   document.getElementById('friendWrap').style.display = 'none';
   document.getElementById('appWrap').style.display = '';
   var sl = document.getElementById('stickerLayer');
@@ -285,7 +285,7 @@ document.getElementById('friendBackBtn').addEventListener('click', ()=>{
     return;
   }
   history.pushState('', document.title, location.pathname + location.search);
-  closeFriendCatalogue();
+  closeFriendCataloguex();
 });
 
 async function fetchProfileByUsername(username){
@@ -494,7 +494,7 @@ async function loadFriendLeaderboard(){
   });
   const nameFor = id => { if(id === currentUserId) return 'you'; const p = allProfilesCache.find(x=>x.user_id===id); return p ? p.username : 'someone'; };
   const rows = [];
-  if(mostProlific) rows.push({ emoji:'🎧', title:'Most Prolific', name:nameFor(mostProlific.id), detail:`${mostProlific.songs.length} tracks catalogued` });
+  if(mostProlific) rows.push({ emoji:'🎧', title:'Most Prolific', name:nameFor(mostProlific.id), detail:`${mostProlific.songs.length} tracks cataloguexd` });
   if(pickiest) rows.push({ emoji:'🔥', title:'Pickiest Curator', name:nameFor(pickiest.id), detail:`${Math.round(pickiest.ratio*100)}% S-tier picks` });
   if(twin) rows.push({ emoji:'🧬', title:'Your Taste Twin', name:nameFor(twin.id), detail:`${twin.percent}% match with you` });
   if(!rows.length){ list.innerHTML = '<p class="profile-empty-note">Not enough data yet — add a few tracks and check back!</p>'; return; }
@@ -839,7 +839,7 @@ function updateFriendAddBtn(userId, p){
     if(!ok) return;
   };
 }
-async function openFriendCatalogue(username){
+async function openFriendCataloguex(username){
   document.getElementById('appWrap').style.display = 'none';
   document.getElementById('friendWrap').style.display = '';
   var sl = document.getElementById('stickerLayer');
@@ -890,7 +890,7 @@ async function openFriendCatalogue(username){
   if(!isSelf) renderTasteMatch(songs, friendSongs);
 }
 
-async function openPublicCatalogue(username){
+async function openPublicCataloguex(username){
   document.getElementById('appWrap').style.display = 'none';
   document.getElementById('friendWrap').style.display = '';
   var sl = document.getElementById('stickerLayer');
@@ -960,11 +960,11 @@ document.getElementById('friendObsessedStrip').addEventListener('click', e=>{
 function checkRoute(){
   const username = usernameFromRoute();
   if(username && currentUserId){
-    openFriendCatalogue(username);
+    openFriendCataloguex(username);
   } else if(username && !currentUserId){
-    openPublicCatalogue(username);
+    openPublicCataloguex(username);
   } else if(!username && document.getElementById('friendWrap').style.display !== 'none'){
-    closeFriendCatalogue();
+    closeFriendCataloguex();
   }
 }
 window.addEventListener('hashchange', checkRoute);
