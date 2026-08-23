@@ -5099,6 +5099,7 @@ document.getElementById('shareCopyBtn').addEventListener('click', async ()=>{
 
 /* ---- 30-second audio previews (official Apple Music previews via iTunes Search API) ---- */
 const previewCache = {};
+const previewFailed = new Set();
 let previewAudio = null;
 let nowPlayingId = null;
 const feedSongCache = {};
@@ -5141,9 +5142,10 @@ function setPreviewBtnState(id, state){
 async function fetchPreviewUrl(song){
   const id = song && song.id;
   if(id === null || id === undefined) return null;
+  if(previewFailed.has(id)) return null;
   if(Object.prototype.hasOwnProperty.call(previewCache, id)) return previewCache[id];
   if(song.previewUrl){ previewCache[id] = song.previewUrl; return song.previewUrl; }
-  const term = [song.title, (song.artists||[])[0]].filter(Boolean).join(' ');
+  const term = [song.title, (song.artists||[])[0]].filter(Boolean).join(' ').replace(/\//g, ' ');
   let url = null;
   try{
     const dzRows = await deezerSearch(term, 10) || [];
@@ -5166,18 +5168,19 @@ async function fetchPreviewUrl(song){
     }catch(err){}
   }
   if(url) previewCache[id] = url;
+  else previewFailed.add(id);
   if(url && id === 'sotd' && typeof window.sotdPersistPreview === 'function') window.sotdPersistPreview(url);
   return url;
 }
 function prefetchPreviews(songList){
   if(!songList || !songList.length) return;
-  const todo = songList.filter(s=> s && s.id && !Object.prototype.hasOwnProperty.call(previewCache, s.id) && !s.previewUrl);
+  const todo = songList.filter(s=> s && s.id && !previewFailed.has(s.id) && !Object.prototype.hasOwnProperty.call(previewCache, s.id) && !s.previewUrl);
   if(!todo.length) return;
   let idx = 0;
   function next(){
     if(idx >= todo.length) return;
     const s = todo[idx++];
-    fetchPreviewUrl(s).catch(()=>{}).then(()=> setTimeout(next, 400));
+    fetchPreviewUrl(s).catch(()=>{}).then(()=> setTimeout(next, 1500));
   }
   next();
 }
@@ -6650,7 +6653,7 @@ function enrichSongsFromSearch(toEnrich, abort, saveEvery){
         save();
         render();
       }
-      await new Promise(r => setTimeout(r, 800));
+      await new Promise(r => setTimeout(r, 1500));
     }
     save();
     render();
@@ -9408,7 +9411,7 @@ async function loadAppForUser(user){
   updateViewUI();
   await loadStickers();
   render();
-  enrichAllMissingArtwork();
+  setTimeout(()=> enrichAllMissingArtwork(), 10000);
 
   const accepted = await ensureTermsAccepted(user);
   if(!accepted) return; // user chose to log out instead of accepting
