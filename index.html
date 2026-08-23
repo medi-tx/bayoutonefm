@@ -9566,9 +9566,10 @@ document.getElementById('recoverySubmitBtn').addEventListener('click', async ()=
   if(session && session.user) setTimeout(()=>loadAppForUser(session.user), 900);
 });
 
-document.getElementById('logoutBtn').addEventListener('click', async ()=>{
-  trackEvent('logout');
-  myProfile = null;
+  document.getElementById('logoutBtn').addEventListener('click', async ()=>{
+    trackEvent('logout');
+    unsubscribeNotifications();
+    myProfile = null;
   localStorage.removeItem(THEME_KEY);
   localStorage.removeItem(CUSTOM_THEMES_KEY);
   await sb.auth.signOut();
@@ -9963,6 +9964,7 @@ async function loadAppForUser(user){
     openOnboarding();
   }
   updateRemoveExamplesBtn();
+  subscribeNotifications();
 }
 
 /* ---- Apple Music / iTunes search (album + song lookup) ----
@@ -10412,6 +10414,7 @@ sb.auth.onAuthStateChange((event, session)=>{
     localStorage.removeItem(CUSTOM_THEMES_KEY);
     applyTheme(DEFAULT_THEME);
     showSotdScheduleBtn();
+    unsubscribeNotifications();
     showAuthScreen();
   }
 });
@@ -11183,8 +11186,13 @@ document.getElementById('passwordSaveBtn').addEventListener('click', async ()=>{
      create policy "notifications_select_own" on public.notifications for select to authenticated using (user_id = auth.uid());
      drop policy if exists "notifications_insert" on public.notifications;
      create policy "notifications_insert" on public.notifications for insert to authenticated with check (user_id <> auth.uid());
-      drop policy if exists "notifications_update_own" on public.notifications;
-      create policy "notifications_update_own" on public.notifications for update to authenticated using (user_id = auth.uid());
+       drop policy if exists "notifications_update_own" on public.notifications;
+       create policy "notifications_update_own" on public.notifications for update to authenticated using (user_id = auth.uid());
+
+       -- Realtime: required so postgres_changes events fire for this table
+       alter publication if exists supabase_realtime add table public.notifications;
+       alter table public.notifications replica identity full;
+
 
       create table if not exists public.feed_reactions (
         id uuid primary key default gen_random_uuid(),
@@ -12097,6 +12105,73 @@ document.getElementById('notifOverlay').addEventListener('click', e=>{
   if(e.target.id === 'notifOverlay') document.getElementById('notifOverlay').classList.remove('open');
 });
 document.getElementById('notifMarkReadBtn').addEventListener('click', ()=>{ trackEvent('mark_all_read'); markAllNotifsRead(); });
+
+/* ---- REALTIME NOTIFICATIONS (Supabase Realtime) ---- */
+let notifChannel = null;
+let notifPollTimer = null;
+let lastNotifToastId = null;
+
+async function refreshNotifBadge(){
+  if(!sb || !currentUserId) return;
+  try{
+    const { count, error } = await sb.from('notifications')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', currentUserId).is('read_at', null);
+    if(!error && typeof count === 'number') setNotifBadge(count);
+  }catch(e){ /* ignore */ }
+}
+
+function startNotifPoll(){
+  if(notifPollTimer || !currentUserId) return;
+  notifPollTimer = setInterval(()=>{ refreshNotifBadge(); }, 30000);
+}
+function stopNotifPoll(){
+  if(notifPollTimer){ clearInterval(notifPollTimer); notifPollTimer = null; }
+}
+
+function handleNotifChange(payload){
+  const overlay = document.getElementById('notifOverlay');
+  const open = overlay && overlay.classList.contains('open');
+  if(open){ loadNotifications(); }
+  else { refreshNotifBadge(); }
+  if(payload && payload.eventType === 'INSERT' && payload.new){
+    const n = payload.new;
+    if(n.id && n.id !== lastNotifToastId){
+      lastNotifToastId = n.id;
+      const icon = NOTIF_ICONS[n.type] || '🔔';
+      showToast(icon + ' ' + (n.message || 'New notification'), 5000);
+    }
+  }
+}
+
+function subscribeNotifications(){
+  if(!sb || !currentUserId || notifChannel) return;
+  refreshNotifBadge();
+  try{
+    notifChannel = sb.channel('notifications:' + currentUserId)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'notifications',
+        filter: 'user_id=eq.' + currentUserId
+      }, (payload)=> handleNotifChange(payload))
+      .subscribe((status)=>{
+        if(status === 'SUBSCRIBED'){ stopNotifPoll(); }
+        else if(status === 'CHANNEL_ERROR' || status === 'TIMED_OUT'){ startNotifPoll(); }
+      });
+  }catch(e){
+    console.warn('Realtime subscribe failed, falling back to polling:', e);
+    startNotifPoll();
+  }
+}
+
+function unsubscribeNotifications(){
+  stopNotifPoll();
+  if(notifChannel){
+    try{ sb.removeChannel(notifChannel); }catch(e){}
+    notifChannel = null;
+  }
+}
 
 /* ---- FRIEND ACTIVITY FEED ---- */
 const FEED_REACTION_EMOJIS = ['🔥','❤️','🤯','😎','😭','💯'];
