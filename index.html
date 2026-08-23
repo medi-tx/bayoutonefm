@@ -6616,42 +6616,41 @@ function enrichImportedSongs(clusterId, serviceLabel){
 function enrichSongsFromSearch(toEnrich, abort, saveEvery){
   if(!toEnrich.length) return;
   let done = 0;
-  const BATCH = 3;
-  const DELAY = 600;
   const total = toEnrich.length;
+  const failed = new Set();
   saveEvery = saveEvery || 50;
   async function enrichLoop(){
-    for(let i = 0; i < toEnrich.length; i += BATCH){
+    for(let i = 0; i < toEnrich.length; i++){
       if(abort && abort.aborted) return;
-      const batch = toEnrich.slice(i, i + BATCH);
-      await Promise.all(batch.map(async (s) => {
-        if(abort && abort.aborted) return;
-        const term = s.title + ' ' + (s.artists[0] || '');
-        try{
-          const dzHits = await deezerSearch(term, 1);
-          if(dzHits && dzHits.length){
-            const dz = dzHits[0];
-            if(dz.artworkUrl100) s.coverArt = dz.artworkUrl100;
-            if(dz.collectionName && !s.album) s.album = dz.collectionName;
-            if(dz.primaryGenreName && (!s.genres || s.genres.length === 0)) s.genres = [dz.primaryGenreName];
+      const s = toEnrich[i];
+      if(failed.has(s.id)) continue;
+      const term = (s.title || '').replace(/\//g, ' ') + ' ' + (s.artists[0] || '');
+      try{
+        const dzHits = await deezerSearch(term, 1);
+        if(dzHits && dzHits.length){
+          const dz = dzHits[0];
+          if(dz.artworkUrl100) s.coverArt = dz.artworkUrl100;
+          if(dz.collectionName && !s.album) s.album = dz.collectionName;
+          if(dz.primaryGenreName && (!s.genres || s.genres.length === 0)) s.genres = [dz.primaryGenreName];
+        } else {
+          const hits = await itunesSearch(term, 'song', 1);
+          if(hits && hits.length){
+            const hit = hits[0];
+            if(hit.artworkUrl100) s.coverArt = hit.artworkUrl100.replace('100x100', '150x150');
+            if(hit.collectionName && !s.album) s.album = hit.collectionName;
+            if(hit.primaryGenreName && (!s.genres || s.genres.length === 0)) s.genres = [hit.primaryGenreName];
+            if(hit.releaseDate && !s.year) s.year = parseInt(hit.releaseDate.slice(0,4), 10) || null;
           } else {
-            const hits = await itunesSearch(term, 'song', 1);
-            if(hits && hits.length){
-              const hit = hits[0];
-              if(hit.artworkUrl100) s.coverArt = hit.artworkUrl100.replace('100x100', '150x150');
-              if(hit.collectionName && !s.album) s.album = hit.collectionName;
-              if(hit.primaryGenreName && (!s.genres || s.genres.length === 0)) s.genres = [hit.primaryGenreName];
-              if(hit.releaseDate && !s.year) s.year = parseInt(hit.releaseDate.slice(0,4), 10) || null;
-            }
+            failed.add(s.id);
           }
-        }catch(e){}
-        done++;
-      }));
+        }
+      }catch(e){ failed.add(s.id); }
+      done++;
       if(done % saveEvery === 0 || done === total){
         save();
         render();
       }
-      await new Promise(r => setTimeout(r, DELAY));
+      await new Promise(r => setTimeout(r, 800));
     }
     save();
     render();
