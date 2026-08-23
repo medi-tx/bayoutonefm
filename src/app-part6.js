@@ -196,11 +196,24 @@ document.getElementById('sendResetBtn').addEventListener('click', async ()=>{
   const email = document.getElementById('forgot-email').value.trim();
   setForgotError(null); setForgotMessage(null);
   if(!email){ setForgotError('Enter your email.'); return; }
-  const { error } = await sb.auth.resetPasswordForEmail(email, {
-    redirectTo: window.location.href.split('#')[0]
-  });
-  if(error){ setForgotError(error.message); return; }
-  setForgotMessage('If that email has an account, a reset link is on its way. Check your inbox.');
+  const btn = document.getElementById('sendResetBtn');
+  btn.disabled = true; btn.textContent = '…';
+  try{
+    const { error } = await sb.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + window.location.pathname
+    });
+    if(error){
+      console.error('Password reset email failed:', error);
+      setForgotError(error.message || 'The reset email could not be sent. This is usually a temporary server issue — please try again in a moment, and if it keeps failing, contact support.');
+      return;
+    }
+    setForgotMessage('If that email has an account, a reset link is on its way. Check your inbox (and spam). The link opens back here so you can set a new password.');
+  }catch(e){
+    console.error('Password reset request threw:', e);
+    setForgotError('Something went wrong reaching the server. Please try again.');
+  }finally{
+    btn.disabled = false; btn.textContent = 'Send reset link';
+  }
 });
 
 function setRecoveryError(msg){
