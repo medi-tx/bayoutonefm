@@ -968,6 +968,7 @@ function renderAllGenres(){
   }
   chart.style.display = 'none';
   hint.textContent = '(click to collapse)';
+  listEl.style.display = 'flex';
   listEl.innerHTML = entries.length
     ? entries.map(([g,n])=>`<span class="tag">${escapeHtml(g)}<b>${n}</b></span>`).join('')
     : '<span class="stat-chart-note">No genres yet — add them when you log songs.</span>';
