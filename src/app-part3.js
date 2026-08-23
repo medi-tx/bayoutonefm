@@ -481,7 +481,7 @@ function renderPeople(){
     const photo = (lp && lp.photo) ? lp.photo : p.photo;
     const tip = lp ? 'Songs that remind me of @' + lp.username + ' (friend on bayoutonefm)' : 'Songs that remind me of ' + escapeAttr(p.name);
     return `
-    <button type="button" class="person-card ${remindsFilterId===p.id?'active':''}${isExample?' example':''}${lp?' linked':''}" data-person="${p.id}" title="${tip}">
+    <button type="button" class="person-card ${remindsFilterId===p.id?'active':''}${isExample?' example':''}${lp?' linked':''}" data-person="${p.id}" title="${tip}" aria-current="${remindsFilterId===p.id?'true':'false'}">
       <span class="person-edit" data-edit-person="${p.id}" title="Edit person">✎</span>
       <span class="person-remove" data-remove-person="${p.id}" title="Remove person">×</span>
       ${photo ? `<img class="person-photo" src="${photo}" alt="Profile photo">` : `<span class="person-photo-fallback">${escapeHtml((p.name||'?').charAt(0).toUpperCase())}</span>`}
@@ -669,7 +669,7 @@ function songCardHtml(s, clusterCounts){
   return `
       <div class="card ${s.archived?'archived':''}${showEx?' example-card':''}" data-id="${s.id}">
         ${showEx ? '<span class="example-badge">EXAMPLE</span>' : ''}
-        <button class="pin-btn ${s.favorited?'pinned':''}" data-action="pin" title="${s.favorited?'Remove from favorites':'Add to favorites'}">${s.favorited?'♥':'♡'}</button>
+        <button class="pin-btn ${s.favorited?'pinned':''}" data-action="pin" aria-pressed="${s.favorited?'true':'false'}" aria-label="${s.favorited?'Remove from favorites':'Add to favorites'}" title="${s.favorited?'Remove from favorites':'Add to favorites'}">${s.favorited?'♥':'♡'}</button>
         <div class="card-top">
           ${coverThumbHtml(s)}
           <div class="title-stack">
@@ -2612,6 +2612,8 @@ document.getElementById('grid').addEventListener('click', e=>{
   if(action === 'pin'){
     trackEvent('pin_song');
     song.favorited = !song.favorited;
+    btn.setAttribute('aria-pressed', song.favorited ? 'true' : 'false');
+    btn.setAttribute('aria-label', song.favorited ? 'Remove from favorites' : 'Add to favorites');
     save(); render();
     if(document.getElementById('feedOverlay').classList.contains('open')) loadFeed();
   } else if(action === 'archive'){

@@ -478,7 +478,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
     flex-shrink:0;
   }
   .cluster-edit-toggle-btn:hover{ border-color:var(--rose); color:var(--rose); }
-  .cluster-edit-toggle-btn.active{ background:var(--rose); border-color:var(--rose); color:var(--ink); }
+  .cluster-edit-toggle-btn.active{ background:var(--rose); border-color:var(--rose); color:var(--ink); outline:2px solid var(--ink); outline-offset:2px; }
   .cluster-delete-btn{
     background:none;
     border:1px solid rgba(190,50,75,0.4);
@@ -618,6 +618,8 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
     background:var(--rose);
     color:var(--ink);
     border-color:var(--rose);
+    outline:2px solid var(--ink);
+    outline-offset:2px;
   }
   .add-btn.danger{
     color:#f2b6c2;
@@ -634,6 +636,8 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
     background:var(--rose);
     color:var(--ink);
     border-color:var(--rose);
+    outline:2px solid var(--ink);
+    outline-offset:2px;
   }
   #toggleTierBoard, #friendTierBoardBtn{
     background:var(--teal) !important;
@@ -815,7 +819,14 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
     transition: color .15s ease, transform .15s ease;
     z-index:2;
   }
-  .pin-btn.pinned{ color:var(--teal); transform:scale(1.1); }
+  .pin-btn.pinned{ color:var(--teal); transform:scale(1.1); position:relative; outline:2px solid var(--ink); outline-offset:2px; }
+  .pin-btn.pinned::after{
+    content:'✓'; position:absolute; top:-6px; right:-6px;
+    width:14px; height:14px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    background:var(--ink); color:var(--paper);
+    font-size:9px; font-weight:700; line-height:1;
+  }
   .pin-btn:hover{ transform:scale(1.2); }
 
   .card-top{ padding-right:26px; }
@@ -1234,6 +1245,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
     flex-wrap:wrap;
   }
   .person-card{
+    position:relative;
     display:flex;
     flex-direction:column;
     align-items:center;
@@ -1267,6 +1279,14 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
   }
   .person-card:hover .person-photo, .person-card:hover .person-photo-fallback{ border-color:var(--rose); transform:translateY(-2px); }
   .person-card.active .person-photo, .person-card.active .person-photo-fallback{ border-color:var(--rose); }
+  .person-card.active{ outline:2px solid var(--ink); outline-offset:2px; }
+  .person-card.active::after{
+    content:'✓'; position:absolute; top:8px; right:8px;
+    width:20px; height:20px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    background:var(--ink); color:var(--paper);
+    font-size:12px; font-weight:700; line-height:1;
+  }
   .person-name{
     font-size:11.5px;
     color:var(--on-ink);
@@ -2010,13 +2030,21 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
     background:rgba(var(--on-paper-rgb),0.04);
   }
   .msg-friend-item{
+    position:relative;
     display:flex; align-items:center; gap:10px;
     width:100%; padding:12px 14px;
     background:none; border:none; border-bottom:1px solid var(--line-on-paper);
     color:var(--on-paper); text-align:left; cursor:pointer; font-family:inherit;
   }
   .msg-friend-item:hover{ background:rgba(var(--on-paper-rgb),0.06); }
-  .msg-friend-item.active{ background:rgba(var(--on-paper-rgb),0.1); }
+  .msg-friend-item.active{ background:rgba(var(--on-paper-rgb),0.1); outline:2px solid var(--ink); outline-offset:-2px; }
+  .msg-friend-item.active::after{
+    content:'✓'; position:absolute; top:8px; right:8px;
+    width:18px; height:18px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    background:var(--ink); color:var(--paper);
+    font-size:11px; font-weight:700; line-height:1;
+  }
   .msg-friend-avatar{
     width:34px; height:34px; border-radius:50%; flex:0 0 34px;
     display:flex; align-items:center; justify-content:center;
@@ -3134,7 +3162,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
   <div class="modal">
     <div class="cluster-modal-header">
       <h3>Your Linked Stacks</h3>
-      <button type="button" class="cluster-edit-toggle-btn" id="editClustersToggleBtn">Edit stacks</button>
+      <button type="button" class="cluster-edit-toggle-btn" id="editClustersToggleBtn" aria-pressed="false">Edit stacks</button>
     </div>
     <div id="clustersListWrap"></div>
     <div class="modal-actions">
@@ -4165,7 +4193,7 @@ function renderPeople(){
     const photo = (lp && lp.photo) ? lp.photo : p.photo;
     const tip = lp ? 'Songs that remind me of @' + lp.username + ' (friend on bayoutonefm)' : 'Songs that remind me of ' + escapeAttr(p.name);
     return `
-    <button type="button" class="person-card ${remindsFilterId===p.id?'active':''}${isExample?' example':''}${lp?' linked':''}" data-person="${p.id}" title="${tip}">
+    <button type="button" class="person-card ${remindsFilterId===p.id?'active':''}${isExample?' example':''}${lp?' linked':''}" data-person="${p.id}" title="${tip}" aria-current="${remindsFilterId===p.id?'true':'false'}">
       <span class="person-edit" data-edit-person="${p.id}" title="Edit person">✎</span>
       <span class="person-remove" data-remove-person="${p.id}" title="Remove person">×</span>
       ${photo ? `<img class="person-photo" src="${photo}" alt="Profile photo">` : `<span class="person-photo-fallback">${escapeHtml((p.name||'?').charAt(0).toUpperCase())}</span>`}
@@ -4353,7 +4381,7 @@ function songCardHtml(s, clusterCounts){
   return `
       <div class="card ${s.archived?'archived':''}${showEx?' example-card':''}" data-id="${s.id}">
         ${showEx ? '<span class="example-badge">EXAMPLE</span>' : ''}
-        <button class="pin-btn ${s.favorited?'pinned':''}" data-action="pin" title="${s.favorited?'Remove from favorites':'Add to favorites'}">${s.favorited?'♥':'♡'}</button>
+        <button class="pin-btn ${s.favorited?'pinned':''}" data-action="pin" aria-pressed="${s.favorited?'true':'false'}" aria-label="${s.favorited?'Remove from favorites':'Add to favorites'}" title="${s.favorited?'Remove from favorites':'Add to favorites'}">${s.favorited?'♥':'♡'}</button>
         <div class="card-top">
           ${coverThumbHtml(s)}
           <div class="title-stack">
@@ -6296,6 +6324,8 @@ document.getElementById('grid').addEventListener('click', e=>{
   if(action === 'pin'){
     trackEvent('pin_song');
     song.favorited = !song.favorited;
+    btn.setAttribute('aria-pressed', song.favorited ? 'true' : 'false');
+    btn.setAttribute('aria-label', song.favorited ? 'Remove from favorites' : 'Add to favorites');
     save(); render();
     if(document.getElementById('feedOverlay').classList.contains('open')) loadFeed();
   } else if(action === 'archive'){
@@ -7759,6 +7789,7 @@ document.getElementById('editClustersToggleBtn').addEventListener('click', ()=>{
   clustersEditMode = !clustersEditMode;
   const btn = document.getElementById('editClustersToggleBtn');
   btn.classList.toggle('active', clustersEditMode);
+  btn.setAttribute('aria-pressed', clustersEditMode ? 'true' : 'false');
   btn.textContent = clustersEditMode ? 'Done editing' : 'Edit stacks';
   renderClustersList();
 });
@@ -11142,7 +11173,7 @@ document.getElementById('passwordSaveBtn').addEventListener('click', async ()=>{
     list.innerHTML = msgFriendProfiles.map(p=>{
       const unread = msgUnreadCache[p.user_id] || 0;
       const active = p.user_id === msgActiveFriend ? ' active' : '';
-      return `<button type="button" class="msg-friend-item${active}" data-msg-friend="${p.user_id}">
+      return `<button type="button" class="msg-friend-item${active}" data-msg-friend="${p.user_id}" aria-current="${p.user_id === msgActiveFriend ? 'true' : 'false'}">
         ${msgAvatarHtml(p)}
         <span class="msg-friend-name">${escapeHtml(p.username)}</span>
         ${unread > 0 ? `<span class="msg-friend-unread">${unread}</span>` : ''}

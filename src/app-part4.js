@@ -315,6 +315,7 @@ document.getElementById('editClustersToggleBtn').addEventListener('click', ()=>{
   clustersEditMode = !clustersEditMode;
   const btn = document.getElementById('editClustersToggleBtn');
   btn.classList.toggle('active', clustersEditMode);
+  btn.setAttribute('aria-pressed', clustersEditMode ? 'true' : 'false');
   btn.textContent = clustersEditMode ? 'Done editing' : 'Edit stacks';
   renderClustersList();
 });

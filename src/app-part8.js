@@ -108,7 +108,7 @@
     list.innerHTML = msgFriendProfiles.map(p=>{
       const unread = msgUnreadCache[p.user_id] || 0;
       const active = p.user_id === msgActiveFriend ? ' active' : '';
-      return `<button type="button" class="msg-friend-item${active}" data-msg-friend="${p.user_id}">
+      return `<button type="button" class="msg-friend-item${active}" data-msg-friend="${p.user_id}" aria-current="${p.user_id === msgActiveFriend ? 'true' : 'false'}">
         ${msgAvatarHtml(p)}
         <span class="msg-friend-name">${escapeHtml(p.username)}</span>
         ${unread > 0 ? `<span class="msg-friend-unread">${unread}</span>` : ''}
