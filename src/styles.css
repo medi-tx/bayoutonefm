@@ -2528,3 +2528,27 @@
   @media (prefers-reduced-motion: reduce){
     *{ animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; scroll-behavior:auto !important; }
   }
+
+  /* EMAIL CONFIRM BANNER (uses app tokens so it matches) */
+  .email-confirm{
+    display:flex; align-items:center; gap:12px;
+    padding:14px 16px; margin:14px 0;
+    border:1px solid rgba(238,221,149,0.25);
+    border-radius:14px; background:rgba(var(--on-paper-rgb),0.55);
+    color:var(--text-dim);
+  }
+  .email-confirm .brand-logo.email-confirm-logo{ height:34px; flex-shrink:0; border-radius:7px; }
+  .email-confirm-body{ flex:1; min-width:0; }
+  .email-confirm-title{
+    font-family:'Fraunces', serif; font-style:italic;
+    color:var(--on-ink); font-size:15px; margin:0 0 2px;
+  }
+  .email-confirm-note{ font-size:12.5px; line-height:1.45; margin:0; }
+  .email-confirm-note b{ color:var(--on-ink); }
+  .email-confirm-resend{ margin-top:8px; padding:6px 12px; font-size:12px; }
+  .email-confirm-status{ display:block; margin-top:6px; font-size:12px; }
+  .email-confirm-check{ flex-shrink:0; color:var(--rose); display:none; }
+  .email-confirm.is-confirmed{ border-color:rgba(42,157,143,0.5); }
+  .email-confirm.is-confirmed .email-confirm-check{ display:block; }
+  .email-confirm.is-confirmed .email-confirm-resend{ display:none; }
+  .email-confirm.is-confirmed .email-confirm-title{ color:var(--rose); }

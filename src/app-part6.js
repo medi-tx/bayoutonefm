@@ -480,6 +480,8 @@ function syncToSupabase(){
 
 let currentUserId = null;
 window.currentUserId = currentUserId;
+let currentUserEmail = null;
+let emailWasPending = false;
 window.resetCataloguex = async function(){
   console.log('Resetting cataloguex for user:', currentUserId);
   localStorage.removeItem(STORAGE_KEY);
@@ -538,6 +540,8 @@ function renderMyAvatar(){
 
 async function loadAppForUser(user){
   currentUserId = user.id;
+  currentUserEmail = user.email || null;
+  updateEmailConfirmBanner(user);
   // Per-user localStorage keys to prevent cross-account data bleed
   STORAGE_KEY = 'song-journal-entries-' + user.id;
   PEOPLE_KEY = 'song-journal-people-' + user.id;
@@ -1068,6 +1072,56 @@ document.getElementById('resetCataloguexBtn').addEventListener('click', ()=>{
   renderPeople();
   updateRemoveExamplesBtn();
 });
+
+function updateEmailConfirmBanner(user){
+  const banner = document.getElementById('emailConfirmBanner');
+  if(!banner || !user){ if(banner) banner.style.display = 'none'; return; }
+  const confirmed = user.email_confirmed_at || user.confirmed_at;
+  const resendBtn = document.getElementById('emailConfirmResend');
+  const title = banner.querySelector('.email-confirm-title');
+  const note = banner.querySelector('.email-confirm-note');
+  if(confirmed){
+    if(emailWasPending){
+      banner.classList.add('is-confirmed'); banner.classList.remove('is-pending');
+      title.textContent = 'Email confirmed';
+      note.textContent = 'Your email is verified — you\'re all set!';
+      if(resendBtn) resendBtn.style.display = 'none';
+      banner.style.display = '';
+      setTimeout(()=>{ banner.style.display = 'none'; }, 4000);
+    } else {
+      banner.style.display = 'none';
+    }
+    emailWasPending = false;
+  } else {
+    emailWasPending = true;
+    banner.classList.add('is-pending'); banner.classList.remove('is-confirmed');
+    title.textContent = 'Confirm your email address';
+    note.textContent = 'We sent a confirmation link to ';
+    const b = document.createElement('b'); b.textContent = user.email || 'your email';
+    note.appendChild(b);
+    note.appendChild(document.createTextNode('. Open it to activate your account.'));
+    if(resendBtn) resendBtn.style.display = '';
+    banner.style.display = '';
+  }
+}
+
+document.getElementById('emailConfirmResend').addEventListener('click', async (e)=>{
+  const btn = e.currentTarget;
+  const status = document.getElementById('emailConfirmStatus');
+  if(!currentUserEmail){ if(status){ status.style.display=''; status.textContent='No email on file.'; } return; }
+  btn.disabled = true; btn.textContent = '…';
+  if(status){ status.style.display=''; status.textContent=''; }
+  try{
+    const { error } = await sb.auth.resend({ type:'signup', email: currentUserEmail });
+    if(error){ if(status){ status.textContent = error.message || 'Could not resend. Try again.'; status.style.color = 'var(--rose)'; } }
+    else { if(status){ status.textContent = 'Confirmation email sent — check your inbox (and spam).'; status.style.color = 'var(--on-ink)'; } }
+  }catch(err){
+    if(status){ status.textContent = 'Something went wrong. Try again.'; status.style.color = 'var(--rose)'; }
+  }finally{
+    btn.disabled = false; btn.textContent = 'Resend confirmation';
+  }
+});
+
 sb.auth.onAuthStateChange((event, session)=>{
   if(event === 'PASSWORD_RECOVERY'){
     showRecoveryScreen();

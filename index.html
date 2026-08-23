@@ -2576,6 +2576,30 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
   @media (prefers-reduced-motion: reduce){
     *{ animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; scroll-behavior:auto !important; }
   }
+
+  /* EMAIL CONFIRM BANNER (uses app tokens so it matches) */
+  .email-confirm{
+    display:flex; align-items:center; gap:12px;
+    padding:14px 16px; margin:14px 0;
+    border:1px solid rgba(238,221,149,0.25);
+    border-radius:14px; background:rgba(var(--on-paper-rgb),0.55);
+    color:var(--text-dim);
+  }
+  .email-confirm .brand-logo.email-confirm-logo{ height:34px; flex-shrink:0; border-radius:7px; }
+  .email-confirm-body{ flex:1; min-width:0; }
+  .email-confirm-title{
+    font-family:'Fraunces', serif; font-style:italic;
+    color:var(--on-ink); font-size:15px; margin:0 0 2px;
+  }
+  .email-confirm-note{ font-size:12.5px; line-height:1.45; margin:0; }
+  .email-confirm-note b{ color:var(--on-ink); }
+  .email-confirm-resend{ margin-top:8px; padding:6px 12px; font-size:12px; }
+  .email-confirm-status{ display:block; margin-top:6px; font-size:12px; }
+  .email-confirm-check{ flex-shrink:0; color:var(--rose); display:none; }
+  .email-confirm.is-confirmed{ border-color:rgba(42,157,143,0.5); }
+  .email-confirm.is-confirmed .email-confirm-check{ display:block; }
+  .email-confirm.is-confirmed .email-confirm-resend{ display:none; }
+  .email-confirm.is-confirmed .email-confirm-title{ color:var(--rose); }
 </style>
 </head>
 <body>
@@ -2682,6 +2706,19 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
       <button class="logout-btn" id="logoutBtn">Log out</button>
     </div>
   </header>
+
+  <div class="email-confirm" id="emailConfirmBanner" style="display:none;">
+    <img class="brand-logo email-confirm-logo" alt="bayoutonefm" src="icon-512.png">
+    <div class="email-confirm-body">
+      <p class="email-confirm-title">Confirm your email address</p>
+      <p class="email-confirm-note">We sent a confirmation link to <b id="emailConfirmAddr">your email</b>. Open it to activate your account.</p>
+      <button type="button" class="add-btn secondary email-confirm-resend" id="emailConfirmResend">Resend confirmation</button>
+      <span class="email-confirm-status" id="emailConfirmStatus" style="display:none;"></span>
+    </div>
+    <span class="email-confirm-check" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></svg>
+    </span>
+  </div>
 
   <div class="last-added" id="lastAdded" style="display:none;">
     <span class="last-added-label">Last added</span>
@@ -9887,6 +9924,8 @@ function syncToSupabase(){
 
 let currentUserId = null;
 window.currentUserId = currentUserId;
+let currentUserEmail = null;
+let emailWasPending = false;
 window.resetCataloguex = async function(){
   console.log('Resetting cataloguex for user:', currentUserId);
   localStorage.removeItem(STORAGE_KEY);
@@ -9945,6 +9984,8 @@ function renderMyAvatar(){
 
 async function loadAppForUser(user){
   currentUserId = user.id;
+  currentUserEmail = user.email || null;
+  updateEmailConfirmBanner(user);
   // Per-user localStorage keys to prevent cross-account data bleed
   STORAGE_KEY = 'song-journal-entries-' + user.id;
   PEOPLE_KEY = 'song-journal-people-' + user.id;
@@ -10475,6 +10516,56 @@ document.getElementById('resetCataloguexBtn').addEventListener('click', ()=>{
   renderPeople();
   updateRemoveExamplesBtn();
 });
+
+function updateEmailConfirmBanner(user){
+  const banner = document.getElementById('emailConfirmBanner');
+  if(!banner || !user){ if(banner) banner.style.display = 'none'; return; }
+  const confirmed = user.email_confirmed_at || user.confirmed_at;
+  const resendBtn = document.getElementById('emailConfirmResend');
+  const title = banner.querySelector('.email-confirm-title');
+  const note = banner.querySelector('.email-confirm-note');
+  if(confirmed){
+    if(emailWasPending){
+      banner.classList.add('is-confirmed'); banner.classList.remove('is-pending');
+      title.textContent = 'Email confirmed';
+      note.textContent = 'Your email is verified — you\'re all set!';
+      if(resendBtn) resendBtn.style.display = 'none';
+      banner.style.display = '';
+      setTimeout(()=>{ banner.style.display = 'none'; }, 4000);
+    } else {
+      banner.style.display = 'none';
+    }
+    emailWasPending = false;
+  } else {
+    emailWasPending = true;
+    banner.classList.add('is-pending'); banner.classList.remove('is-confirmed');
+    title.textContent = 'Confirm your email address';
+    note.textContent = 'We sent a confirmation link to ';
+    const b = document.createElement('b'); b.textContent = user.email || 'your email';
+    note.appendChild(b);
+    note.appendChild(document.createTextNode('. Open it to activate your account.'));
+    if(resendBtn) resendBtn.style.display = '';
+    banner.style.display = '';
+  }
+}
+
+document.getElementById('emailConfirmResend').addEventListener('click', async (e)=>{
+  const btn = e.currentTarget;
+  const status = document.getElementById('emailConfirmStatus');
+  if(!currentUserEmail){ if(status){ status.style.display=''; status.textContent='No email on file.'; } return; }
+  btn.disabled = true; btn.textContent = '…';
+  if(status){ status.style.display=''; status.textContent=''; }
+  try{
+    const { error } = await sb.auth.resend({ type:'signup', email: currentUserEmail });
+    if(error){ if(status){ status.textContent = error.message || 'Could not resend. Try again.'; status.style.color = 'var(--rose)'; } }
+    else { if(status){ status.textContent = 'Confirmation email sent — check your inbox (and spam).'; status.style.color = 'var(--on-ink)'; } }
+  }catch(err){
+    if(status){ status.textContent = 'Something went wrong. Try again.'; status.style.color = 'var(--rose)'; }
+  }finally{
+    btn.disabled = false; btn.textContent = 'Resend confirmation';
+  }
+});
+
 sb.auth.onAuthStateChange((event, session)=>{
   if(event === 'PASSWORD_RECOVERY'){
     showRecoveryScreen();
