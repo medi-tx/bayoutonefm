@@ -11190,7 +11190,7 @@ document.getElementById('passwordSaveBtn').addEventListener('click', async ()=>{
        create policy "notifications_update_own" on public.notifications for update to authenticated using (user_id = auth.uid());
 
        -- Realtime: required so postgres_changes events fire for this table
-       alter publication if exists supabase_realtime add table public.notifications;
+       alter publication supabase_realtime add table public.notifications;
        alter table public.notifications replica identity full;
 
 
