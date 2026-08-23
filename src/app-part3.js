@@ -242,10 +242,10 @@ document.addEventListener('DOMContentLoaded', ()=>{
   const CB_THEME_KEY = 'song-journal-colorblind-theme';
   const CB_TYPE_KEY = 'song-journal-colorblind-type';
   const CB_PRESETS = {
-    protan: { ink:'#14151A', paper:'#F4F1EA', gold:'#E69F00', teal:'#0072B2', rose:'#D55E00', lilac:'#CC79A7', sage:'#56B4E9', paperElevated:'#FFFFFF', border:'rgba(200,200,200,0.5)' },
-    deutan: { ink:'#14151A', paper:'#F4F1EA', gold:'#E69F00', teal:'#0072B2', rose:'#009E73', lilac:'#CC79A7', sage:'#56B4E9', paperElevated:'#FFFFFF', border:'rgba(200,200,200,0.5)' },
-    tritan: { ink:'#14151A', paper:'#F4F1EA', gold:'#D95F02', teal:'#E7298A', rose:'#1B9E77', lilac:'#7570B3', sage:'#66A61E', paperElevated:'#FFFFFF', border:'rgba(200,200,200,0.5)' },
-    mono:   { ink:'#0A0A0A', paper:'#F2F2F2', gold:'#C8C8C8', teal:'#404040', rose:'#707070', lilac:'#9A9A9A', sage:'#585858', paperElevated:'#FFFFFF', border:'rgba(160,160,160,0.5)' },
+    protan: { ink:'#1A1A1A', paper:'#F4F1EA', gold:'#009292', teal:'#004949', rose:'#920000', lilac:'#B66DFF', sage:'#FFB6DB', paperElevated:'#FFFFFF', border:'rgba(0,0,0,0.2)' },
+    deutan: { ink:'#1A1A1A', paper:'#F4F1EA', teal:'#0072B2', gold:'#D55E00', lilac:'#F0E442', sage:'#000000', rose:'#CC79A7', paperElevated:'#FFFFFF', border:'rgba(0,0,0,0.2)' },
+    tritan: { ink:'#1A1A1A', paper:'#D9D9D9', gold:'#D41159', teal:'#1A85FF', sage:'#000000', lilac:'#FFFFFF', rose:'#994F00', paperElevated:'#FFFFFF', border:'rgba(0,0,0,0.2)' },
+    mono:   { ink:'#0A0A0A', paper:'#F2F2F2', gold:'#595959', teal:'#999999', rose:'#1A1A1A', lilac:'#D9D9D9', sage:'#777777', paperElevated:'#FFFFFF', border:'rgba(0,0,0,0.25)' },
   };
   const cbToggle = document.getElementById('cbToggle');
   const cbTypes = document.getElementById('cbTypes');
