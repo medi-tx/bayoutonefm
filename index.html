@@ -1523,12 +1523,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
   .sticker-crop-preview-box{ width:64px; height:64px; border:1px solid var(--line); border-radius:8px; overflow:hidden; background:var(--ink-2); }
   .sticker-crop-preview-box img{ width:100%; height:100%; object-fit:contain; }
   /* DEFAULT STICKERS GRID */
-  .sticker-defaults-section{ margin-bottom:12px; }
-  .sticker-defaults-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(72px,1fr)); gap:8px; margin-top:8px; }
-  .sticker-default-thumb{ width:100%; aspect-ratio:1; border-radius:10px; overflow:hidden; border:1px solid var(--line); cursor:pointer; background:var(--ink-2); position:relative; }
-  .sticker-default-thumb img{ width:100%; height:100%; object-fit:cover; }
-  .sticker-default-thumb:hover{ border-color:var(--rose); }
-  .sticker-default-thumb .sticker-default-label{ position:absolute; bottom:0; left:0; right:0; background:rgba(0,0,0,.6); color:#fff; font-size:9px; text-align:center; padding:2px 2px; }
+
 
 
   /* IMAGE STICKERS */
@@ -3323,11 +3318,6 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
   <div class="modal">
     <h3>Stickers</h3>
     <p class="sticker-modal-hint">Upload sticker images, then drag them anywhere on your page. Friends see them when they visit.</p>
-    <div class="sticker-defaults-section">
-      <p class="theme-section-label">Sticker Library</p>
-      <p class="sticker-modal-hint">Tap a sheet to crop individual stickers from it.</p>
-      <div class="sticker-defaults-grid" id="stickerDefaultsGrid"></div>
-    </div>
     <div class="sticker-upload-area">
       <input type="file" id="stickerFileInput" accept="image/*" multiple style="display:none;">
       <button class="btn-save" id="stickerUploadBtn">Upload your own sticker</button>
@@ -8689,7 +8679,6 @@ document.getElementById('personSaveBtn').addEventListener('click', ()=>{
 
 /* ---- STICKER PACKS (decorate your page) ---- */
 const MAX_STICKERS = 12;
-const STICKER_BASE = 'https://aaqlnjdooeydtaihhdia.supabase.co/storage/v1/object/public/stickers/defaults/';
 const DEFAULT_STICKERS = [];
 let stickerSyncTimer = null;
 
@@ -8826,14 +8815,10 @@ let _cropFromUrl = null;
 
 function renderStickerPicker(){
   const shelfEl = document.getElementById('stickerPickerShelf');
-  const gridEl = document.getElementById('stickerDefaultsGrid');
   if(!shelfEl) return;
   document.getElementById('stickerCount').textContent = '(' + stickers.length + '/' + MAX_STICKERS + ')';
   const imgStickers = stickers.filter(s=>s&&s.url);
   shelfEl.innerHTML = stickerShelfHtml(imgStickers) || '<span class="sticker-empty">No stickers yet - crop one from the library above or upload your own!</span>';
-  if(gridEl){
-    gridEl.innerHTML = DEFAULT_STICKERS.map(d=>`<div class="sticker-default-thumb" data-default-file="${d.file}" title="${d.name}"><img src="${escapeAttr(STICKER_BASE + d.file)}" alt="${escapeAttr(d.name)}"><span class="sticker-default-label">${escapeAttr(d.name)}</span></div>`).join('');
-  }
 }
 
 document.getElementById('stickerWipOkBtn').addEventListener('click', ()=>{
@@ -8901,13 +8886,7 @@ document.getElementById('stickerFileInput').addEventListener('change', e=>{
   e.target.value = '';
 });
 
-document.getElementById('stickerDefaultsGrid').addEventListener('click', e=>{
-  const thumb = e.target.closest('.sticker-default-thumb');
-  if(!thumb) return;
-  const file = thumb.dataset.defaultFile;
-  if(!file) return;
-  openCropFromUrl(STICKER_BASE + file);
-});
+
 
 function openCropFromUrl(url){
   const overlay = document.getElementById('stickerCropOverlay');

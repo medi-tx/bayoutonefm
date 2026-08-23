@@ -1114,7 +1114,6 @@ document.getElementById('personSaveBtn').addEventListener('click', ()=>{
 
 /* ---- STICKER PACKS (decorate your page) ---- */
 const MAX_STICKERS = 12;
-const STICKER_BASE = 'https://aaqlnjdooeydtaihhdia.supabase.co/storage/v1/object/public/stickers/defaults/';
 const DEFAULT_STICKERS = [];
 let stickerSyncTimer = null;
 
@@ -1251,14 +1250,10 @@ let _cropFromUrl = null;
 
 function renderStickerPicker(){
   const shelfEl = document.getElementById('stickerPickerShelf');
-  const gridEl = document.getElementById('stickerDefaultsGrid');
   if(!shelfEl) return;
   document.getElementById('stickerCount').textContent = '(' + stickers.length + '/' + MAX_STICKERS + ')';
   const imgStickers = stickers.filter(s=>s&&s.url);
   shelfEl.innerHTML = stickerShelfHtml(imgStickers) || '<span class="sticker-empty">No stickers yet - crop one from the library above or upload your own!</span>';
-  if(gridEl){
-    gridEl.innerHTML = DEFAULT_STICKERS.map(d=>`<div class="sticker-default-thumb" data-default-file="${d.file}" title="${d.name}"><img src="${escapeAttr(STICKER_BASE + d.file)}" alt="${escapeAttr(d.name)}"><span class="sticker-default-label">${escapeAttr(d.name)}</span></div>`).join('');
-  }
 }
 
 document.getElementById('stickerWipOkBtn').addEventListener('click', ()=>{
@@ -1326,13 +1321,7 @@ document.getElementById('stickerFileInput').addEventListener('change', e=>{
   e.target.value = '';
 });
 
-document.getElementById('stickerDefaultsGrid').addEventListener('click', e=>{
-  const thumb = e.target.closest('.sticker-default-thumb');
-  if(!thumb) return;
-  const file = thumb.dataset.defaultFile;
-  if(!file) return;
-  openCropFromUrl(STICKER_BASE + file);
-});
+
 
 function openCropFromUrl(url){
   const overlay = document.getElementById('stickerCropOverlay');
