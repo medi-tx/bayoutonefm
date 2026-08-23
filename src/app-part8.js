@@ -73,7 +73,7 @@
     return `and(sender_id.eq.${currentUserId},recipient_id.eq.${friendId}),and(sender_id.eq.${friendId},recipient_id.eq.${currentUserId})`;
   }
   function msgAvatarHtml(p){
-    if(p.photo) return `<span class="msg-friend-avatar"><img src="${escapeAttr(p.photo)}" alt=""></span>`;
+    if(p.photo) return `<span class="msg-friend-avatar"><img src="${escapeAttr(p.photo)}" alt="Profile photo"></span>`;
     return `<span class="msg-friend-avatar">${escapeHtml((p.username || '?').charAt(0).toUpperCase())}</span>`;
   }
   function setMsgBadge(total){
@@ -160,7 +160,7 @@
     return `<div class="${cls}">${content}${song}<span class="msg-time">${timeStr}</span></div>`;
   }
   function msgSongCardHtml(song, msgId){
-    const cover = song.cover ? `<img src="${escapeAttr(song.cover)}" alt="">` : '';
+    const cover = song.cover ? `<img src="${escapeAttr(song.cover)}" alt="Album cover">` : '';
     return `<a class="msg-song-card" href="${escapeAttr(song.url || '#')}" target="_blank" rel="noopener">
       ${cover}
       <span class="msg-song-meta">
@@ -194,7 +194,7 @@
     msgPendingSong = song;
     const wrap = document.getElementById('msgPendingSongWrap');
     if(!song){ wrap.innerHTML = ''; wrap.style.display = 'none'; return; }
-    const cover = song.cover ? `<img src="${escapeAttr(song.cover)}" alt="">` : '';
+    const cover = song.cover ? `<img src="${escapeAttr(song.cover)}" alt="Album cover">` : '';
     wrap.style.display = '';
     wrap.innerHTML = `<div class="msg-pending-song">
       ${cover}
@@ -255,7 +255,7 @@
     msgSongResultsCache = results || [];
     if(msgSongResultsCache.length === 0){ wrap.innerHTML = '<p class="msg-empty">No songs found.</p>'; return; }
     wrap.innerHTML = msgSongResultsCache.map((r, i)=>{
-      const cover = r.artworkUrl100 ? `<img src="${escapeAttr(upscaleArtwork(r.artworkUrl100))}" alt="">` : '';
+      const cover = r.artworkUrl100 ? `<img src="${escapeAttr(upscaleArtwork(r.artworkUrl100))}" alt="Album cover">` : '';
       const artist = r.collectionName ? `${escapeHtml(r.artistName || '')} · ${escapeHtml(r.collectionName)}` : escapeHtml(r.artistName || '');
       return `<button type="button" class="msg-song-result" data-msg-song-index="${i}">
         ${cover}

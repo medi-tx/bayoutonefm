@@ -391,7 +391,7 @@ function renderRemindsPicker(prefix, selectedIds){
     label.className = 'reminds-chip' + (selectedIds.includes(p.id) ? ' selected' : '') + (lp ? ' linked' : '');
     const photo = (lp && lp.photo) ? lp.photo : p.photo;
     const imgOrFallback = photo
-      ? `<img src="${photo}">`
+      ? `<img src="${photo}" alt="Image">`
       : `<span class="rc-fallback">${escapeHtml((p.name||'?').charAt(0).toUpperCase())}</span>`;
     const friendMark = lp ? `<span class="rc-linked" title="Actual friend on bayoutonefm">✓</span>` : '';
     label.innerHTML = `<input type="checkbox" value="${escapeAttr(p.id)}" ${selectedIds.includes(p.id)?'checked':''}> ${imgOrFallback} ${escapeHtml(p.name)}${friendMark}`;
@@ -425,7 +425,7 @@ function renderPeople(){
     <button type="button" class="person-card ${remindsFilterId===p.id?'active':''}${isExample?' example':''}${lp?' linked':''}" data-person="${p.id}" title="${tip}">
       <span class="person-edit" data-edit-person="${p.id}" title="Edit person">✎</span>
       <span class="person-remove" data-remove-person="${p.id}" title="Remove person">×</span>
-      ${photo ? `<img class="person-photo" src="${photo}">` : `<span class="person-photo-fallback">${escapeHtml((p.name||'?').charAt(0).toUpperCase())}</span>`}
+      ${photo ? `<img class="person-photo" src="${photo}" alt="Profile photo">` : `<span class="person-photo-fallback">${escapeHtml((p.name||'?').charAt(0).toUpperCase())}</span>`}
       <span class="person-name">${escapeHtml(p.name)}</span>
       ${lp ? `<span class="person-username">@${escapeHtml(lp.username)}</span>` : ''}
       ${isExample ? '<span class="person-example">EXAMPLE</span>' : ''}
@@ -508,7 +508,7 @@ function dedupeSongsForBoard(list){
 function tierBoardItemHtml(s, editable){
   const initial = (s.title||'?').charAt(0).toUpperCase();
   const cover = s.coverArt
-    ? `<img class="tier-board-cover" src="${escapeAttr(s.coverArt)}" loading="lazy" decoding="async" alt="">
+    ? `<img class="tier-board-cover" src="${escapeAttr(s.coverArt)}" loading="lazy" decoding="async" alt="Album cover">
 `
     : `<div class="tier-board-cover-fallback">${escapeHtml(initial)}</div>`;
   return `
@@ -597,7 +597,8 @@ function coverInitials(s){
 }
 function coverThumbHtml(s){
   if(s && s.coverArt){
-    return `<img class="cover-thumb" src="${escapeAttr(s.coverArt)}" loading="lazy" decoding="async" alt="">`;
+    const alt = (s.title||'Album') + (s.artists && s.artists.length ? ' by ' + (s.artists||[]).join(', ') : '');
+    return `<img class="cover-thumb" src="${escapeAttr(s.coverArt)}" loading="lazy" decoding="async" alt="${escapeAttr(alt)}">`;
   }
   const initials = coverInitials(s);
   const hue = stringHue((s && (s.title || s.id)) || '?');
@@ -637,7 +638,7 @@ function songCardHtml(s, clusterCounts){
           const lp = linkedProfile(p);
           const photo = (lp && lp.photo) ? lp.photo : p.photo;
           const tip = lp ? 'Friend @' + escapeAttr(lp.username) + ' on bayoutonefm' : 'Songs that remind me of ' + escapeAttr(p.name);
-          return `<span class="reminds-badge${lp?' linked':''}" data-person="${p.id}" title="${tip}">${photo?`<img src="${photo}" loading="lazy" decoding="async">`:''}${escapeHtml(p.name)}${lp?' <span class="rc-linked">✓</span>':''}<button type="button" class="reminds-badge-x" data-remove-reminder="${s.id}|${p.id}" title="Remove ${escapeAttr(p.name)} from this song">×</button></span>`;
+          return `<span class="reminds-badge${lp?' linked':''}" data-person="${p.id}" title="${tip}">${photo?`<img src="${photo}" loading="lazy" decoding="async" alt="Image">`:''}${escapeHtml(p.name)}${lp?' <span class="rc-linked">✓</span>':''}<button type="button" class="reminds-badge-x" data-remove-reminder="${s.id}|${p.id}" title="Remove ${escapeAttr(p.name)} from this song">×</button></span>`;
         }).join('')}</div>` : (showEx ? `<div class="reminds-badges"><span class="reminds-badge ex">e.g. Mom</span><span class="reminds-badge ex">e.g. a college roommate</span></div>` : '')}
         <div class="card-actions">
           ${!showEx && geniusLyricsUrl(s.title, s.artists) ? `<a href="${escapeAttr(geniusLyricsUrl(s.title, s.artists))}" target="_blank" rel="noopener" title="Open lyrics on Genius">LYRICS ↗</a>` : ''}
@@ -680,7 +681,7 @@ function renderNextGridBatch(){
 /* ---- timeline / scrapbook view: chronological feed grouped by day ---- */
 function timelineItemHtml(s){
   const cover = s.coverArt
-    ? `<img class="timeline-cover" src="${escapeAttr(s.coverArt)}" loading="lazy" decoding="async" alt="">
+    ? `<img class="timeline-cover" src="${escapeAttr(s.coverArt)}" loading="lazy" decoding="async" alt="Album cover">
 `
     : `<div class="timeline-cover timeline-cover-fallback">${escapeHtml((s.title||'?').charAt(0).toUpperCase())}</div>`;
   const when = s.createdAt
@@ -1064,7 +1065,7 @@ function openYearReview(){
     if(topSongs.length){
       html += `<div class="yr-section"><div class="yr-section-title">Highlights of ${year}</div><ul class="yr-song-list">`;
       topSongs.forEach((s,i)=>{
-        const cover = s.coverArt ? `<img class="yr-song-cover" src="${escapeAttr(s.coverArt)}" loading="lazy" alt="">` : '';
+        const cover = s.coverArt ? `<img class="yr-song-cover" src="${escapeAttr(s.coverArt)}" loading="lazy" alt="Album cover">` : '';
         html += `<li class="yr-song-item"><span class="yr-song-rank">${i+1}</span>${cover}<span class="yr-song-title">${escapeHtml(s.title||'Untitled')}</span><span class="yr-song-artist">${escapeHtml(formatArtists(s.artists))}</span></li>`;
       });
       html += `</ul></div>`;
@@ -1130,7 +1131,7 @@ let mixtapeDays = 7;
 let feedMode = 'friends'; // 'friends' | 'discover'
 function mixtapeItemHtml(s, who){
   const cover = s.coverArt
-    ? `<img class="mixtape-cover" src="${escapeAttr(s.coverArt)}" loading="lazy" decoding="async" alt="">
+    ? `<img class="mixtape-cover" src="${escapeAttr(s.coverArt)}" loading="lazy" decoding="async" alt="Album cover">
 `
     : `<div class="mixtape-cover mixtape-cover-fallback">${escapeHtml((s.title||'?').charAt(0).toUpperCase())}</div>`;
   const when = s.createdAt ? escapeHtml(new Date(s.createdAt).toLocaleString(undefined,{ month:'short', day:'numeric', hour:'numeric', minute:'2-digit' })) : '';
@@ -1179,7 +1180,7 @@ document.getElementById('mixtapeDiscoverBtn').addEventListener('click', ()=>{
 });
 function discoverCardHtml(row, alreadyOwned){
   const cover = row.cover_art
-    ? `<img class="mixtape-cover" src="${escapeAttr(row.cover_art)}" loading="lazy" decoding="async" alt="">`
+    ? `<img class="mixtape-cover" src="${escapeAttr(row.cover_art)}" loading="lazy" decoding="async" alt="Album cover">`
     : `<div class="mixtape-cover mixtape-cover-fallback">${escapeHtml((row.title||'?').charAt(0).toUpperCase())}</div>`;
   const artistLine = [row.artist, row.album].filter(Boolean).map(escapeHtml).join(' · ');
   const actionHtml = alreadyOwned
@@ -2180,7 +2181,7 @@ function showDupModal(duplicates, onConfirm){
     : `${duplicates.length} songs are already in your catalogue. Add them again?`) + '</p>' +
     duplicates.slice(0, showCount).map(s=>{
       const cover = s.coverArt
-        ? `<img src="${escapeAttr(s.coverArt)}" alt="">`
+        ? `<img src="${escapeAttr(s.coverArt)}" alt="Album cover">`
         : `<div class="dup-song-fallback">${escapeHtml((s.title||'?').charAt(0).toUpperCase())}</div>`;
       return `<div class="dup-song">${cover}<div class="dup-song-info"><div class="dup-song-title">${escapeHtml(s.title||'')}</div><div class="dup-song-artist">${escapeHtml(formatArtists(s.artists))}</div></div></div>`;
     }).join('') + (duplicates.length > showCount ? `<p class="dup-body" style="opacity:0.6">…and ${duplicates.length - showCount} more</p>` : '');
@@ -3401,7 +3402,7 @@ async function loadPlaylist(url){
     document.getElementById('spotifyImportPauseBtn').style.display = 'none';
     const serviceLabel = service === 'spotify' ? 'Spotify' : service === 'apple' ? 'Apple Music' : service === 'youtube' ? 'YouTube Music' : 'Tidal';
     infoEl.innerHTML = `
-      ${coverArt ? `<img src="${escapeAttr(coverArt)}" style="width:48px;height:48px;border-radius:6px;object-fit:cover;">` : ''}
+      ${coverArt ? `<img src="${escapeAttr(coverArt)}" style="width:48px;height:48px;border-radius:6px;object-fit:cover;" alt="Album cover">` : ''}
       <div>
         <div style="font-weight:700; font-size:15px;">${escapeHtml(playlistName)}</div>
         <div style="font-size:12px; opacity:0.7;">${tracks.length} tracks · ${serviceLabel}</div>
@@ -3431,7 +3432,7 @@ function renderPlaylistTrackList(listEl, tracks){
     const t = tracks[i];
     html += `<div class="discover-row" style="cursor:default;" data-pl-idx="${i}">
       ${t.coverArt
-        ? `<img src="${escapeAttr(t.coverArt)}" style="width:36px;height:36px;border-radius:5px;object-fit:cover;flex-shrink:0;">`
+        ? `<img src="${escapeAttr(t.coverArt)}" style="width:36px;height:36px;border-radius:5px;object-fit:cover;flex-shrink:0;" alt="Album cover">`
         : `<span class="drow-fallback" style="font-size:11px;">${i+1}</span>`}
       <span style="flex:1;">
         <span class="drow-name">${escapeHtml(t.title)}</span><br>
@@ -3505,7 +3506,7 @@ async function enrichTracksFromItunes(tracks, listEl, statusEl){
           const row = listEl.querySelector(`[data-pl-idx="${idx}"]`);
           if(row){
             row.outerHTML = `<div class="discover-row" style="cursor:default;" data-pl-idx="${idx}">
-              <img src="${escapeAttr(t.coverArt)}" style="width:36px;height:36px;border-radius:5px;object-fit:cover;flex-shrink:0;">
+              <img src="${escapeAttr(t.coverArt)}" style="width:36px;height:36px;border-radius:5px;object-fit:cover;flex-shrink:0;" alt="Album cover">
               <span style="flex:1;">
                 <span class="drow-name">${escapeHtml(t.title)}</span><br>
                 <span class="drow-bio">${escapeHtml((t.artists||[]).join(', '))}${t.album ? ' · ' + escapeHtml(t.album) : ''}</span>

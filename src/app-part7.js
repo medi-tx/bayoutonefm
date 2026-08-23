@@ -31,7 +31,7 @@ function pinnedSongs(list){
 }
 function obsessedChipHtml(s){
   const cover = s.coverArt
-    ? `<img src="${escapeAttr(s.coverArt)}" alt="">`
+    ? `<img src="${escapeAttr(s.coverArt)}" alt="Album cover">`
     : `<span class="oc-fallback">${escapeHtml((s.title||'?').charAt(0).toUpperCase())}</span>`;
   return `<button type="button" class="obsessed-chip" data-obsessed="${escapeAttr(s.id)}" title="Open ${escapeAttr(s.title||'Untitled')}">
       ${cover}

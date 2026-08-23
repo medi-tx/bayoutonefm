@@ -351,7 +351,7 @@
     return sotdProfiles.find(p=>p.user_id === id) || null;
   }
   function sotdAvatarHtml(p){
-    if(p && p.photo) return `<span class="sotd-avatar"><img src="${escapeAttr(p.photo)}" alt="" style="width:100%;height:100%;object-fit:cover;"></span>`;
+    if(p && p.photo) return `<span class="sotd-avatar"><img src="${escapeAttr(p.photo)}" alt="Profile photo" style="width:100%;height:100%;object-fit:cover;"></span>`;
     return `<span class="sotd-avatar">${escapeHtml(((p && p.username) || '?').charAt(0).toUpperCase())}</span>`;
   }
   function renderSotdDock(extra){
@@ -393,7 +393,7 @@
       reactionsHtml = '<span class="sotd-empty">No reactions yet — be the first!</span>';
     }
     const cover = sotdSong.cover
-      ? `<img class="sotd-cover" src="${escapeAttr(sotdSong.cover)}" alt="">`
+      ? `<img class="sotd-cover" src="${escapeAttr(sotdSong.cover)}" alt="Album cover">`
       : `<span class="sotd-cover" style="display:flex;align-items:center;justify-content:center;font-size:20px;">🎵</span>`;
     const link = sotdSong.url ? `<a class="sotd-link" href="${escapeAttr(sotdSong.url)}" target="_blank" rel="noopener">Open ↗</a>` : '';
     const streakHtml = (sotdCurrentStreak > 0 || sotdBestStreak > 0)
@@ -546,7 +546,7 @@
      listEl.innerHTML = filtered.map(item => {
        const song = item.song || {};
        const cover = song.cover
-         ? `<img class="sotd-history-cover" src="${escapeAttr(song.cover)}" alt="">`
+         ? `<img class="sotd-history-cover" src="${escapeAttr(song.cover)}" alt="Album cover">`
          : `<span class="sotd-history-cover-fallback">🎵</span>`;
        const link = song.url
          ? `<a class="sotd-history-link" href="${escapeAttr(song.url)}" target="_blank" rel="noopener">Open ↗</a>`
@@ -556,7 +556,7 @@
          reactionsHtml = item.reactions.map(r => {
            const p = r.profile;
            const avatar = (p && p.photo)
-             ? `<span class="sotd-avatar"><img src="${escapeAttr(p.photo)}" alt="" style="width:100%;height:100%;object-fit:cover;"></span>`
+             ? `<span class="sotd-avatar"><img src="${escapeAttr(p.photo)}" alt="Profile photo" style="width:100%;height:100%;object-fit:cover;"></span>`
              : `<span class="sotd-avatar">${escapeHtml(((p && p.username) || '?').charAt(0).toUpperCase())}</span>`;
            return `<span class="sotd-history-reactor" data-sotd-history-reactor="${r.user_id}" title="${escapeAttr(p && p.username ? '@' + p.username : 'View profile')}">${avatar}<span class="sotd-emoji">${r.emoji}</span></span>`;
          }).join('');

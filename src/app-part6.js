@@ -516,7 +516,7 @@ async function upsertMyProfile(fields){
 function renderMyAvatar(){
   const el = document.getElementById('myAvatarContent');
   if(myProfile && myProfile.photo){
-    el.innerHTML = `<img src="${myProfile.photo}">`;
+    el.innerHTML = `<img src="${myProfile.photo}" alt="Profile photo">`;
   } else {
     el.innerHTML = '♪';
   }
@@ -853,7 +853,7 @@ async function renderAlbumSearchResults(query){
   }
   wrap.innerHTML = albums.map(a=>`
       <button type="button" class="discover-row" data-collection-id="${a.collectionId}">
-        ${a.artworkUrl100 ? `<img src="${a.artworkUrl100}">` : `<span class="drow-fallback">${escapeHtml((a.collectionName||'?').charAt(0).toUpperCase())}</span>`}
+        ${a.artworkUrl100 ? `<img src="${a.artworkUrl100}" alt="Album cover">` : `<span class="drow-fallback">${escapeHtml((a.collectionName||'?').charAt(0).toUpperCase())}</span>`}
         <span>
           <span class="drow-name">${escapeHtml(a.collectionName||'Untitled')}</span><br>
           <span class="drow-bio">${escapeHtml(a.artistName||'')}${a.releaseDate ? ' · '+a.releaseDate.slice(0,4) : ''}</span>
@@ -987,7 +987,7 @@ async function renderSongSearchResults(query){
   songSearchCache = unique;
   wrap.innerHTML = unique.map((t, i)=>`
     <button type="button" class="discover-row" data-track-id="${t.trackId}">
-      ${t.artworkUrl100 ? `<img src="${t.artworkUrl100}">` : `<span class="drow-fallback">${escapeHtml((t.trackName||'?').charAt(0).toUpperCase())}</span>`}
+      ${t.artworkUrl100 ? `<img src="${t.artworkUrl100}" alt="Album cover">` : `<span class="drow-fallback">${escapeHtml((t.trackName||'?').charAt(0).toUpperCase())}</span>`}
       <span>
         <span class="drow-name">${escapeHtml(t.trackName||'Untitled')}</span><br>
         <span class="drow-bio">${escapeHtml(t.artistName||'')}${t.collectionName ? ' · '+escapeHtml(t.collectionName) : ''}</span>
