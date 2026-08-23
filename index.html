@@ -6720,6 +6720,12 @@ document.getElementById('spotifyImportConfirmBtn').addEventListener('click', ()=
     const dupes = findDuplicates(allImported);
     const dupeKeys = new Set(dupes.map(d => songKey(d)));
     const newSongs = allImported.filter(s => !dupeKeys.has(songKey(s)));
+    dupes.forEach(d => {
+      const existing = songs.find(s => songKey(s) === songKey(d));
+      if(existing && !existing.coverArt && d.coverArt){
+        existing.coverArt = d.coverArt;
+      }
+    });
     const doImportSave = ()=>{
       songs = [...newSongs, ...songs];
       save();
