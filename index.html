@@ -9263,9 +9263,10 @@ function syncToSupabase(){
         // Then fetch existing songs and merge
         const { data: existing } = await sb.from('user_data').select('songs').eq('user_id', currentUserId).maybeSingle();
         let existingSongs = (existing && existing.songs) || [];
-        const existingIds = new Set(existingSongs.map(s => s.id));
-        const toAdd = songs.filter(s => !existingIds.has(s.id));
-        const merged = [...toAdd, ...existingSongs];
+        // Local state wins for songs that exist locally; keep remote-only songs too
+        const localIds = new Set(songs.map(s => s.id));
+        const remoteOnly = existingSongs.filter(s => !localIds.has(s.id));
+        const merged = [...songs, ...remoteOnly];
         // Save merged in chunks if still too large
         const mergedStr = JSON.stringify(merged);
         if(mergedStr.length < 900000){
