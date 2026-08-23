@@ -6085,13 +6085,23 @@ document.getElementById('addMusicSpotifyBtn').addEventListener('click', ()=>{
   document.getElementById('spotifyImportResults').style.display = 'none';
   document.getElementById('spotifyImportError').style.display = 'none';
   document.getElementById('spotifyImportConfirmBtn').disabled = true;
+  document.getElementById('spotifyImportCancelBtn').textContent = 'Close';
   playlistImportedTracks = [];
   playlistImportService = 'spotify';
   playlistImportUrl = null;
   playlistImportLoadedUrl = null;
   document.getElementById('spotify-url-input').focus();
 });
-document.getElementById('spotifyImportCancelBtn').addEventListener('click', ()=>{
+document.getElementById('spotifyImportCancelBtn').addEventListener('click', function(){
+  if(playlistImportedTracks && playlistImportedTracks.length){
+    playlistImportedTracks = [];
+    playlistImportLoadedUrl = null;
+    document.getElementById('spotifyImportResults').style.display = 'none';
+    document.getElementById('spotifyImportConfirmBtn').disabled = true;
+    document.getElementById('spotify-url-input').value = '';
+    this.textContent = 'Close';
+    return;
+  }
   document.getElementById('spotifyImportOverlay').classList.remove('open');
 });
 document.getElementById('spotifyImportStopBtn').addEventListener('click', ()=>{
@@ -6484,6 +6494,7 @@ async function loadPlaylist(url){
       </div>`;
     renderPlaylistTrackList(listEl, tracks);
     confirmBtn.disabled = false;
+    document.getElementById('spotifyImportCancelBtn').textContent = 'Cancel';
     playlistImportInProgress = false;
     stopImportProgressTimer();
   }catch(e){
