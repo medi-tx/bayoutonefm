@@ -2830,8 +2830,9 @@
       <canvas id="statTierChart" width="460" height="130"></canvas>
     </div>
     <div class="stat-section">
-      <p class="stat-label">Top genres</p>
+      <p class="stat-label" style="cursor:pointer;" id="genreLabelToggle">Top genres <span id="genreToggleHint" style="font-size:10px; opacity:0.6; cursor:pointer;">(click for all)</span></p>
       <canvas id="statGenreChart" width="460" height="190"></canvas>
+      <div id="allGenresList" class="stat-tags" style="display:none;"></div>
     </div>
     <div class="stat-section">
       <p class="stat-label">Songs added per month</p>
@@ -4374,6 +4375,33 @@ function drawMonthChart(){
     ctx.fillText('Add songs to see your month-by-month history', w/2, (h-padT-padB)/2);
   }
 }
+function genreCounts(){
+  const map = {};
+  songs.forEach(s=>{
+    if(s.archived) return;
+    (s.genres||[]).forEach(g=>{ const k=String(g).trim(); if(k) map[k]=(map[k]||0)+1; });
+  });
+  return Object.entries(map).sort((a,b)=>b[1]-a[1]);
+}
+function renderAllGenres(){
+  const entries = genreCounts();
+  const listEl = document.getElementById('allGenresList');
+  const chart = document.getElementById('statGenreChart');
+  const hint = document.getElementById('genreToggleHint');
+  const expanded = listEl.style.display !== 'none';
+  if(expanded){
+    listEl.style.display = 'none';
+    chart.style.display = '';
+    hint.textContent = '(click for all)';
+    return;
+  }
+  chart.style.display = 'none';
+  hint.textContent = '(click to collapse)';
+  listEl.innerHTML = entries.length
+    ? entries.map(([g,n])=>`<span class="tag">${escapeHtml(g)}<b>${n}</b></span>`).join('')
+    : '<span class="stat-chart-note">No genres yet — add them when you log songs.</span>';
+}
+document.getElementById('genreLabelToggle').addEventListener('click', renderAllGenres);
 function renderStatTags(){
   const map = {};
   songs.forEach(s=>{
