@@ -1,4 +1,7 @@
 
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+window.sb = sb;
+
 let STORAGE_KEY = 'song-journal-entries';
 let PEOPLE_KEY = 'song-journal-people';
 let WISHLIST_KEY = 'song-journal-wishlist';
