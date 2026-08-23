@@ -2205,6 +2205,8 @@
   .feed-card .preview-btn:hover{ background:var(--rose); color:var(--ink); }
   .feed-card .preview-btn.playing{ background:var(--rose); color:var(--ink); }
   .feed-card .preview-btn.loading{ border-color:var(--rose); color:var(--rose); }
+  .feed-import-songs.open{ display:block !important; }
+  .feed-card-import{ cursor:default; }
   .feed-card-why{ font-size:12px; color:rgba(var(--on-paper-rgb),0.8); font-style:italic; margin-top:6px; line-height:1.4; }
   .feed-card-reminds{ font-size:11px; color:rgba(var(--on-paper-rgb),0.6); margin-top:4px; }
   .feed-card-reminds span{ color:var(--teal); }
@@ -11475,6 +11477,38 @@ document.getElementById('notifMarkReadBtn').addEventListener('click', ()=>{ trac
 
 /* ---- FRIEND ACTIVITY FEED ---- */
 const FEED_REACTION_EMOJIS = ['🔥','❤️','🤯','😎','😭','💯'];
+function feedImportCardHtml(clusterName, entries, who, profile, ownerId, when){
+  const initial = who === 'you' ? 'You' : ((who || '?').charAt(0).toUpperCase());
+  const avatar = (profile && profile.photo)
+    ? `<span class="feed-card-avatar"><img src="${escapeAttr(profile.photo)}" alt=""></span>`
+    : `<span class="feed-card-avatar">${escapeHtml(initial)}</span>`;
+  const whoLabel = who === 'you'
+    ? `<span class="feed-card-who"><b>You</b> imported a playlist</span>`
+    : `<span class="feed-card-who"><b>@${escapeHtml(who)}</b> imported a playlist</span>`;
+  const whenStr = when ? `<div class="feed-card-when">${new Date(when).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'})}</div>` : '';
+  const previewCovers = entries.slice(0,3).map(e=> e.song.coverArt ? `<img src="${escapeAttr(e.song.coverArt)}" style="width:32px;height:32px;border-radius:4px;object-fit:cover;">` : '').join('');
+  const songList = entries.map(e=>`<div style="display:flex;align-items:center;gap:8px;padding:4px 0;font-size:13px;border-bottom:1px solid rgba(var(--on-paper-rgb),0.08);">
+    ${e.song.coverArt ? `<img src="${escapeAttr(e.song.coverArt)}" style="width:28px;height:28px;border-radius:3px;object-fit:cover;flex-shrink:0;">` : ''}
+    <span><b>${escapeHtml(e.song.title||'Untitled')}</b> <span style="opacity:0.6;">${escapeHtml(formatArtists(e.song.artists))}</span></span>
+  </div>`).join('');
+  return `
+    <div class="feed-card feed-card-import" data-cluster-expand="${escapeAttr(entries[0].song.clusterId||'')}">
+      <div class="feed-card-head">
+        ${avatar}
+        ${whoLabel}
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;margin:8px 0;cursor:pointer;" onclick="this.closest('.feed-card-import').querySelector('.feed-import-songs').classList.toggle('open')">
+        <div style="display:flex;gap:4px;">${previewCovers}</div>
+        <div style="flex:1;">
+          <div style="font-weight:700;font-size:14px;">${escapeHtml(clusterName)}</div>
+          <div style="font-size:12px;opacity:0.6;">${entries.length} song${entries.length!==1?'s':''} · click to ${entries.length<=5?'see':'expand'}</div>
+        </div>
+        <span style="font-size:18px;opacity:0.4;">›</span>
+      </div>
+      <div class="feed-import-songs" style="display:none;">${songList}</div>
+      ${whenStr}
+    </div>`;
+}
 function feedCardHtml(entry){
   const s = entry.song;
   const who = entry.who;
@@ -11579,10 +11613,29 @@ async function loadFeed(){
     list.innerHTML = '<div class="feed-empty">Nothing new in the last ' + (mixtapeDays===7?'7 days':'30 days') + ' yet. Add some music or tell a friend to!</div>';
     return;
   }
-  list.innerHTML = all.map(e=>feedCardHtml(e)).join('');
+  const grouped = [];
+  const clusterGroups = {};
+  for(const e of all){
+    const cid = e.song.clusterId;
+    if(cid){
+      if(!clusterGroups[cid]) clusterGroups[cid] = { entries:[], who:e.who, profile:e.profile, ownerId:e.ownerId, clusterName:e.song.clusterName||'Imported Playlist', when:e.song.createdAt };
+      clusterGroups[cid].entries.push(e);
+    } else {
+      grouped.push(e);
+    }
+  }
+  for(const [cid, g] of Object.entries(clusterGroups)){
+    grouped.push({ _cluster:true, cid, clusterName:g.clusterName, entries:g.entries, who:g.who, profile:g.profile, ownerId:g.ownerId, when:g.when });
+  }
+  grouped.sort((a,b)=>{
+    const ta = a._cluster ? (a.when||0) : (a.song?.createdAt||0);
+    const tb = b._cluster ? (b.when||0) : (b.song?.createdAt||0);
+    return tb - ta;
+  });
+  list.innerHTML = grouped.map(e=> e._cluster ? feedImportCardHtml(e.clusterName, e.entries, e.who, e.profile, e.ownerId, e.when) : feedCardHtml(e)).join('');
   list.__feedData = all;
 }
-
+  
 document.getElementById('feedList').addEventListener('click', e=>{
   if(e.target.closest('[data-preview]')) return;
   const addBtn = e.target.closest('[data-feed-add]');
