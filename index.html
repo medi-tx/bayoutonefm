@@ -988,6 +988,17 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
     font-size:26px;
     margin-bottom:8px;
   }
+  .empty-emoji{
+    font-size:46px;
+    line-height:1;
+    margin-bottom:6px;
+    filter:drop-shadow(0 2px 6px rgba(0,0,0,0.25));
+  }
+  .empty p{
+    max-width:420px;
+    margin:0 auto 4px;
+    line-height:1.5;
+  }
 
   /* MODAL */
   .overlay{
@@ -2722,8 +2733,9 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
   <div class="grid" id="grid"></div>
   <div id="gridSentinel" style="height:1px;"></div>
   <div class="empty" id="emptyState" style="display:none;">
+    <div class="empty-emoji">🎵</div>
     <h2>No tracks yet</h2>
-    <p>Add the first song to start your cataloguex.</p>
+    <p>Log your first song to start your cataloguex — and unlock your tier board, timeline, and taste stats.</p>
     <button type="button" class="add-btn empty-state-add-btn" style="margin-top:12px;">+ Add your first song</button>
   </div>
   <div class="tier-board-toolbar" id="tierBoardToolbar" style="display:none;">
@@ -2732,14 +2744,16 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
   </div>
   <div class="tier-board" id="tierBoard" style="display:none;"></div>
   <div class="empty" id="tierBoardEmptyState" style="display:none;">
-    <h2>No tracks yet</h2>
-    <p>Add the first song to start your cataloguex.</p>
+    <div class="empty-emoji">🏆</div>
+    <h2>Your tier board is locked</h2>
+    <p>Rate your first few songs to unlock your tier board and see where everything lands.</p>
     <button type="button" class="add-btn empty-state-add-btn" style="margin-top:12px;">+ Add your first song</button>
   </div>
   <div class="timeline" id="timeline" style="display:none;"></div>
   <div class="empty" id="timelineEmptyState" style="display:none;">
+    <div class="empty-emoji">🕒</div>
     <h2>No entries yet</h2>
-    <p>Every song you add gets a date-and-time stamp here.</p>
+    <p>Every song you log gets a timestamp here. Add your first to start your listening timeline.</p>
     <button type="button" class="add-btn empty-state-add-btn" style="margin-top:12px;">+ Add your first song</button>
   </div>
 </div>
@@ -2791,16 +2805,20 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
   <div class="grid" id="friendGrid"></div>
   <div class="tier-board" id="friendTierBoard" style="display:none;"></div>
   <div class="empty" id="friendEmptyState" style="display:none;">
+    <div class="empty-emoji">🫧</div>
     <h2>No tracks yet</h2>
-    <p>This cataloguex is empty so far.</p>
+    <p>This cataloguex is quiet for now — check back soon to see what they've been listening to.</p>
   </div>
   <div class="empty" id="friendLockedState" style="display:none;">
+    <div class="empty-emoji">🔒</div>
     <h2>Friends only</h2>
     <p>Add this listener as a friend to see their cataloguex.</p>
   </div>
   <div class="empty" id="friendNotFoundState" style="display:none;">
+    <div class="empty-emoji">🔍</div>
     <h2>Cataloguex not found</h2>
-    <p>No listener with that username exists.</p>
+    <p>We couldn't find a listener with that username. Double-check the spelling, or explore Discover to find people to follow.</p>
+    <button type="button" class="add-btn secondary" id="friendNotFoundDiscoverBtn" style="margin-top:12px;">🔎 Explore Discover</button>
   </div>
   <div class="sticker-layer" id="friendStickerLayer" aria-hidden="true"></div>
 </div>
@@ -5636,7 +5654,7 @@ function render(){
       empty.querySelector('p').textContent = 'Songs you archive will show up here.';
     } else {
       empty.querySelector('h2').textContent = songs.length ? 'No matches' : 'No tracks yet';
-      empty.querySelector('p').textContent = songs.length ? 'Try a different search or filter.' : 'Add the first song to start your cataloguex.';
+      empty.querySelector('p').textContent = songs.length ? 'Try a different search or filter.' : 'Log your first song to start your cataloguex — and unlock your tier board, timeline, and taste stats.';
     }
   } else {
     empty.style.display = 'none';
@@ -5693,7 +5711,7 @@ function renderWishlistGrid(){
     grid.innerHTML = '';
     empty.style.display = 'block';
     empty.querySelector('h2').textContent = wishlist.length ? 'No matches' : 'No songs yet';
-    empty.querySelector('p').textContent = wishlist.length ? 'Try a different search.' : "Add a song you wish you'd written, for inspiration.";
+    empty.querySelector('p').textContent = wishlist.length ? 'Try a different search.' : "Add a song you wish you'd written — a little inspiration shelf for your cataloguex.";
   } else {
     empty.style.display = 'none';
     grid.innerHTML = list.map(s=>`
@@ -7823,6 +7841,10 @@ document.getElementById('discoverBtn').addEventListener('click', async ()=>{
   processFriendRows(rows);
   renderFriendRequests();
   renderDiscoverList('');
+});
+document.getElementById('friendNotFoundDiscoverBtn').addEventListener('click', ()=>{
+  const db = document.getElementById('discoverBtn');
+  if(db) db.click();
 });
 document.getElementById('friend-username-search').addEventListener('input', e=>{
   renderDiscoverList(e.target.value);

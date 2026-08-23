@@ -139,6 +139,10 @@ document.getElementById('discoverBtn').addEventListener('click', async ()=>{
   renderFriendRequests();
   renderDiscoverList('');
 });
+document.getElementById('friendNotFoundDiscoverBtn').addEventListener('click', ()=>{
+  const db = document.getElementById('discoverBtn');
+  if(db) db.click();
+});
 document.getElementById('friend-username-search').addEventListener('input', e=>{
   renderDiscoverList(e.target.value);
 });

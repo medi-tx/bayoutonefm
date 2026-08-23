@@ -2020,7 +2020,7 @@ function render(){
       empty.querySelector('p').textContent = 'Songs you archive will show up here.';
     } else {
       empty.querySelector('h2').textContent = songs.length ? 'No matches' : 'No tracks yet';
-      empty.querySelector('p').textContent = songs.length ? 'Try a different search or filter.' : 'Add the first song to start your cataloguex.';
+      empty.querySelector('p').textContent = songs.length ? 'Try a different search or filter.' : 'Log your first song to start your cataloguex — and unlock your tier board, timeline, and taste stats.';
     }
   } else {
     empty.style.display = 'none';
@@ -2077,7 +2077,7 @@ function renderWishlistGrid(){
     grid.innerHTML = '';
     empty.style.display = 'block';
     empty.querySelector('h2').textContent = wishlist.length ? 'No matches' : 'No songs yet';
-    empty.querySelector('p').textContent = wishlist.length ? 'Try a different search.' : "Add a song you wish you'd written, for inspiration.";
+    empty.querySelector('p').textContent = wishlist.length ? 'Try a different search.' : "Add a song you wish you'd written — a little inspiration shelf for your cataloguex.";
   } else {
     empty.style.display = 'none';
     grid.innerHTML = list.map(s=>`
