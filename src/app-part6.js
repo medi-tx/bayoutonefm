@@ -100,6 +100,7 @@ document.getElementById('auth-toggle-btn').addEventListener('click', ()=>{
   document.getElementById('auth-submit-btn').textContent = authMode === 'login' ? 'Log in' : 'Sign up';
   document.getElementById('auth-toggle-btn').textContent = authMode === 'login' ? 'Need an account? Sign up' : 'Already have an account? Log in';
   document.getElementById('auth-consent-row').style.display = authMode === 'signup' ? '' : 'none';
+  document.getElementById('auth-confirm-row').style.display = authMode === 'signup' ? '' : 'none';
   setAuthError(null); setAuthMessage(null);
 });
 
@@ -112,6 +113,11 @@ document.getElementById('auth-submit-btn').addEventListener('click', async ()=>{
   if(authMode === 'signup' && !document.getElementById('auth-consent-checkbox').checked){
     setAuthError('Please agree to the Terms of Service and Privacy Policy to create an account.');
     return;
+  }
+  if(authMode === 'signup'){
+    if(password.length < 6){ setAuthError('Password must be at least 6 characters.'); return; }
+    const confirmPassword = document.getElementById('auth-confirm-password').value;
+    if(password !== confirmPassword){ setAuthError('Passwords do not match.'); return; }
   }
   const btn = document.getElementById('auth-submit-btn');
   btn.disabled = true; btn.textContent = '…';
@@ -1057,6 +1063,7 @@ sb.auth.onAuthStateChange((event, session)=>{
   if(session && session.user){
     document.getElementById('auth-email').value = '';
     document.getElementById('auth-password').value = '';
+    const acp = document.getElementById('auth-confirm-password'); if(acp) acp.value = '';
     setAuthError(null); setAuthMessage(null);
     loadAppForUser(session.user);
   } else {
