@@ -3408,7 +3408,7 @@
 
 <div class="overlay" id="spotifyImportOverlay">
   <div class="modal" style="max-width:560px;">
-    <h3>Import Playlist</h3>
+    <h3 id="importModalTitle">Import Playlist</h3>
     <div class="field">
       <label>Playlist URL (Spotify, Apple Music, or Tidal)</label>
       <input type="text" id="spotify-url-input" placeholder="Paste a Spotify, Apple Music, or Tidal playlist URL…" autocomplete="off">
@@ -6070,6 +6070,7 @@ document.getElementById('addMusicSpotifyBtn').addEventListener('click', ()=>{
   document.getElementById('spotifyImportError').style.display = 'none';
   document.getElementById('spotifyImportConfirmBtn').disabled = true;
   document.getElementById('spotifyImportCancelBtn').textContent = 'Close';
+  document.getElementById('importModalTitle').textContent = 'Import Playlist';
   playlistImportedTracks = [];
   playlistImportService = 'spotify';
   playlistImportUrl = null;
@@ -6083,6 +6084,7 @@ document.getElementById('spotifyImportCancelBtn').addEventListener('click', func
     document.getElementById('spotifyImportResults').style.display = 'none';
     document.getElementById('spotifyImportConfirmBtn').disabled = true;
     document.getElementById('spotify-url-input').value = '';
+    document.getElementById('importModalTitle').textContent = 'Import Playlist';
     this.textContent = 'Close';
     return;
   }
@@ -6477,6 +6479,7 @@ async function loadPlaylist(url){
         <div style="font-size:12px; opacity:0.7;">${tracks.length} tracks · ${serviceLabel}</div>
       </div>`;
     renderPlaylistTrackList(listEl, tracks);
+    document.getElementById('importModalTitle').textContent = playlistName;
     confirmBtn.disabled = false;
     document.getElementById('spotifyImportCancelBtn').textContent = 'Cancel';
     playlistImportInProgress = false;
