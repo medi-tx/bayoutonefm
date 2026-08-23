@@ -5100,6 +5100,9 @@ document.getElementById('shareCopyBtn').addEventListener('click', async ()=>{
 /* ---- 30-second audio previews (official Apple Music previews via iTunes Search API) ---- */
 const previewCache = {};
 const previewFailed = new Set();
+const previewInflight = new Set();
+let itunesCooldownUntil = 0;
+let deezerCooldownUntil = 0;
 let previewAudio = null;
 let nowPlayingId = null;
 const feedSongCache = {};
@@ -5142,21 +5145,27 @@ function setPreviewBtnState(id, state){
 async function fetchPreviewUrl(song){
   const id = song && song.id;
   if(id === null || id === undefined) return null;
-  if(previewFailed.has(id)) return null;
+  if(previewFailed.has(id) || previewInflight.has(id)) return null;
   if(Object.prototype.hasOwnProperty.call(previewCache, id)) return previewCache[id];
   if(song.previewUrl){ previewCache[id] = song.previewUrl; return song.previewUrl; }
+  previewInflight.add(id);
   const term = [song.title, (song.artists||[])[0]].filter(Boolean).join(' ').replace(/\//g, ' ');
   let url = null;
-  try{
-    const dzRows = await deezerSearch(term, 10) || [];
-    const wantTitle = String(song.title||'').trim().toLowerCase();
-    const wantArtist = String((song.artists||[])[0]||'').trim().toLowerCase();
-    let hit = dzRows.find(r=> r.previewUrl && String(r.trackName||'').trim().toLowerCase() === wantTitle && wantArtist && String(r.artistName||'').trim().toLowerCase() === wantArtist);
-    if(!hit) hit = dzRows.find(r=> r.previewUrl && wantTitle && String(r.trackName||'').trim().toLowerCase().includes(wantTitle) && wantArtist && String(r.artistName||'').trim().includes(wantArtist));
-    if(!hit) hit = dzRows.find(r=> r.previewUrl && String(r.trackName||'').trim().toLowerCase() === wantTitle && wantArtist && wantArtist.split(' ').some(w => w.length > 2 && String(r.artistName||'').toLowerCase().includes(w)));
-    if(hit) url = hit.previewUrl;
-  }catch(e){}
-  if(!url){
+  const now = Date.now();
+  if(now > deezerCooldownUntil){
+    try{
+      const dzHits = await deezerSearch(term, 10) || [];
+      const wantTitle = String(song.title||'').trim().toLowerCase();
+      const wantArtist = String((song.artists||[])[0]||'').trim().toLowerCase();
+      let hit = dzHits.find(r=> r.previewUrl && String(r.trackName||'').trim().toLowerCase() === wantTitle && wantArtist && String(r.artistName||'').trim().toLowerCase() === wantArtist);
+      if(!hit) hit = dzHits.find(r=> r.previewUrl && wantTitle && String(r.trackName||'').trim().toLowerCase().includes(wantTitle) && wantArtist && String(r.artistName||'').trim().toLowerCase().includes(wantArtist));
+      if(!hit) hit = dzHits.find(r=> r.previewUrl && String(r.trackName||'').trim().toLowerCase() === wantTitle && wantArtist && wantArtist.split(' ').some(w => w.length > 2 && String(r.artistName||'').toLowerCase().includes(w)));
+      if(hit) url = hit.previewUrl;
+    }catch(e){
+      deezerCooldownUntil = Date.now() + 60000;
+    }
+  }
+  if(!url && now > itunesCooldownUntil){
     try{
       const rows = await itunesSearch(term, 'song', 10) || [];
       const wantTitle = String(song.title||'').trim().toLowerCase();
@@ -5165,8 +5174,11 @@ async function fetchPreviewUrl(song){
       if(!hit) hit = rows.find(r=> r.previewUrl && wantTitle && String(r.trackName||'').trim().toLowerCase().includes(wantTitle) && wantArtist && String(r.artistName||'').trim().toLowerCase().includes(wantArtist));
       if(!hit) hit = rows.find(r=> r.previewUrl && String(r.trackName||'').trim().toLowerCase() === wantTitle && wantArtist && wantArtist.split(' ').some(w => w.length > 2 && String(r.artistName||'').toLowerCase().includes(w)));
       if(hit) url = hit.previewUrl;
-    }catch(err){}
+    }catch(err){
+      itunesCooldownUntil = Date.now() + 60000;
+    }
   }
+  previewInflight.delete(id);
   if(url) previewCache[id] = url;
   else previewFailed.add(id);
   if(url && id === 'sotd' && typeof window.sotdPersistPreview === 'function') window.sotdPersistPreview(url);
@@ -5174,13 +5186,13 @@ async function fetchPreviewUrl(song){
 }
 function prefetchPreviews(songList){
   if(!songList || !songList.length) return;
-  const todo = songList.filter(s=> s && s.id && !previewFailed.has(s.id) && !Object.prototype.hasOwnProperty.call(previewCache, s.id) && !s.previewUrl);
+  const todo = songList.filter(s=> s && s.id && !previewFailed.has(s.id) && !previewInflight.has(s.id) && !Object.prototype.hasOwnProperty.call(previewCache, s.id) && !s.previewUrl).slice(0, 60);
   if(!todo.length) return;
   let idx = 0;
   function next(){
     if(idx >= todo.length) return;
     const s = todo[idx++];
-    fetchPreviewUrl(s).catch(()=>{}).then(()=> setTimeout(next, 1500));
+    fetchPreviewUrl(s).catch(()=>{}).then(()=> setTimeout(next, 3000));
   }
   next();
 }
@@ -6627,15 +6639,21 @@ function enrichSongsFromSearch(toEnrich, abort, saveEvery){
       if(abort && abort.aborted) return;
       const s = toEnrich[i];
       if(failed.has(s.id)) continue;
+      const now = Date.now();
+      if(now < deezerCooldownUntil && now < itunesCooldownUntil){ failed.add(s.id); continue; }
       const term = (s.title || '').replace(/\//g, ' ') + ' ' + (s.artists[0] || '');
       try{
-        const dzHits = await deezerSearch(term, 1);
-        if(dzHits && dzHits.length){
-          const dz = dzHits[0];
-          if(dz.artworkUrl100) s.coverArt = dz.artworkUrl100;
-          if(dz.collectionName && !s.album) s.album = dz.collectionName;
-          if(dz.primaryGenreName && (!s.genres || s.genres.length === 0)) s.genres = [dz.primaryGenreName];
-        } else {
+        let gotArt = false;
+        if(now > deezerCooldownUntil){
+          const dzHits = await deezerSearch(term, 1);
+          if(dzHits && dzHits.length){
+            const dz = dzHits[0];
+            if(dz.artworkUrl100){ s.coverArt = dz.artworkUrl100; gotArt = true; }
+            if(dz.collectionName && !s.album) s.album = dz.collectionName;
+            if(dz.primaryGenreName && (!s.genres || s.genres.length === 0)) s.genres = [dz.primaryGenreName];
+          }
+        }
+        if(!gotArt && Date.now() > itunesCooldownUntil){
           const hits = await itunesSearch(term, 'song', 1);
           if(hits && hits.length){
             const hit = hits[0];
@@ -6646,6 +6664,8 @@ function enrichSongsFromSearch(toEnrich, abort, saveEvery){
           } else {
             failed.add(s.id);
           }
+        } else if(!gotArt) {
+          failed.add(s.id);
         }
       }catch(e){ failed.add(s.id); }
       done++;
@@ -9171,7 +9191,7 @@ function enrichExplicitStatus(){
   const DELAY = 800;
   let i = 0;
   function nextBatch(){
-    if(i >= missingExplicit.length) return;
+    if(i >= missingExplicit.length){ save(); return; }
     const batch = missingExplicit.slice(i, i + BATCH);
     i += BATCH;
     Promise.all(batch.map(s => {
@@ -9182,14 +9202,11 @@ function enrichExplicitStatus(){
         return r ? { idx: songs.indexOf(s), explicit: !!r.explicit } : null;
       }).catch(()=> null);
     })).then(results => {
-      let changed = false;
       results.filter(Boolean).forEach(r => {
         if(r.idx > -1 && typeof songs[r.idx].explicit === 'undefined'){
           songs[r.idx].explicit = r.explicit;
-          changed = true;
         }
       });
-      if(changed) save();
       setTimeout(nextBatch, DELAY);
     }).catch(()=> setTimeout(nextBatch, DELAY));
   }
