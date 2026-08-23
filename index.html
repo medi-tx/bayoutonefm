@@ -9715,9 +9715,6 @@ async function loadAppForUser(user){
     }
     delete s.rating;
   });
-  songs.forEach(s => {
-    if(s.tier === '★' && !s.favorited) s.favorited = true;
-  });
 
   seedPeopleIfEmpty();
   seedIfEmpty();
