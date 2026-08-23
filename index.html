@@ -2666,6 +2666,7 @@
       <option value="year-desc">Year (newest)</option>
       <option value="year-asc">Year (oldest)</option>
       <option value="title">Title (A–Z)</option>
+      <option value="recently-played">Recently played</option>
     </select>
     <button class="add-btn secondary" id="toggleArchive">View archive</button>
     <button class="add-btn secondary" id="toggleTierBoard">🏆 Tier board</button>
@@ -5423,6 +5424,15 @@ function stopPreview(){
   if(previewAudio) previewAudio.removeAttribute('src');
   if(nowPlayingId){ setPreviewBtnState(nowPlayingId, 'idle'); nowPlayingId = null; }
 }
+function markPlayed(song){
+  if(!song || !song.id) return;
+  const idx = songs.findIndex(s=>s.id === song.id);
+  if(idx === -1) return; // only record plays for real catalogue songs
+  songs[idx].lastPlayed = Date.now();
+  save();
+  syncToSupabase();
+}
+
 function playPreviewNow(id, song){
   if(!previewAudio) previewAudio = document.getElementById('previewAudio');
   if(nowPlayingId === id && previewAudio && !previewAudio.paused) return false;
@@ -5436,6 +5446,7 @@ function playPreviewNow(id, song){
   nowPlayingId = id;
   setPreviewBtnState(id, 'playing');
   previewAudio.play().catch(()=>{ setPreviewBtnState(id, 'idle'); nowPlayingId = null; });
+  markPlayed(song);
   trackEvent('preview_play');
   return true;
 }
@@ -5481,6 +5492,7 @@ async function togglePreview(id){
   previewAudio.onerror = ()=>{ setPreviewBtnState(id, 'none'); nowPlayingId = null; };
   nowPlayingId = id;
   previewAudio.play().then(()=>{ setPreviewBtnState(id, 'playing'); }).catch(()=>{ setPreviewBtnState(id, 'idle'); nowPlayingId = null; });
+  markPlayed(song);
   trackEvent('preview_play');
 }
 function resolveSong(id){
@@ -5584,6 +5596,7 @@ function render(){
     if(sortBy === 'year-desc') return (parseInt(b.year)||0) - (parseInt(a.year)||0);
     if(sortBy === 'year-asc') return (parseInt(a.year)||0) - (parseInt(b.year)||0);
     if(sortBy === 'title') return a.title.localeCompare(b.title);
+    if(sortBy === 'recently-played') return (b.lastPlayed||0) - (a.lastPlayed||0);
     return 0;
   });
 
