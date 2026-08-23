@@ -2545,9 +2545,23 @@
     cursor:pointer; margin-top:10px; width:100%;
   }
   .sotd-prev-btn:hover{ background:rgba(var(--on-ink-rgb),0.18); border-color:var(--on-ink); }
+
+  /* ---- Accessibility ---- */
+  :focus-visible{ outline:2px solid var(--teal); outline-offset:2px; }
+  .skip-link{
+    position:fixed; top:8px; left:8px; z-index:20000;
+    background:var(--ink); color:var(--paper); padding:8px 14px; border-radius:6px;
+    text-decoration:none; font-size:13px; font-family:"Space Grotesk",sans-serif;
+    transform:translateY(-150%); transition:transform .15s ease;
+  }
+  .skip-link:focus{ transform:translateY(0); outline:2px solid var(--teal); outline-offset:2px; }
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; scroll-behavior:auto !important; }
+  }
 </style>
 </head>
 <body>
+  <a href="#appWrap" class="skip-link">Skip to content</a>
 
 <!-- AUTH SCREEN -->
 <div id="authScreen" class="auth-screen">
@@ -6513,6 +6527,9 @@ function showToast(msg, duration){
   if(!t){
     t = document.createElement('div');
     t.id = 'appToast';
+    t.setAttribute('role', 'status');
+    t.setAttribute('aria-live', 'polite');
+    t.setAttribute('aria-atomic', 'true');
     t.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);max-width:420px;width:calc(100% - 32px);padding:12px 20px;border-radius:8px;background:var(--ink);border:1px solid rgba(var(--on-paper-rgb),0.15);color:var(--paper);font-family:"Space Grotesk",sans-serif;font-size:13px;line-height:1.5;z-index:10002;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,0.4);opacity:0;transition:opacity 0.25s ease;pointer-events:none;';
     document.body.appendChild(t);
   }
