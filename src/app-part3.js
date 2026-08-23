@@ -83,6 +83,15 @@ function applyTheme(theme){
   root.setProperty('--on-ink-rgb', onInkRgb.r + ',' + onInkRgb.g + ',' + onInkRgb.b);
   root.setProperty('--line-on-paper', rgba(onPaper, 0.16));
   root.setProperty('--field-bg', paperLum > 0.45 ? '#ffffff' : '#262833');
+  const tierAccents = { 'S':'teal', 'star':'gold', 'A':'rose', 'B':'lilac', 'C':'sage' };
+  const darkText = '#1A1A1A', lightText = '#F5F2EA';
+  const darkTLum = luminance(darkText), lightTLum = luminance(lightText);
+  Object.keys(tierAccents).forEach(tk=>{
+    const cA = luminance(t[tierAccents[tk]] || '#888888');
+    const crDark = (Math.max(cA, darkTLum) + 0.05) / (Math.min(cA, darkTLum) + 0.05);
+    const crLight = (Math.max(cA, lightTLum) + 0.05) / (Math.min(cA, lightTLum) + 0.05);
+    root.setProperty('--tier-' + tk + '-fg', crDark >= crLight ? darkText : lightText);
+  });
   const meta = document.querySelector('meta[name="theme-color"]');
   if(meta) meta.setAttribute('content', t.ink);
 

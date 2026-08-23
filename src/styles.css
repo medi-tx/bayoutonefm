@@ -635,11 +635,11 @@
     color:var(--ink);
     border:1px solid rgba(var(--on-paper-rgb),0.15);
   }
-  .tier-board-badge.tier-S{ background:var(--teal); border-color:var(--teal); }
-  .tier-board-badge.tier-★{ background:var(--star); border-color:var(--star); }
-  .tier-board-badge.tier-A{ background:var(--rose); border-color:var(--rose); }
-  .tier-board-badge.tier-B{ background:var(--lilac); border-color:var(--lilac); }
-  .tier-board-badge.tier-C{ background:var(--sage); border-color:var(--sage); }
+  .tier-board-badge.tier-S{ background:var(--teal); border-color:var(--teal); color:var(--tier-S-fg); }
+  .tier-board-badge.tier-★{ background:var(--star); border-color:var(--star); color:var(--tier-star-fg); }
+  .tier-board-badge.tier-A{ background:var(--rose); border-color:var(--rose); color:var(--tier-A-fg); }
+  .tier-board-badge.tier-B{ background:var(--lilac); border-color:var(--lilac); color:var(--tier-B-fg); }
+  .tier-board-badge.tier-C{ background:var(--sage); border-color:var(--sage); color:var(--tier-C-fg); }
 
   .tier-board-covers{
     display:flex;
@@ -833,11 +833,11 @@
     color:var(--ink);
     border:1px solid rgba(var(--on-paper-rgb),0.15);
   }
-  .tier-badge.tier-S{ background:var(--teal); border-color:var(--teal); }
-  .tier-badge.tier-★{ background:var(--star); border-color:var(--star); }
-  .tier-badge.tier-A{ background:var(--rose); color:var(--on-ink); border-color:var(--rose); }
-  .tier-badge.tier-B{ background:var(--lilac); color:var(--on-ink); border-color:var(--lilac); }
-  .tier-badge.tier-C{ background:var(--sage); color:var(--on-ink); border-color:var(--sage); }
+  .tier-badge.tier-S{ background:var(--teal); border-color:var(--teal); color:var(--tier-S-fg); }
+  .tier-badge.tier-★{ background:var(--star); border-color:var(--star); color:var(--tier-star-fg); }
+  .tier-badge.tier-A{ background:var(--rose); color:var(--tier-A-fg); border-color:var(--rose); }
+  .tier-badge.tier-B{ background:var(--lilac); color:var(--tier-B-fg); border-color:var(--lilac); }
+  .tier-badge.tier-C{ background:var(--sage); color:var(--tier-C-fg); border-color:var(--sage); }
 
   .tier-badge.tier-none{ background:none; color: rgba(var(--on-paper-rgb),0.55); border-style:dashed; font-style:normal; font-family:'IBM Plex Mono', monospace; font-size:10px; letter-spacing:0.5px; }
 
