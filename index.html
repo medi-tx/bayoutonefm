@@ -4107,7 +4107,6 @@ function songCardHtml(s, clusterCounts){
         </div>
         <div class="tier-row">${renderTierBadge(s.tier)}</div>
         <div class="preview-row">
-          <span class="explicit-toggle${s.explicit ? ' on' : ''}" data-explicit-toggle="${escapeAttr(s.id)}" title="Is this song explicit?" role="button" tabindex="0">E</span>
           <button type="button" class="preview-btn" data-preview="${escapeAttr(s.id)}" title="Play a 30-second preview" aria-label="Play 30-second preview">▶</button>
           <span class="preview-hint">30-sec preview</span>
         </div>
@@ -5873,21 +5872,6 @@ document.getElementById('grid').addEventListener('click', e=>{
         wishlist = wishlist.filter(w=>w.id!==id);
         saveWishlist();
         renderWishlistGrid();
-      }
-    }
-    return;
-  }
-  const explicitToggle = e.target.closest('[data-explicit-toggle]');
-  if(explicitToggle){
-    const card = explicitToggle.closest('.card');
-    if(card){
-      const songId = explicitToggle.dataset.explicitToggle;
-      const song = songs.find(s=>s.id===songId);
-      if(song){
-        song.explicit = !song.explicit;
-        explicitToggle.classList.toggle('on', song.explicit);
-        save();
-        upsertGlobalSong(song, currentUserId);
       }
     }
     return;
@@ -9128,6 +9112,7 @@ function syncToSongDb(song, userId){
       album: (song.album || '').trim(),
       year: (song.year || '').toString().trim(),
       genres: song.genres || [],
+      explicit: !!song.explicit,
       cover_art: song.coverArt || null,
       source: 'user',
       added_by: userId || null
@@ -9195,6 +9180,7 @@ async function updateGlobalSong(song){
     if(song.album) updates.album = song.album.trim();
     if(song.coverArt) updates.cover_art = song.coverArt;
     if(song.previewUrl) updates.preview_url = song.previewUrl;
+    if(typeof song.explicit === 'boolean') updates.explicit = song.explicit;
     if(Object.keys(updates).length === 0) return;
     await sb.from('global_songs').update(updates).eq('title', title).ilike('artist', artist);
   }catch(e){ console.error('global_songs update failed:', e); }
