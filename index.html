@@ -9506,52 +9506,78 @@ async function updateGlobalSong(song){
   }catch(e){ console.error('global_songs update failed:', e); }
 }
 
+function slimSongForUpload(s){
+  const c = Object.assign({}, s);
+  ['album','year','why','credit','lyricSnippet','heard','source','clusterName'].forEach(k=>{
+    if(c[k] === '' || c[k] === null || c[k] === undefined) delete c[k];
+  });
+  ['artists','genres','tags','remindsOf','edits'].forEach(k=>{
+    if(Array.isArray(c[k]) && c[k].length === 0) delete c[k];
+  });
+  if(c.tier === '' || c.tier === null || c.tier === undefined) delete c.tier;
+  return c;
+}
+let syncDirty = false;
+async function doSync(attempt){
+  try{
+    const updated = new Date().toISOString();
+    const localIds = new Set(songs.map(s=>s.id));
+    let slimSongs = songs.map(slimSongForUpload);
+    let payload = { user_id: currentUserId, songs: slimSongs, people, wishlist, updated_at: updated };
+    if(JSON.stringify(payload).length < 900000){
+      await pushUserData(payload);
+    } else {
+      // Large catalogue: save people+wishlist first, then merge songs with remote
+      await pushUserData({ user_id: currentUserId, people, wishlist, updated_at: updated });
+      const { data: existing } = await sb.from('user_data').select('songs').eq('user_id', currentUserId).maybeSingle();
+      const remoteOnly = (((existing && existing.songs) || [])).filter(s => !localIds.has(s.id));
+      const merged = [...slimSongs, ...remoteOnly];
+      payload = { user_id: currentUserId, songs: merged, updated_at: updated };
+      if(JSON.stringify(payload).length < 900000){
+        await pushUserData(payload);
+      } else {
+        // Still too big — drop remote-only songs we can't verify, keep local state authoritative
+        // and strip heavy fields (base64 art, edit logs)
+        payload.songs = merged.map(s => {
+          const c = Object.assign({}, s);
+          if(c.coverArt && c.coverArt.startsWith('data:')) delete c.coverArt;
+          if(c.edits && c.edits.length > 3) c.edits = c.edits.slice(-3);
+          return c;
+        });
+        if(JSON.stringify(payload).length >= 900000){
+          // Final fallback: drop cover art entirely from upload copy only
+          payload.songs = payload.songs.map(s => { const c = Object.assign({}, s); delete c.coverArt; return c; });
+        }
+        await pushUserData(payload);
+        console.warn('Saved songs in reduced form due to size limit. Full data preserved locally.');
+      }
+    }
+    syncDirty = false;
+  }catch(e){
+    console.error('Cloud save failed (attempt ' + (attempt + 1) + '/3):', e);
+    if(attempt < 2){
+      setTimeout(()=> doSync(attempt + 1), 2000 * (attempt + 1));
+    } else {
+      alert('Your last change could not be saved to the cloud (connection or size issue). It will retry automatically when you switch tabs.');
+    }
+  }
+}
+function pushUserData(payload){
+  return sb.from('user_data').upsert(payload, { onConflict: 'user_id' }).then(r=>{
+    if(r.error) throw r.error;
+  });
+}
+document.addEventListener('visibilitychange', ()=>{
+  if(!document.hidden && syncDirty && currentUserId){
+    clearTimeout(syncTimer);
+    syncTimer = setTimeout(()=> doSync(0), 1000);
+  }
+});
 function syncToSupabase(){
   if(!currentUserId) return;
+  syncDirty = true;
   clearTimeout(syncTimer);
-  syncTimer = setTimeout(async ()=>{
-    try{
-      const payload = { user_id: currentUserId, songs, people, wishlist, updated_at: new Date().toISOString() };
-      const payloadStr = JSON.stringify(payload);
-      if(payloadStr.length < 900000){
-        const { error } = await sb
-          .from('user_data')
-          .upsert(payload, { onConflict: 'user_id' });
-        if(error) console.error('Error saving to your account:', error);
-      } else {
-        // For large catalogues, save songs in chunks via RPC merge
-        // First save people+wishlist separately (small)
-        await sb.from('user_data')
-          .upsert({ user_id: currentUserId, people, wishlist, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
-        // Then fetch existing songs and merge
-        const { data: existing } = await sb.from('user_data').select('songs').eq('user_id', currentUserId).maybeSingle();
-        let existingSongs = (existing && existing.songs) || [];
-        // Local state wins for songs that exist locally; keep remote-only songs too
-        const localIds = new Set(songs.map(s => s.id));
-        const remoteOnly = existingSongs.filter(s => !localIds.has(s.id));
-        const merged = [...songs, ...remoteOnly];
-        // Save merged in chunks if still too large
-        const mergedStr = JSON.stringify(merged);
-        if(mergedStr.length < 900000){
-          await sb.from('user_data')
-            .upsert({ user_id: currentUserId, songs: merged, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
-        } else {
-          // Last resort: save without cover art to reduce size
-          const stripped = merged.map(s => {
-            const c = Object.assign({}, s);
-            if(c.coverArt && c.coverArt.startsWith('data:')) delete c.coverArt;
-            return c;
-          });
-          const { error: stripErr } = await sb.from('user_data')
-            .upsert({ user_id: currentUserId, songs: stripped, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
-          if(stripErr) console.error('Error saving stripped songs:', stripErr);
-          else console.warn('Saved songs without artwork due to size limit. Artwork preserved in localStorage.');
-        }
-      }
-    }catch(e){
-      console.error('Sync error:', e);
-    }
-  }, 400);
+  syncTimer = setTimeout(()=> doSync(0), 400);
 }
 
 let currentUserId = null;
