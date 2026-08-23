@@ -1214,9 +1214,11 @@ function mixtapeItemHtml(s, who){
 }
 function setFeedModeUI(mode){
   feedMode = mode;
-  document.getElementById('mixtapeWeekBtn').classList.toggle('active', mode==='friends' && mixtapeDays===7);
-  document.getElementById('mixtapeMonthBtn').classList.toggle('active', mode==='friends' && mixtapeDays===30);
-  document.getElementById('mixtapeDiscoverBtn').classList.toggle('active', mode==='discover');
+  const wOn = mode==='friends' && mixtapeDays===7, mOn = mode==='friends' && mixtapeDays===30, dOn = mode==='discover';
+  const wk = document.getElementById('mixtapeWeekBtn'), mo = document.getElementById('mixtapeMonthBtn'), di = document.getElementById('mixtapeDiscoverBtn');
+  wk.classList.toggle('active', wOn); wk.setAttribute('aria-pressed', wOn ? 'true' : 'false');
+  mo.classList.toggle('active', mOn); mo.setAttribute('aria-pressed', mOn ? 'true' : 'false');
+  di.classList.toggle('active', dOn); di.setAttribute('aria-pressed', dOn ? 'true' : 'false');
   document.getElementById('feedFriendsSub').style.display = mode==='discover' ? 'none' : '';
   document.getElementById('feedModeSub').style.display = mode==='discover' ? '' : 'none';
 }
@@ -2645,12 +2647,16 @@ function updateViewUI(){
   const timeBtn = document.getElementById('toggleTimeline');
   archBtn.textContent = showArchived ? '← Back to cataloguex' : 'View archive';
   archBtn.classList.toggle('active', showArchived);
+  archBtn.setAttribute('aria-pressed', showArchived ? 'true' : 'false');
   wishBtn.textContent = viewingWishlist ? '← Back to cataloguex' : '✍ Songs I Wish I Wrote';
   wishBtn.classList.toggle('active', viewingWishlist);
+  wishBtn.setAttribute('aria-pressed', viewingWishlist ? 'true' : 'false');
   tierBtn.textContent = viewingTierBoard ? '← Back to cataloguex' : '🏆 Tier board';
   tierBtn.classList.toggle('active', viewingTierBoard);
+  tierBtn.setAttribute('aria-pressed', viewingTierBoard ? 'true' : 'false');
   timeBtn.textContent = viewingTimeline ? '← Back to cataloguex' : '🕰 Timeline';
   timeBtn.classList.toggle('active', viewingTimeline);
+  timeBtn.setAttribute('aria-pressed', viewingTimeline ? 'true' : 'false');
 
   const otherMode = showArchived || viewingWishlist;
   document.getElementById('openAddMusic').style.display = otherMode ? 'none' : '';

@@ -614,6 +614,7 @@ function updateFriendViewUI(){
   const btn = document.getElementById('friendTierBoardBtn');
   btn.textContent = viewingFriendTierBoard ? '← Back to grid' : '🏆 Tier board';
   btn.classList.toggle('active', viewingFriendTierBoard);
+  btn.setAttribute('aria-pressed', viewingFriendTierBoard ? 'true' : 'false');
   if(viewingFriendTierBoard){
     grid.style.display = 'none';
     board.style.display = '';

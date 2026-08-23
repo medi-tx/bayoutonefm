@@ -2771,10 +2771,10 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
       <option value="title">Title (A–Z)</option>
       <option value="recently-played">Recently played</option>
     </select>
-    <button class="add-btn secondary" id="toggleArchive">View archive</button>
-    <button class="add-btn secondary" id="toggleTierBoard">🏆 Tier board</button>
-    <button class="add-btn secondary" id="toggleWishlist">✍ Songs I Wish I Wrote</button>
-    <button class="add-btn secondary" id="toggleTimeline">🕰 Timeline</button>
+    <button class="add-btn secondary" id="toggleArchive" aria-pressed="false">View archive</button>
+    <button class="add-btn secondary" id="toggleTierBoard" aria-pressed="false">🏆 Tier board</button>
+    <button class="add-btn secondary" id="toggleWishlist" aria-pressed="false">✍ Songs I Wish I Wrote</button>
+    <button class="add-btn secondary" id="toggleTimeline" aria-pressed="false">🕰 Timeline</button>
     <button class="add-btn secondary" id="openCluster">+ Create Stack</button>
     <button class="add-btn secondary" id="viewClustersBtn">View Stacks</button>
     <button class="add-btn" id="openAddMusic">+ Add Music</button>
@@ -2846,7 +2846,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
       <p class="friend-bio" id="friendBio"></p>
     </div>
     <div class="friend-banner-actions">
-      <button type="button" id="friendTierBoardBtn">🏆 Tier board</button>
+      <button type="button" id="friendTierBoardBtn" aria-pressed="false">🏆 Tier board</button>
       <button type="button" id="friendCompareBtn">⚖️ Compare</button>
       <button type="button" id="friendShareBtn">🃏 Share card</button>
       <button type="button" id="friendShareTierBoardBtn">🏆 Share board</button>
@@ -3040,9 +3040,9 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
   <div class="modal feed-modal">
     <p class="mixtape-sub" id="feedFriendsSub">Songs from your friends and you — click any song to add it to your cataloguex.</p>
     <div class="mixtape-period">
-      <button type="button" class="mixtape-period-btn active" id="mixtapeWeekBtn">This week</button>
-      <button type="button" class="mixtape-period-btn" id="mixtapeMonthBtn">This month</button>
-      <button type="button" class="mixtape-period-btn" id="mixtapeDiscoverBtn" title="Recently added by everyone on bayoutonefm, not just friends">🌐 Discover</button>
+      <button type="button" class="mixtape-period-btn active" id="mixtapeWeekBtn" aria-pressed="true">This week</button>
+      <button type="button" class="mixtape-period-btn" id="mixtapeMonthBtn" aria-pressed="false">This month</button>
+      <button type="button" class="mixtape-period-btn" id="mixtapeDiscoverBtn" aria-pressed="false" title="Recently added by everyone on bayoutonefm, not just friends">🌐 Discover</button>
     </div>
     <p class="mixtape-sub" id="feedModeSub" style="display:none;">New music added by everyone on bayoutonefm — not just your friends.</p>
     <p class="mixtape-count" id="feedCount"></p>
@@ -4926,9 +4926,11 @@ function mixtapeItemHtml(s, who){
 }
 function setFeedModeUI(mode){
   feedMode = mode;
-  document.getElementById('mixtapeWeekBtn').classList.toggle('active', mode==='friends' && mixtapeDays===7);
-  document.getElementById('mixtapeMonthBtn').classList.toggle('active', mode==='friends' && mixtapeDays===30);
-  document.getElementById('mixtapeDiscoverBtn').classList.toggle('active', mode==='discover');
+  const wOn = mode==='friends' && mixtapeDays===7, mOn = mode==='friends' && mixtapeDays===30, dOn = mode==='discover';
+  const wk = document.getElementById('mixtapeWeekBtn'), mo = document.getElementById('mixtapeMonthBtn'), di = document.getElementById('mixtapeDiscoverBtn');
+  wk.classList.toggle('active', wOn); wk.setAttribute('aria-pressed', wOn ? 'true' : 'false');
+  mo.classList.toggle('active', mOn); mo.setAttribute('aria-pressed', mOn ? 'true' : 'false');
+  di.classList.toggle('active', dOn); di.setAttribute('aria-pressed', dOn ? 'true' : 'false');
   document.getElementById('feedFriendsSub').style.display = mode==='discover' ? 'none' : '';
   document.getElementById('feedModeSub').style.display = mode==='discover' ? '' : 'none';
 }
@@ -6357,12 +6359,16 @@ function updateViewUI(){
   const timeBtn = document.getElementById('toggleTimeline');
   archBtn.textContent = showArchived ? '← Back to cataloguex' : 'View archive';
   archBtn.classList.toggle('active', showArchived);
+  archBtn.setAttribute('aria-pressed', showArchived ? 'true' : 'false');
   wishBtn.textContent = viewingWishlist ? '← Back to cataloguex' : '✍ Songs I Wish I Wrote';
   wishBtn.classList.toggle('active', viewingWishlist);
+  wishBtn.setAttribute('aria-pressed', viewingWishlist ? 'true' : 'false');
   tierBtn.textContent = viewingTierBoard ? '← Back to cataloguex' : '🏆 Tier board';
   tierBtn.classList.toggle('active', viewingTierBoard);
+  tierBtn.setAttribute('aria-pressed', viewingTierBoard ? 'true' : 'false');
   timeBtn.textContent = viewingTimeline ? '← Back to cataloguex' : '🕰 Timeline';
   timeBtn.classList.toggle('active', viewingTimeline);
+  timeBtn.setAttribute('aria-pressed', viewingTimeline ? 'true' : 'false');
 
   const otherMode = showArchived || viewingWishlist;
   document.getElementById('openAddMusic').style.display = otherMode ? 'none' : '';
@@ -8457,6 +8463,7 @@ function updateFriendViewUI(){
   const btn = document.getElementById('friendTierBoardBtn');
   btn.textContent = viewingFriendTierBoard ? '← Back to grid' : '🏆 Tier board';
   btn.classList.toggle('active', viewingFriendTierBoard);
+  btn.setAttribute('aria-pressed', viewingFriendTierBoard ? 'true' : 'false');
   if(viewingFriendTierBoard){
     grid.style.display = 'none';
     board.style.display = '';
