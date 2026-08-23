@@ -1,0 +1,19 @@
+{
+  "name": "bayoutonefm",
+  "short_name": "bayoutonefm",
+  "description": "A social music catalogue — log the songs you love, rate them, tag the moods, and share with friends.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#12141c",
+  "theme_color": "#12141c",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
