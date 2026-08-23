@@ -1946,7 +1946,7 @@ async function togglePreview(id){
     song = feedSongCache[id];
   }
   if(!song) song = songs.find(s=>s.id === id) || (currentFriendSongs||[]).find(s=>s.id === id);
-  if(!song) return;
+  if(!song){ setPreviewBtnState(id, 'none'); setTimeout(()=>{ if(nowPlayingId !== id) setPreviewBtnState(id, 'idle'); }, 1600); return; }
   if(nowPlayingId && nowPlayingId !== id) setPreviewBtnState(nowPlayingId, 'idle');
   previewFailed.delete(id);
   previewInflight.delete(id);
@@ -1982,6 +1982,7 @@ function resolveSong(id){
   return song;
 }
 document.addEventListener('click', e=>{
+ try{
   unlockAudioCtx();
   const btn = e.target.closest('[data-preview]');
   if(!btn) return;
@@ -1998,7 +1999,8 @@ document.addEventListener('click', e=>{
   let song = resolveSong(id);
   if(song && playPreviewNow(id, song)) return;
   togglePreview(id);
-});
+ }catch(err){ console.error('preview click handler error:', err); }
+}, true);
 document.addEventListener('keydown', e=>{
   if(e.key === 'Escape' && nowPlayingId) stopPreview();
 });
