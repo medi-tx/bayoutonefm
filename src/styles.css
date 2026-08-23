@@ -2418,7 +2418,7 @@
   .stat-label{ font-family:'IBM Plex Mono', monospace; font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:rgba(var(--on-paper-rgb),0.85); margin-bottom:8px; }
   .stat-chart-note{ font-size:11px; color:rgba(var(--on-paper-rgb),0.78); font-style:italic; }
   .stat-tags{ display:flex; flex-wrap:wrap; gap:6px; }
-  .stat-tags .tag{ background:var(--lilac); border:1px solid var(--lilac); color:var(--tier-B-fg); }
+  .stat-tags .tag{ background:color-mix(in srgb, var(--lilac) 18%, transparent); border:1px solid var(--lilac); color:var(--lilac); }
   .stat-tags .tag b{ font-weight:700; margin-left:4px; }
   .mixtape-modal{ max-width:520px; }
   .mixtape-sub{ font-size:13px; color:rgba(var(--on-paper-rgb),0.82); margin:-4px 0 12px; }

@@ -2466,7 +2466,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
   .stat-label{ font-family:'IBM Plex Mono', monospace; font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:rgba(var(--on-paper-rgb),0.85); margin-bottom:8px; }
   .stat-chart-note{ font-size:11px; color:rgba(var(--on-paper-rgb),0.78); font-style:italic; }
   .stat-tags{ display:flex; flex-wrap:wrap; gap:6px; }
-  .stat-tags .tag{ background:var(--lilac); border:1px solid var(--lilac); color:var(--tier-B-fg); }
+  .stat-tags .tag{ background:color-mix(in srgb, var(--lilac) 18%, transparent); border:1px solid var(--lilac); color:var(--lilac); }
   .stat-tags .tag b{ font-weight:700; margin-left:4px; }
   .mixtape-modal{ max-width:520px; }
   .mixtape-sub{ font-size:13px; color:rgba(var(--on-paper-rgb),0.82); margin:-4px 0 12px; }
@@ -4366,7 +4366,7 @@ function songCardHtml(s, clusterCounts){
           <span class="preview-hint">30-sec preview</span>
         </div>
         ${(s.clusterId && clusterCounts[s.clusterId] > 1) ? `<span class="link-badge" data-cluster="${s.clusterId}">🔗 ${clusterCounts[s.clusterId]} linked</span>` : ''}
-        ${(s.tags&&s.tags.length) ? `<div class="tags">${s.tags.map(t=>`<span class="tag" style="background:${tierColor('B')};color:var(--tier-B-fg);border-color:${tierColor('B')}">${escapeHtml(t)}</span>`).join('')}</div>` : (showEx ? `<div class="tags">${['nostalgic','road trip','late night'].map(t=>`<span class="tag ex-tag">e.g. ${t}</span>`).join('')}</div>` : '')}
+        ${(s.tags&&s.tags.length) ? `<div class="tags">${s.tags.map(t=>`<span class="tag" style="background:color-mix(in srgb, ${tierColor('B')} 18%, transparent);color:${tierColor('B')};border-color:${tierColor('B')}">${escapeHtml(t)}</span>`).join('')}</div>` : (showEx ? `<div class="tags">${['nostalgic','road trip','late night'].map(t=>`<span class="tag ex-tag">e.g. ${t}</span>`).join('')}</div>` : '')}
         ${s.why ? `<p class="why">${escapeHtml(s.why)}</p>` : (showEx ? `<p class="why ex">e.g. the bassline just doesn't let go</p>` : '')}
         ${s.credit ? `<p class="credit-note"><b>Borrowed from / Where I Heard It:</b> ${escapeHtml(s.credit)}</p>` : ''}
         ${(s.remindsOf && s.remindsOf.length) ? `<div class="reminds-badges">${s.remindsOf.map(pid=>{
@@ -8160,7 +8160,7 @@ function renderFriendGrid(list){
         <button type="button" class="preview-btn" data-preview="${escapeAttr(s.id)}" title="Play a 30-second preview" aria-label="Play 30-second preview">▶</button>
         <span class="preview-hint">30-sec preview</span>
       </div>
-      ${(s.tags&&s.tags.length) ? `<div class="tags">${s.tags.map(t=>`<span class="tag" style="background:${tierColor('B')};color:var(--tier-B-fg);border-color:${tierColor('B')}">${escapeHtml(t)}</span>`).join('')}</div>` : ''}
+      ${(s.tags&&s.tags.length) ? `<div class="tags">${s.tags.map(t=>`<span class="tag" style="background:color-mix(in srgb, ${tierColor('B')} 18%, transparent);color:${tierColor('B')};border-color:${tierColor('B')}">${escapeHtml(t)}</span>`).join('')}</div>` : ''}
       ${s.why ? `<p class="why">${escapeHtml(s.why)}</p>` : ''}
       ${s.credit ? `<p class="credit-note"><b>Borrowed from / Where I Heard It:</b> ${escapeHtml(s.credit)}</p>` : ''}
       ${geniusLyricsUrl(s.title, s.artists) ? `<a class="lyrics-link" href="${escapeAttr(geniusLyricsUrl(s.title, s.artists))}" target="_blank" rel="noopener" title="Open lyrics on Genius">LYRICS ↗</a>` : ''}
@@ -8274,7 +8274,7 @@ function renderCompareView(){
         ${(s.genres&&s.genres.length) ? `<span> · ${s.genres.map(g=>escapeHtml(g)).join(', ')}</span>` : ''}
       </div>
       <div class="tier-row">${renderTierBadge(s.tier)}</div>
-      ${(s.tags&&s.tags.length) ? `<div class="tags">${s.tags.map(t=>`<span class="tag" style="background:${tierColor('B')};color:var(--tier-B-fg);border-color:${tierColor('B')}">${escapeHtml(t)}</span>`).join('')}</div>` : ''}
+      ${(s.tags&&s.tags.length) ? `<div class="tags">${s.tags.map(t=>`<span class="tag" style="background:color-mix(in srgb, ${tierColor('B')} 18%, transparent);color:${tierColor('B')};border-color:${tierColor('B')}">${escapeHtml(t)}</span>`).join('')}</div>` : ''}
       ${s.why ? `<p class="why">${escapeHtml(s.why)}</p>` : ''}
     </div>`;
 
