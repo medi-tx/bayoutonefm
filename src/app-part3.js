@@ -579,6 +579,22 @@ function tierBandLabel(t){
   const b = bandForTier(t);
   return b ? `${b[0]}–${b[1]}` : '';
 }
+let _friendPeopleCache = null;
+function cbField(label, val){
+  if(val === null || val === undefined || val === '' || (Array.isArray(val) && !val.length)) return '';
+  return `<div class="cb-field"><span class="cb-flabel">${label}</span><span class="cb-fval">${val}</span></div>`;
+}
+function cbRemindsNames(s){
+  if(!(s.remindsOf && s.remindsOf.length)) return '';
+  const pool = [
+    ...(typeof people !== 'undefined' && Array.isArray(people) ? people : []),
+    ...(Array.isArray(_friendPeopleCache) ? _friendPeopleCache : [])
+  ];
+  return s.remindsOf.map(pid=>{
+    const pp = pool.find(x=>x.id===pid);
+    return pp ? escapeHtml(pp.name) : null;
+  }).filter(Boolean).join(', ');
+}
 function cardBackHtml(s){
   const st = s.stars || {};
   const rows = [['🎤','Lyrics',st.lyrics],['🎶','Vocals',st.vocals],['🎨','Aesthetic',st.aesthetic]];
@@ -586,21 +602,37 @@ function cardBackHtml(s){
   return `
     <div class="card-back">
       <div class="cb-head">
-        <span class="cb-title">${escapeHtml(s.title||'Untitled')}</span>
+        <span class="cb-title">${escapeHtml(s.title||'Untitled')}${s.explicit ? ' <span class="explicit-badge" title="Explicit content">E</span>' : ''}</span>
         <button type="button" class="cb-close" data-action="flip" title="Flip back" aria-label="Flip back">✕</button>
       </div>
+      <div class="cb-fields">
+        ${cbField('Artist(s)', s.artists && s.artists.length ? escapeHtml(formatArtists(s.artists)) : '')}
+        ${cbField('Album', escapeHtml(s.album||''))}
+        ${cbField('Track #', s.trackNumber ? escapeHtml(String(s.trackNumber)) : '')}
+        ${cbField('Year', escapeHtml(s.year||''))}
+        ${cbField('Genres', s.genres && s.genres.length ? escapeHtml(s.genres.join(', ')) : '')}
+        ${cbField('Mood / tags', s.tags && s.tags.length ? s.tags.map(t=>`<span class="tag">${escapeHtml(t)}</span>`).join(' ') : '')}
+      </div>
       <div class="cb-score-row">
+        <span class="cb-flabel">Score</span>
         ${renderTierBadge(s.tier)}
         ${score !== null ? `<span class="score-chip big">${escapeHtml(String(score))}</span><span class="cb-band">${escapeHtml(tierBandLabel(s.tier))}</span>` : '<span class="cb-unrated">Not scored yet</span>'}
       </div>
-      <div class="cb-stars">
-        ${rows.map(([ico,label,n])=>`<div class="cb-star-row"><span class="cs-ico">${ico}</span><span class="cb-cat">${label}</span><span>${starsHtml(n)}</span><span class="cb-star-num">${n||0}/5</span></div>`).join('')}
+      <div class="cb-fields">
+        ${cbField('🎤 Lyrics', starsHtml(st.lyrics) + ` <span class="cb-star-num">${st.lyrics||0}/5</span>`)}
+        ${cbField('🎶 Vocals', starsHtml(st.vocals) + ` <span class="cb-star-num">${st.vocals||0}/5</span>`)}
+        ${cbField('🎨 Aesthetic', starsHtml(st.aesthetic) + ` <span class="cb-star-num">${st.aesthetic||0}/5</span>`)}
       </div>
       <div class="vibe-bars">
-        ${vibeBarHtml('⚡ Energy '+(s.vibeEnergy != null ? s.vibeEnergy : 0), s.vibeEnergy, 'energy')}
-        ${vibeBarHtml('🌗 Mood '+(s.vibeMood != null ? s.vibeMood : 0), s.vibeMood, 'mood')}
+        ${vibeBarHtml('⚡ Energy · chill ↔ electric '+(s.vibeEnergy != null ? s.vibeEnergy : 0), s.vibeEnergy, 'energy')}
+        ${vibeBarHtml('🌗 Mood · stormy ↔ sunny '+(s.vibeMood != null ? s.vibeMood : 0), s.vibeMood, 'mood')}
       </div>
-      ${(s.trackNumber || s.album) ? `<p class="cb-meta">${s.album ? escapeHtml(s.album) : ''}${s.trackNumber ? `${s.album ? ' · ' : ''}Track #${escapeHtml(String(s.trackNumber))}` : ''}</p>` : ''}
+      <div class="cb-fields">
+        ${cbField('Thoughts', s.why ? escapeHtml(s.why) : '')}
+        ${cbField('Borrowed from / Where I heard it', s.credit ? escapeHtml(s.credit) : '')}
+        ${cbField('Reminds me of', cbRemindsNames(s))}
+        ${cbField('Added', s.createdAt ? escapeHtml(formatAddedDate(s.createdAt)) : '')}
+      </div>
     </div>`;
 }
 function cardVibesHtml(s){

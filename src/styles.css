@@ -1445,6 +1445,15 @@
   }
   .card.flipped .card-back{ display:flex; }
   .card.flipped .sticker-drag{ visibility:hidden; }
+  .cb-fields{ display:flex; flex-direction:column; gap:4px; }
+  .cb-field{ display:flex; gap:8px; font-size:12px; line-height:1.45; }
+  .cb-flabel{
+    flex:none; width:92px; padding-top:2px;
+    text-transform:uppercase; letter-spacing:.5px;
+    font-size:9px; font-weight:700; opacity:.5;
+  }
+  .cb-fval{ flex:1; min-width:0; overflow-wrap:anywhere; }
+  .cb-fval .tag{ font-size:10px; padding:1px 7px; margin:0 3px 3px 0; display:inline-block; }
   .cb-head{ display:flex; align-items:center; gap:8px; }
   .cb-title{ flex:1; font-weight:700; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .cb-close{

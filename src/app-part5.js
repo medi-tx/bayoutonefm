@@ -900,7 +900,9 @@ async function openFriendCataloguex(username){
 
   document.getElementById('friendTierBoardBtn').style.display = '';
   document.getElementById('friendShareBtn').style.display = '';
-  const friendSongs = isSelf ? songs : await fetchReadOnlySongs(p.user_id);
+  const pd = isSelf ? { songs, people } : await fetchReadOnlyPeopleAndSongs(p.user_id);
+  const friendSongs = (pd && Array.isArray(pd.songs)) ? pd.songs : [];
+  _friendPeopleCache = (pd && Array.isArray(pd.people)) ? pd.people : null;
   currentFriendStickers = isSelf ? stickers : await fetchReadOnlyStickers(p.user_id);
   currentFriendSongs = friendSongs;
   currentFriendSongs.__ownerId = p.user_id;
@@ -941,7 +943,9 @@ async function openPublicCataloguex(username){
   updateFriendBanner(p);
   applyTheme(p.theme || DEFAULT_THEME);
 
-  const friendSongs = await fetchReadOnlySongs(p.user_id);
+  const pd = await fetchReadOnlyPeopleAndSongs(p.user_id);
+  const friendSongs = (pd && Array.isArray(pd.songs)) ? pd.songs : [];
+  _friendPeopleCache = (pd && Array.isArray(pd.people)) ? pd.people : null;
   currentFriendStickers = await fetchReadOnlyStickers(p.user_id);
   currentFriendSongs = friendSongs;
   updateFriendViewUI();
