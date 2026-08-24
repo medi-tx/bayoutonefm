@@ -1434,6 +1434,44 @@
   .card .sticker-drag{ z-index:9; }
   .card .sticker-img{ width:38px; height:38px; }
   .card:has(> .sticker-drag){ overflow:visible; }
+  /* DUAL-FACE CARD (details flip) */
+  .card-back{
+    position:absolute; inset:0; z-index:7;
+    display:none; flex-direction:column; gap:10px;
+    background:var(--paper); color:var(--on-paper);
+    border-radius:10px; border-top:3px solid var(--gold);
+    padding:16px 18px;
+    overflow-y:auto; text-align:left;
+  }
+  .card.flipped .card-back{ display:flex; }
+  .card.flipped .sticker-drag{ visibility:hidden; }
+  .cb-head{ display:flex; align-items:center; gap:8px; }
+  .cb-title{ flex:1; font-weight:700; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .cb-close{
+    background:none; border:none; cursor:pointer;
+    font-size:16px; line-height:1; padding:2px 4px;
+    color:rgba(var(--on-paper-rgb),0.6);
+  }
+  .cb-close:hover{ color:var(--rose); }
+  .cb-score-row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .score-chip.big{ font-size:15px; padding:4px 11px; margin-left:0; }
+  .cb-band{ font-size:11px; opacity:.55; letter-spacing:.5px; }
+  .cb-unrated{ font-size:12px; opacity:.6; font-style:italic; }
+  .cb-stars{ display:flex; flex-direction:column; gap:5px; }
+  .cb-star-row{ display:flex; align-items:center; gap:7px; font-size:12px; }
+  .cb-star-row .cs-ico{ width:18px; text-align:center; opacity:.75; }
+  .cb-star-row .cb-cat{ width:72px; opacity:.8; }
+  .cb-star-num{ margin-left:auto; font-size:10.5px; opacity:.55; font-variant-numeric:tabular-nums; }
+  .cb-meta{ margin:0; font-size:12px; opacity:.7; }
+  .cb-flip-fab{
+    position:absolute; top:8px; right:8px; z-index:6;
+    width:26px; height:26px; border-radius:50%;
+    border:1.5px solid rgba(var(--on-paper-rgb),0.35);
+    background:rgba(var(--on-paper-rgb),0.06);
+    color:rgba(var(--on-paper-rgb),0.75);
+    font-size:13px; line-height:1; cursor:pointer;
+  }
+  .cb-flip-fab:hover{ background:color-mix(in srgb, var(--gold) 22%, transparent); border-color:var(--gold); }
   /* CATEGORY STARS */
   .card-stars{ display:flex; gap:12px; flex-wrap:wrap; font-size:11.5px; align-items:center; }
   .card-star-cat{ display:inline-flex; align-items:center; gap:4px; }

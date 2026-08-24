@@ -550,6 +550,34 @@ function cardStarsHtml(s){
 function vibeBarHtml(label, v, cls){
   return `<div class="vibe-bar-row"><span class="vibe-bar-label">${label}</span><span class="vibe-bar-track"><span class="vibe-bar-fill ${cls}" style="width:${clampNum(v||0,0,100)}%;"></span></span></div>`;
 }
+function tierBandLabel(t){
+  const b = bandForTier(t);
+  return b ? `${b[0]}–${b[1]}` : '';
+}
+function cardBackHtml(s){
+  const st = s.stars || {};
+  const rows = [['🎤','Lyrics',st.lyrics],['🎶','Vocals',st.vocals],['🎨','Aesthetic',st.aesthetic]];
+  const score = (s.score === null || s.score === undefined || s.score === '') ? null : s.score;
+  return `
+    <div class="card-back">
+      <div class="cb-head">
+        <span class="cb-title">${escapeHtml(s.title||'Untitled')}</span>
+        <button type="button" class="cb-close" data-action="flip" title="Flip back" aria-label="Flip back">✕</button>
+      </div>
+      <div class="cb-score-row">
+        ${renderTierBadge(s.tier)}
+        ${score !== null ? `<span class="score-chip big">${escapeHtml(String(score))}</span><span class="cb-band">${escapeHtml(tierBandLabel(s.tier))}</span>` : '<span class="cb-unrated">Not scored yet</span>'}
+      </div>
+      <div class="cb-stars">
+        ${rows.map(([ico,label,n])=>`<div class="cb-star-row"><span class="cs-ico">${ico}</span><span class="cb-cat">${label}</span><span>${starsHtml(n)}</span><span class="cb-star-num">${n||0}/5</span></div>`).join('')}
+      </div>
+      <div class="vibe-bars">
+        ${vibeBarHtml('⚡ Energy '+(s.vibeEnergy != null ? s.vibeEnergy : 0), s.vibeEnergy, 'energy')}
+        ${vibeBarHtml('🌗 Mood '+(s.vibeMood != null ? s.vibeMood : 0), s.vibeMood, 'mood')}
+      </div>
+      ${(s.trackNumber || s.album) ? `<p class="cb-meta">${s.album ? escapeHtml(s.album) : ''}${s.trackNumber ? `${s.album ? ' · ' : ''}Track #${escapeHtml(String(s.trackNumber))}` : ''}</p>` : ''}
+    </div>`;
+}
 function cardVibesHtml(s){
   if(s.vibeEnergy === null || s.vibeEnergy === undefined) return '';
   return `<div class="vibe-bars">${vibeBarHtml('⚡ Energy', s.vibeEnergy, 'energy')}${vibeBarHtml('🌗 Mood', s.vibeMood, 'mood')}</div>`;
@@ -739,6 +767,7 @@ function songCardHtml(s, clusterCounts){
           <button data-action="delete" class="del">DELETE</button>
           ${!showEx ? `<button data-action="share" class="share-card-btn" title="Generate a shareable card for this song">↗ SHARE</button>` : ''}
           ${!showEx ? `<button type="button" data-action="sticker" class="card-sticker-btn" title="Put a sticker on this song">😀 STICKER</button>` : ''}
+          ${!showEx ? `<button type="button" data-action="flip" title="Ratings & vibes">ℹ INFO</button>` : ''}
         </div>
         ${s.createdAt && !showEx ? `<p class="card-date">🕒 Added ${escapeHtml(formatAddedDate(s.createdAt))}</p>` : ''}
         ${(!showEx && s.edits && s.edits.length) ? `<button class="edits-toggle" onclick="this.nextElementSibling.classList.toggle('open')">${s.edits.length} edit${s.edits.length!==1?'s':''} — view log</button><div class="edits-log">${s.edits.slice().reverse().map(e=>{
@@ -746,6 +775,7 @@ function songCardHtml(s, clusterCounts){
           const valStr = v=> Array.isArray(v) ? (v.length ? v.join(', ') : 'none') : (v || 'none');
           return `<div class="edits-entry"><div class="edits-entry-time">${ts}</div>${e.changes.map(c=>`<div class="edits-entry-change"><span class="edits-entry-field">${escapeHtml(c.field)}</span><span class="edits-entry-old">${escapeHtml(valStr(c.old))}</span><span class="edits-entry-arrow">→</span><span class="edits-entry-new">${escapeHtml(valStr(c.now))}</span></div>`).join('')}</div>`;
         }).join('')}</div>` : ''}
+        ${!showEx ? cardBackHtml(s) : ''}
       </div>
     `;
 }
@@ -2818,6 +2848,9 @@ document.getElementById('grid').addEventListener('click', e=>{
   } else if(action === 'sticker'){
     trackEvent('card_sticker_open');
     if(typeof openStickerPickerForSong === 'function') openStickerPickerForSong(song);
+  } else if(action === 'flip'){
+    const cardEl = btn.closest('.card');
+    if(cardEl) cardEl.classList.toggle('flipped');
   } else if(action === 'delete'){
     trackEvent('delete_song');
     if(confirm(`Remove "${song.title}" from your cataloguex?`)){

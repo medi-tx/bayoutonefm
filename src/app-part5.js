@@ -611,9 +611,17 @@ function renderFriendGrid(list){
       ${s.why ? `<p class="why">${escapeHtml(s.why)}</p>` : ''}
       ${s.credit ? `<p class="credit-note"><b>Borrowed from / Where I Heard It:</b> ${escapeHtml(s.credit)}</p>` : ''}
       ${geniusLyricsUrl(s.title, s.artists) ? `<a class="lyrics-link" href="${escapeAttr(geniusLyricsUrl(s.title, s.artists))}" target="_blank" rel="noopener" title="Open lyrics on Genius">LYRICS ↗</a>` : ''}
+      <button type="button" class="cb-flip-fab" data-action="flip" title="Ratings & vibes">ℹ</button>
+      ${cardBackHtml(s)}
     </div>
   `).join('');
 }
+document.getElementById('friendGrid').addEventListener('click', e=>{
+  const btn = e.target.closest('[data-action="flip"]');
+  if(!btn) return;
+  const cardEl = btn.closest('.card');
+  if(cardEl) cardEl.classList.toggle('flipped');
+});
 let viewingFriendTierBoard = false;
 let currentFriendSongs = [];
 let currentFriendStickers = [];
