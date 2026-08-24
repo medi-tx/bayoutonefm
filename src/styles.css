@@ -522,6 +522,22 @@
     width:fit-content;
   }
   .link-badge:hover{ background:rgba(90,155,155,0.22); }
+  .stacks-btn{
+    display:inline-flex;
+    align-items:center;
+    gap:4px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10.5px;
+    letter-spacing:0.4px;
+    color:var(--teal);
+    background:rgba(90,155,155,0.12);
+    border:1px solid rgba(90,155,155,0.35);
+    border-radius:5px;
+    padding:3px 7px;
+    cursor:pointer;
+    width:fit-content;
+  }
+  .stacks-btn:hover{ background:rgba(90,155,155,0.22); }
 
   /* CONTROLS */
   .controls{

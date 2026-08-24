@@ -53,7 +53,12 @@ function handleClusterSave(){
   const clusterName = document.getElementById('cluster-name').value.trim();
   clusterSelectedIds.forEach(id=>{
     const s = songs.find(x=>x.id===id);
-    if(s){ s.clusterId = clusterId; s.clusterName = clusterName || null; s.clusterAddedBy = currentUserId; }
+    if(s){
+      s.stackIds = [...new Set([...(Array.isArray(s.stackIds)?s.stackIds:[]), ...(s.clusterId?[s.clusterId]:[]), clusterId])];
+      s.stackNames = Object.assign({}, s.stackNames||{}, { [clusterId]: clusterName || null });
+      if(!s.clusterId){ s.clusterId = clusterId; s.clusterName = clusterName || null; }
+      s.clusterAddedBy = currentUserId;
+    }
   });
   const collabToggle = document.getElementById('clusterCollabToggle');
   if(collabToggle && collabToggle.checked && collabSelectedFriendIds.length){
@@ -166,7 +171,7 @@ let clusterDetailId = null;
 let clusterRenameId = null;
 function getClusterGroups(){
   const groups = {};
-  songs.forEach(s=>{ if(s.clusterId){ (groups[s.clusterId] = groups[s.clusterId] || []).push(s); } });
+  songs.forEach(s=>{ songStackIds(s).forEach(cid=>{ (groups[cid] = groups[cid] || []).push(s); }); });
   return groups;
 }
 function renderClustersList(){
@@ -180,7 +185,7 @@ function renderClustersList(){
   }
   wrap.innerHTML = clusterIds.map(id=>{
     const list = groups[id];
-    const name = (list.find(s=>s.clusterName)||{}).clusterName;
+    const name = stackDisplayName(id);
     const m = meta[id];
     const collabBadge = m && m.collaborators && m.collaborators.length > 1
       ? `<span class="cnr-collab">🤝 ${m.collaborators.length} people</span>` : '';
@@ -211,7 +216,7 @@ async function renderClusterDetail(id){
     }
   }
   clusterDetailId = id;
-  const name = (list.find(s=>s.clusterName)||{}).clusterName;
+  const name = stackDisplayName(id);
   const renaming = (clusterRenameId === id);
   const isCollab = m && m.collaborators && m.collaborators.length > 1;
   wrap.innerHTML = `
@@ -252,7 +257,7 @@ async function renderClusterDetail(id){
           ${whoPfp}
           <span class="profile-song-row-actions">
             <button type="button" class="psr-edit-btn" data-edit-song="${s.id}">Edit</button>
-            <button type="button" class="psr-remove-btn" data-remove-from-cluster="${s.id}">Remove</button>
+            <button type="button" class="psr-remove-btn" data-remove-from-cluster="${s.id}" data-cluster-id="${id}">Remove</button>
           </span>
         </div>`;
       }).join('')}
@@ -267,7 +272,10 @@ function saveClusterName(id){
   const input = document.getElementById('clusterRenameInput');
   const newName = (input && input.value.trim()) || null;
   const list = getClusterGroups()[id] || [];
-  list.forEach(s=>{ s.clusterName = newName; });
+  list.forEach(s=>{
+    s.stackNames = Object.assign({}, s.stackNames||{}, { [id]: newName });
+    if(s.clusterId === id) s.clusterName = newName;
+  });
   clusterRenameId = null;
   save();
   render();
@@ -279,17 +287,24 @@ function deleteCluster(id){
   if(list.length === 0) return;
   const ok = confirm(`Delete this stack of ${list.length} songs? The songs themselves will stay in your cataloguex — this only removes the link between them.`);
   if(!ok) return;
-  list.forEach(s=>{ s.clusterId = null; s.clusterName = null; });
+  list.forEach(s=>{ removeStackFromSong(s, id); });
   save();
   render();
   renderClustersList();
 }
-function removeSongFromCluster(songId){
+function removeStackFromSong(s, id){
+  if(Array.isArray(s.stackIds)) s.stackIds = s.stackIds.filter(x=>x!==id);
+  if(s.stackNames && Object.prototype.hasOwnProperty.call(s.stackNames, id)){
+    const copy = Object.assign({}, s.stackNames);
+    delete copy[id];
+    s.stackNames = copy;
+  }
+  if(s.clusterId === id){ s.clusterId = null; s.clusterName = null; }
+}
+function removeSongFromCluster(songId, clusterId){
   const song = songs.find(s=>s.id===songId);
-  if(!song || !song.clusterId) return;
-  const clusterId = song.clusterId;
-  song.clusterId = null;
-  song.clusterName = null;
+  if(!song || !clusterId) return;
+  removeStackFromSong(song, clusterId);
   save();
   render();
   const groups = getClusterGroups();
@@ -333,7 +348,7 @@ document.getElementById('viewClustersOverlay').addEventListener('click', e=>{
     return;
   }
   const removeBtn = e.target.closest('[data-remove-from-cluster]');
-  if(removeBtn){ removeSongFromCluster(removeBtn.dataset.removeFromCluster); return; }
+  if(removeBtn){ removeSongFromCluster(removeBtn.dataset.removeFromCluster, removeBtn.dataset.clusterId); return; }
   const backBtn = e.target.closest('#clusterBackBtn');
   if(backBtn){ renderClustersList(); return; }
   const saveNameBtn = e.target.closest('#clusterRenameSaveBtn');
@@ -363,6 +378,42 @@ document.addEventListener('keydown', e=>{
   if(!input) return;
   if(e.key === 'Enter'){ e.preventDefault(); saveClusterName(clusterDetailId); }
   else if(e.key === 'Escape'){ clusterRenameId = null; renderClusterDetail(clusterDetailId); }
+});
+
+/* =========================================================
+   SONG STACKS POPOVER: all stacks a multi-stack song is in
+   ========================================================= */
+function openSongStacksPopover(songId){
+  trackEvent('view_song_stacks');
+  const song = songs.find(s=>s.id===songId);
+  if(!song) return;
+  const groups = getClusterGroups();
+  const ids = songStackIds(song);
+  const wrap = document.getElementById('songStacksList');
+  wrap.innerHTML = ids.map(id=>`
+    <button type="button" class="discover-row" data-pop-cluster="${id}">
+      <span class="drow-fallback">🗂️</span>
+      <span>
+        <span class="drow-name">${escapeHtml(stackDisplayName(id) || 'Untitled stack')}</span><br>
+        <span class="drow-bio">${(groups[id]||[]).length} songs</span>
+      </span>
+    </button>
+  `).join('');
+  document.getElementById('songStacksOverlay').classList.add('open');
+}
+function closeSongStacksPopover(){
+  document.getElementById('songStacksOverlay').classList.remove('open');
+}
+document.getElementById('songStacksCloseBtn').addEventListener('click', closeSongStacksPopover);
+document.getElementById('songStacksOverlay').addEventListener('click', e=>{
+  if(e.target.id==='songStacksOverlay'){ closeSongStacksPopover(); return; }
+  const row = e.target.closest('[data-pop-cluster]');
+  if(row){
+    closeSongStacksPopover();
+    clusterFilterId = row.dataset.popCluster;
+    remindsFilterId = null;
+    render();
+  }
 });
 
 

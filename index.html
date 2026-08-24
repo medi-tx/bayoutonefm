@@ -573,6 +573,22 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
     width:fit-content;
   }
   .link-badge:hover{ background:rgba(90,155,155,0.22); }
+  .stacks-btn{
+    display:inline-flex;
+    align-items:center;
+    gap:4px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10.5px;
+    letter-spacing:0.4px;
+    color:var(--teal);
+    background:rgba(90,155,155,0.12);
+    border:1px solid rgba(90,155,155,0.35);
+    border-radius:5px;
+    padding:3px 7px;
+    cursor:pointer;
+    width:fit-content;
+  }
+  .stacks-btn:hover{ background:rgba(90,155,155,0.22); }
 
   /* CONTROLS */
   .controls{
@@ -3054,6 +3070,14 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
     <div class="modal-actions"><button class="btn-cancel" id="sendFriendCloseBtn">Cancel</button></div>
   </div>
 </div>
+<div class="overlay" id="songStacksOverlay">
+  <div class="modal" style="max-width:420px;">
+    <h3>🗂️ Stacks</h3>
+    <p class="share-sub">This song belongs to these stacks.</p>
+    <div id="songStacksList" class="discover-list" style="max-height:320px; overflow-y:auto;"></div>
+    <div class="modal-actions"><button class="btn-cancel" id="songStacksCloseBtn">Close</button></div>
+  </div>
+</div>
 <div class="overlay" id="compareOverlay">
   <div class="modal" style="max-width:680px;">
     <h3>⚖️ Taste Comparison</h3>
@@ -4443,6 +4467,26 @@ function tierBandLabel(t){
   const b = bandForTier(t);
   return b ? `${b[0]}–${b[1]}` : '';
 }
+function songStackIds(s){
+  const ids = [];
+  if(Array.isArray(s.stackIds)) s.stackIds.forEach(id=>{ if(id && !ids.includes(id)) ids.push(id); });
+  if(s.clusterId && !ids.includes(s.clusterId)) ids.push(s.clusterId);
+  return ids;
+}
+function stackDisplayName(id){
+  for(const s of (typeof songs !== 'undefined' ? songs : [])){
+    if(s.stackNames && s.stackNames[id]) return s.stackNames[id];
+    if(s.clusterId === id && s.clusterName) return s.clusterName;
+  }
+  const meta = (typeof getStackMeta === 'function') ? getStackMeta() : {};
+  return (meta[id] && meta[id].name) || null;
+}
+function songStackBadgesHtml(s, clusterCounts){
+  const ids = songStackIds(s).filter(cid => (clusterCounts[cid]||0) > 1);
+  if(!ids.length) return '';
+  if(ids.length === 1) return `<span class="link-badge" data-cluster="${ids[0]}">🔗 ${clusterCounts[ids[0]]} linked</span>`;
+  return `<button type="button" class="stacks-btn" data-stacks-for="${s.id}" title="Show all stacks">Stacks</button>`;
+}
 let _friendPeopleCache = null;
 function cbField(label, val){
   if(val === null || val === undefined || val === '' || (Array.isArray(val) && !val.length)) return '';
@@ -4665,7 +4709,7 @@ function songCardHtml(s, clusterCounts){
           <button type="button" class="preview-btn" data-preview="${escapeAttr(s.id)}" title="Play a 30-second preview" aria-label="Play 30-second preview">▶</button>
           <span class="preview-hint">30-sec preview</span>
         </div>
-        ${(s.clusterId && clusterCounts[s.clusterId] > 1) ? `<span class="link-badge" data-cluster="${s.clusterId}">🔗 ${clusterCounts[s.clusterId]} linked</span>` : ''}
+        ${songStackBadgesHtml(s, clusterCounts)}
         ${(s.tags&&s.tags.length) ? `<div class="tags">${s.tags.map(t=>`<span class="tag" style="background:color-mix(in srgb, ${tierColor('B')} 18%, transparent);color:${tierColor('B')};border-color:${tierColor('B')}">${escapeHtml(t)}</span>`).join('')}</div>` : (showEx ? `<div class="tags">${['nostalgic','road trip','late night'].map(t=>`<span class="tag ex-tag">e.g. ${t}</span>`).join('')}</div>` : '')}
         ${s.quickThought ? `<p class="card-thought">“${escapeHtml(s.quickThought)}”</p>` : (showEx ? `<p class="why ex">e.g. the bassline just doesn't let go</p>` : '')}
         ${s.credit ? `<p class="credit-note"><b>Borrowed from / Where I Heard It:</b> ${escapeHtml(s.credit)}</p>` : ''}
@@ -6125,7 +6169,7 @@ function render(){
   let list = songs.filter(s=>{
     if(showArchived){ if(!s.archived) return false; }
     else { if(s.archived) return false; }
-    if(clusterFilterId) return s.clusterId === clusterFilterId;
+    if(clusterFilterId) return songStackIds(s).includes(clusterFilterId);
     if(remindsFilterId) return (s.remindsOf||[]).includes(remindsFilterId);
     if(q){
       const hay = `${s.title} ${(s.artists||[]).join(' ')} ${s.album}`.toLowerCase();
@@ -6163,7 +6207,7 @@ function render(){
   } else {
     empty.style.display = 'none';
     const clusterCounts = {};
-    songs.forEach(s=>{ if(s.clusterId) clusterCounts[s.clusterId] = (clusterCounts[s.clusterId]||0)+1; });
+    songs.forEach(s=>{ songStackIds(s).forEach(cid=>{ clusterCounts[cid] = (clusterCounts[cid]||0)+1; }); });
     grid.innerHTML = '';
     currentGridList = list;
     currentClusterCounts = clusterCounts;
@@ -6175,7 +6219,7 @@ function render(){
   const clusterBar = document.getElementById('clusterBar');
   if(clusterFilterId){
     clusterBar.style.display = 'flex';
-    const clusterName = (list.find(s=>s.clusterName)||{}).clusterName;
+    const clusterName = stackDisplayName(clusterFilterId);
     document.getElementById('clusterBarText').textContent = `Viewing "${clusterName || 'Untitled stack'}" · ${list.length} song${list.length!==1?'s':''}`;
   } else {
     clusterBar.style.display = 'none';
@@ -6696,6 +6740,11 @@ function handleMultiSave(){
 }
 
 document.getElementById('grid').addEventListener('click', e=>{
+  const stacksBtn = e.target.closest('[data-stacks-for]');
+  if(stacksBtn){
+    if(typeof openSongStacksPopover === 'function') openSongStacksPopover(stacksBtn.dataset.stacksFor);
+    return;
+  }
   const linkBadge = e.target.closest('.link-badge');
   if(linkBadge){
     clusterFilterId = linkBadge.dataset.cluster;
@@ -7709,7 +7758,12 @@ function handleClusterSave(){
   const clusterName = document.getElementById('cluster-name').value.trim();
   clusterSelectedIds.forEach(id=>{
     const s = songs.find(x=>x.id===id);
-    if(s){ s.clusterId = clusterId; s.clusterName = clusterName || null; s.clusterAddedBy = currentUserId; }
+    if(s){
+      s.stackIds = [...new Set([...(Array.isArray(s.stackIds)?s.stackIds:[]), ...(s.clusterId?[s.clusterId]:[]), clusterId])];
+      s.stackNames = Object.assign({}, s.stackNames||{}, { [clusterId]: clusterName || null });
+      if(!s.clusterId){ s.clusterId = clusterId; s.clusterName = clusterName || null; }
+      s.clusterAddedBy = currentUserId;
+    }
   });
   const collabToggle = document.getElementById('clusterCollabToggle');
   if(collabToggle && collabToggle.checked && collabSelectedFriendIds.length){
@@ -7822,7 +7876,7 @@ let clusterDetailId = null;
 let clusterRenameId = null;
 function getClusterGroups(){
   const groups = {};
-  songs.forEach(s=>{ if(s.clusterId){ (groups[s.clusterId] = groups[s.clusterId] || []).push(s); } });
+  songs.forEach(s=>{ songStackIds(s).forEach(cid=>{ (groups[cid] = groups[cid] || []).push(s); }); });
   return groups;
 }
 function renderClustersList(){
@@ -7836,7 +7890,7 @@ function renderClustersList(){
   }
   wrap.innerHTML = clusterIds.map(id=>{
     const list = groups[id];
-    const name = (list.find(s=>s.clusterName)||{}).clusterName;
+    const name = stackDisplayName(id);
     const m = meta[id];
     const collabBadge = m && m.collaborators && m.collaborators.length > 1
       ? `<span class="cnr-collab">🤝 ${m.collaborators.length} people</span>` : '';
@@ -7867,7 +7921,7 @@ async function renderClusterDetail(id){
     }
   }
   clusterDetailId = id;
-  const name = (list.find(s=>s.clusterName)||{}).clusterName;
+  const name = stackDisplayName(id);
   const renaming = (clusterRenameId === id);
   const isCollab = m && m.collaborators && m.collaborators.length > 1;
   wrap.innerHTML = `
@@ -7908,7 +7962,7 @@ async function renderClusterDetail(id){
           ${whoPfp}
           <span class="profile-song-row-actions">
             <button type="button" class="psr-edit-btn" data-edit-song="${s.id}">Edit</button>
-            <button type="button" class="psr-remove-btn" data-remove-from-cluster="${s.id}">Remove</button>
+            <button type="button" class="psr-remove-btn" data-remove-from-cluster="${s.id}" data-cluster-id="${id}">Remove</button>
           </span>
         </div>`;
       }).join('')}
@@ -7923,7 +7977,10 @@ function saveClusterName(id){
   const input = document.getElementById('clusterRenameInput');
   const newName = (input && input.value.trim()) || null;
   const list = getClusterGroups()[id] || [];
-  list.forEach(s=>{ s.clusterName = newName; });
+  list.forEach(s=>{
+    s.stackNames = Object.assign({}, s.stackNames||{}, { [id]: newName });
+    if(s.clusterId === id) s.clusterName = newName;
+  });
   clusterRenameId = null;
   save();
   render();
@@ -7935,17 +7992,24 @@ function deleteCluster(id){
   if(list.length === 0) return;
   const ok = confirm(`Delete this stack of ${list.length} songs? The songs themselves will stay in your cataloguex — this only removes the link between them.`);
   if(!ok) return;
-  list.forEach(s=>{ s.clusterId = null; s.clusterName = null; });
+  list.forEach(s=>{ removeStackFromSong(s, id); });
   save();
   render();
   renderClustersList();
 }
-function removeSongFromCluster(songId){
+function removeStackFromSong(s, id){
+  if(Array.isArray(s.stackIds)) s.stackIds = s.stackIds.filter(x=>x!==id);
+  if(s.stackNames && Object.prototype.hasOwnProperty.call(s.stackNames, id)){
+    const copy = Object.assign({}, s.stackNames);
+    delete copy[id];
+    s.stackNames = copy;
+  }
+  if(s.clusterId === id){ s.clusterId = null; s.clusterName = null; }
+}
+function removeSongFromCluster(songId, clusterId){
   const song = songs.find(s=>s.id===songId);
-  if(!song || !song.clusterId) return;
-  const clusterId = song.clusterId;
-  song.clusterId = null;
-  song.clusterName = null;
+  if(!song || !clusterId) return;
+  removeStackFromSong(song, clusterId);
   save();
   render();
   const groups = getClusterGroups();
@@ -7989,7 +8053,7 @@ document.getElementById('viewClustersOverlay').addEventListener('click', e=>{
     return;
   }
   const removeBtn = e.target.closest('[data-remove-from-cluster]');
-  if(removeBtn){ removeSongFromCluster(removeBtn.dataset.removeFromCluster); return; }
+  if(removeBtn){ removeSongFromCluster(removeBtn.dataset.removeFromCluster, removeBtn.dataset.clusterId); return; }
   const backBtn = e.target.closest('#clusterBackBtn');
   if(backBtn){ renderClustersList(); return; }
   const saveNameBtn = e.target.closest('#clusterRenameSaveBtn');
@@ -8019,6 +8083,42 @@ document.addEventListener('keydown', e=>{
   if(!input) return;
   if(e.key === 'Enter'){ e.preventDefault(); saveClusterName(clusterDetailId); }
   else if(e.key === 'Escape'){ clusterRenameId = null; renderClusterDetail(clusterDetailId); }
+});
+
+/* =========================================================
+   SONG STACKS POPOVER: all stacks a multi-stack song is in
+   ========================================================= */
+function openSongStacksPopover(songId){
+  trackEvent('view_song_stacks');
+  const song = songs.find(s=>s.id===songId);
+  if(!song) return;
+  const groups = getClusterGroups();
+  const ids = songStackIds(song);
+  const wrap = document.getElementById('songStacksList');
+  wrap.innerHTML = ids.map(id=>`
+    <button type="button" class="discover-row" data-pop-cluster="${id}">
+      <span class="drow-fallback">🗂️</span>
+      <span>
+        <span class="drow-name">${escapeHtml(stackDisplayName(id) || 'Untitled stack')}</span><br>
+        <span class="drow-bio">${(groups[id]||[]).length} songs</span>
+      </span>
+    </button>
+  `).join('');
+  document.getElementById('songStacksOverlay').classList.add('open');
+}
+function closeSongStacksPopover(){
+  document.getElementById('songStacksOverlay').classList.remove('open');
+}
+document.getElementById('songStacksCloseBtn').addEventListener('click', closeSongStacksPopover);
+document.getElementById('songStacksOverlay').addEventListener('click', e=>{
+  if(e.target.id==='songStacksOverlay'){ closeSongStacksPopover(); return; }
+  const row = e.target.closest('[data-pop-cluster]');
+  if(row){
+    closeSongStacksPopover();
+    clusterFilterId = row.dataset.popCluster;
+    remindsFilterId = null;
+    render();
+  }
 });
 
 

@@ -576,6 +576,26 @@ function tierBandLabel(t){
   const b = bandForTier(t);
   return b ? `${b[0]}–${b[1]}` : '';
 }
+function songStackIds(s){
+  const ids = [];
+  if(Array.isArray(s.stackIds)) s.stackIds.forEach(id=>{ if(id && !ids.includes(id)) ids.push(id); });
+  if(s.clusterId && !ids.includes(s.clusterId)) ids.push(s.clusterId);
+  return ids;
+}
+function stackDisplayName(id){
+  for(const s of (typeof songs !== 'undefined' ? songs : [])){
+    if(s.stackNames && s.stackNames[id]) return s.stackNames[id];
+    if(s.clusterId === id && s.clusterName) return s.clusterName;
+  }
+  const meta = (typeof getStackMeta === 'function') ? getStackMeta() : {};
+  return (meta[id] && meta[id].name) || null;
+}
+function songStackBadgesHtml(s, clusterCounts){
+  const ids = songStackIds(s).filter(cid => (clusterCounts[cid]||0) > 1);
+  if(!ids.length) return '';
+  if(ids.length === 1) return `<span class="link-badge" data-cluster="${ids[0]}">🔗 ${clusterCounts[ids[0]]} linked</span>`;
+  return `<button type="button" class="stacks-btn" data-stacks-for="${s.id}" title="Show all stacks">Stacks</button>`;
+}
 let _friendPeopleCache = null;
 function cbField(label, val){
   if(val === null || val === undefined || val === '' || (Array.isArray(val) && !val.length)) return '';
@@ -798,7 +818,7 @@ function songCardHtml(s, clusterCounts){
           <button type="button" class="preview-btn" data-preview="${escapeAttr(s.id)}" title="Play a 30-second preview" aria-label="Play 30-second preview">▶</button>
           <span class="preview-hint">30-sec preview</span>
         </div>
-        ${(s.clusterId && clusterCounts[s.clusterId] > 1) ? `<span class="link-badge" data-cluster="${s.clusterId}">🔗 ${clusterCounts[s.clusterId]} linked</span>` : ''}
+        ${songStackBadgesHtml(s, clusterCounts)}
         ${(s.tags&&s.tags.length) ? `<div class="tags">${s.tags.map(t=>`<span class="tag" style="background:color-mix(in srgb, ${tierColor('B')} 18%, transparent);color:${tierColor('B')};border-color:${tierColor('B')}">${escapeHtml(t)}</span>`).join('')}</div>` : (showEx ? `<div class="tags">${['nostalgic','road trip','late night'].map(t=>`<span class="tag ex-tag">e.g. ${t}</span>`).join('')}</div>` : '')}
         ${s.quickThought ? `<p class="card-thought">“${escapeHtml(s.quickThought)}”</p>` : (showEx ? `<p class="why ex">e.g. the bassline just doesn't let go</p>` : '')}
         ${s.credit ? `<p class="credit-note"><b>Borrowed from / Where I Heard It:</b> ${escapeHtml(s.credit)}</p>` : ''}
@@ -2258,7 +2278,7 @@ function render(){
   let list = songs.filter(s=>{
     if(showArchived){ if(!s.archived) return false; }
     else { if(s.archived) return false; }
-    if(clusterFilterId) return s.clusterId === clusterFilterId;
+    if(clusterFilterId) return songStackIds(s).includes(clusterFilterId);
     if(remindsFilterId) return (s.remindsOf||[]).includes(remindsFilterId);
     if(q){
       const hay = `${s.title} ${(s.artists||[]).join(' ')} ${s.album}`.toLowerCase();
@@ -2296,7 +2316,7 @@ function render(){
   } else {
     empty.style.display = 'none';
     const clusterCounts = {};
-    songs.forEach(s=>{ if(s.clusterId) clusterCounts[s.clusterId] = (clusterCounts[s.clusterId]||0)+1; });
+    songs.forEach(s=>{ songStackIds(s).forEach(cid=>{ clusterCounts[cid] = (clusterCounts[cid]||0)+1; }); });
     grid.innerHTML = '';
     currentGridList = list;
     currentClusterCounts = clusterCounts;
@@ -2308,7 +2328,7 @@ function render(){
   const clusterBar = document.getElementById('clusterBar');
   if(clusterFilterId){
     clusterBar.style.display = 'flex';
-    const clusterName = (list.find(s=>s.clusterName)||{}).clusterName;
+    const clusterName = stackDisplayName(clusterFilterId);
     document.getElementById('clusterBarText').textContent = `Viewing "${clusterName || 'Untitled stack'}" · ${list.length} song${list.length!==1?'s':''}`;
   } else {
     clusterBar.style.display = 'none';
@@ -2829,6 +2849,11 @@ function handleMultiSave(){
 }
 
 document.getElementById('grid').addEventListener('click', e=>{
+  const stacksBtn = e.target.closest('[data-stacks-for]');
+  if(stacksBtn){
+    if(typeof openSongStacksPopover === 'function') openSongStacksPopover(stacksBtn.dataset.stacksFor);
+    return;
+  }
   const linkBadge = e.target.closest('.link-badge');
   if(linkBadge){
     clusterFilterId = linkBadge.dataset.cluster;
