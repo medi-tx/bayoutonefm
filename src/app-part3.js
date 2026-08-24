@@ -620,12 +620,13 @@ function cardBackHtml(s){
         ${cbField('🔁 Replay-ability', starsHtml(st.replay) + ` <span class="cb-star-num">${st.replay||0}/5</span>`)}
       </div>
       <div class="vibe-bars">
-        ${vibeBarHtml('⚡ Energy · chill ↔ electric '+(s.vibeEnergy != null ? s.vibeEnergy : 0), s.vibeEnergy, 'energy')}
-        ${vibeBarHtml('🌗 Mood · stormy ↔ sunny '+(s.vibeMood != null ? s.vibeMood : 0), s.vibeMood, 'mood')}
-        ${vibeBarHtml('🕰️ Nostalgia · new ↔ familiar '+(s.vibeNostalgia != null ? s.vibeNostalgia : 0), s.vibeNostalgia, 'nostalgia')}
+        ${vibeBarHtml('⚡ Energy', s.vibeEnergy, 'energy')}
+        ${vibeBarHtml('🌗 Mood', s.vibeMood, 'mood')}
+        ${vibeBarHtml('🕰️ Nostalgia', s.vibeNostalgia, 'nostalgia')}
       </div>
       <div class="cb-fields">
-        ${cbField('Thoughts', s.why ? escapeHtml(s.why) : '')}
+        ${cbField('Quick thought', s.quickThought ? `“${escapeHtml(s.quickThought)}”` : '')}
+        ${cbField('Opinions', s.why ? escapeHtml(s.why) : '')}
         ${cbField('Borrowed from / Where I heard it', s.credit ? escapeHtml(s.credit) : '')}
         ${cbField('Reminds me of', cbRemindsNames(s))}
         ${cbField('Added', s.createdAt ? escapeHtml(formatAddedDate(s.createdAt)) : '')}
@@ -799,7 +800,7 @@ function songCardHtml(s, clusterCounts){
         </div>
         ${(s.clusterId && clusterCounts[s.clusterId] > 1) ? `<span class="link-badge" data-cluster="${s.clusterId}">🔗 ${clusterCounts[s.clusterId]} linked</span>` : ''}
         ${(s.tags&&s.tags.length) ? `<div class="tags">${s.tags.map(t=>`<span class="tag" style="background:color-mix(in srgb, ${tierColor('B')} 18%, transparent);color:${tierColor('B')};border-color:${tierColor('B')}">${escapeHtml(t)}</span>`).join('')}</div>` : (showEx ? `<div class="tags">${['nostalgic','road trip','late night'].map(t=>`<span class="tag ex-tag">e.g. ${t}</span>`).join('')}</div>` : '')}
-        ${s.why ? `<p class="why">${escapeHtml(s.why)}</p>` : (showEx ? `<p class="why ex">e.g. the bassline just doesn't let go</p>` : '')}
+        ${s.quickThought ? `<p class="card-thought">“${escapeHtml(s.quickThought)}”</p>` : (showEx ? `<p class="why ex">e.g. the bassline just doesn't let go</p>` : '')}
         ${s.credit ? `<p class="credit-note"><b>Borrowed from / Where I Heard It:</b> ${escapeHtml(s.credit)}</p>` : ''}
         ${(s.remindsOf && s.remindsOf.length) ? `<div class="reminds-badges">${s.remindsOf.map(pid=>{
           const p = people.find(pp=>pp.id===pid);
@@ -1443,6 +1444,7 @@ function openAddFromData(data){
   document.getElementById('f-genre').value = (data.genres||[]).join(', ');
   document.getElementById('f-tags').value = (data.tags||[]).join(', ');
   document.getElementById('f-why').value = data.why || '';
+  document.getElementById('f-quick').value = data.quickThought || '';
   document.getElementById('f-credit').value = data.credit || '';
   currentCoverArt = data.coverArt || null;
   setImagePreview('f-cover', currentCoverArt);
@@ -2387,6 +2389,7 @@ function openModal(song){
   document.getElementById('f-genre').value = (song?.genres||[]).join(', ');
   document.getElementById('f-tags').value = (song?.tags||[]).join(', ');
   document.getElementById('f-why').value = song?.why || '';
+  document.getElementById('f-quick').value = song?.quickThought || '';
   document.getElementById('f-credit').value = song?.credit || '';
   document.getElementById('f-track').value = song?.trackNumber || '';
   document.getElementById('f-score').value = (song?.score === null || song?.score === undefined) ? '' : song.score;
@@ -2523,6 +2526,7 @@ function handleSave(){
     genres: document.getElementById('f-genre').value.split(',').map(g=>g.trim()).filter(Boolean),
     tags: document.getElementById('f-tags').value.split(',').map(t=>t.trim()).filter(Boolean),
     why: document.getElementById('f-why').value.trim(),
+    quickThought: document.getElementById('f-quick').value.trim(),
     credit: document.getElementById('f-credit').value.trim(),
     coverArt: currentCoverArt,
     remindsOf: getSelectedReminds('f'),
