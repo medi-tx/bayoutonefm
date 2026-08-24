@@ -1517,8 +1517,11 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
   .star-ico.on{ color:#f5c84c; }
   .cb-star-num{ margin-left:auto; font-size:10.5px; opacity:.55; font-variant-numeric:tabular-nums; }
   .cb-meta{ margin:0; font-size:12px; opacity:.7; }
+  .vibe-slider-line{ display:flex; align-items:center; gap:8px; }
+  .vibe-slider-line input{ flex:1; }
+  .vibe-end-ico{ font-size:16px; line-height:1; flex:none; }
   .cb-flip-fab{
-    position:absolute; top:8px; right:8px; z-index:6;
+    position:absolute; bottom:6px; right:6px; z-index:6;
     width:26px; height:26px; border-radius:50%;
     border:1.5px solid rgba(var(--on-paper-rgb),0.35);
     background:rgba(var(--on-paper-rgb),0.06);
@@ -1531,7 +1534,8 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
   .cr-stars{ display:flex; gap:9px; font-size:11px; }
   .cr-stars > span{ display:inline-flex; align-items:center; gap:3px; }
   .cr-stars .star-ico{ font-size:10.5px; letter-spacing:0; }
-  .cr-vibes{ display:flex; gap:6px; flex:1; min-width:110px; max-width:180px; }
+  .cr-vibes{ display:flex; gap:6px; flex:1; min-width:110px; max-width:200px; align-items:center; }
+  .cr-ve{ font-size:11px; line-height:1; }
   .vb{
     flex:1; height:6px; border-radius:4px;
     background:rgba(var(--on-paper-rgb),0.14);
@@ -3101,11 +3105,11 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
       <label>Song vibes</label>
       <div class="vibe-row">
         <div class="vibe-head"><span>⚡ Energy</span><span class="vibe-ends">chill ↔ electric</span></div>
-        <input type="range" min="0" max="100" id="f-vibe-energy" class="vibe-range energy">
+        <div class="vibe-slider-line"><span class="vibe-end-ico" title="chill">😴</span><input type="range" min="0" max="100" id="f-vibe-energy" class="vibe-range energy"><span class="vibe-end-ico" title="electric">⚡</span></div>
       </div>
       <div class="vibe-row">
         <div class="vibe-head"><span>🌗 Mood</span><span class="vibe-ends">stormy ↔ sunny</span></div>
-        <input type="range" min="0" max="100" id="f-vibe-mood" class="vibe-range mood">
+        <div class="vibe-slider-line"><span class="vibe-end-ico" title="stormy">🌧️</span><input type="range" min="0" max="100" id="f-vibe-mood" class="vibe-range mood"><span class="vibe-end-ico" title="sunny">☀️</span></div>
       </div>
     </div>
     <div class="field"><label>Thoughts</label><textarea id="f-why"></textarea></div>
@@ -4393,8 +4397,12 @@ function cardRatingsStripHtml(s){
   let out = '<div class="card-ratings">';
   if(hasVibes){
     out += `<div class="cr-vibes">`
+      + `<span class="cr-ve" title="chill">😴</span>`
       + `<span class="vb energy" title="⚡ Energy ${s.vibeEnergy}"><i style="width:${clampNum(s.vibeEnergy,0,100)}%;"></i></span>`
+      + `<span class="cr-ve" title="electric">⚡</span>`
+      + `<span class="cr-ve" title="stormy">🌧️</span>`
       + `<span class="vb mood" title="🌗 Mood ${s.vibeMood != null ? s.vibeMood : 0}"><i style="width:${clampNum(s.vibeMood||0,0,100)}%;"></i></span>`
+      + `<span class="cr-ve" title="sunny">☀️</span>`
       + `</div>`;
   }
   if(hasStars){
@@ -4621,7 +4629,6 @@ function songCardHtml(s, clusterCounts){
           <button data-action="archive">${s.archived ? 'UNARCHIVE' : 'ARCHIVE'}</button>
           <button data-action="delete" class="del">DELETE</button>
           ${!showEx ? `<button data-action="share" class="share-card-btn" title="Generate a shareable card for this song">↗ SHARE</button>` : ''}
-          ${!showEx ? `<button type="button" data-action="flip" title="Ratings & vibes">ℹ INFO</button>` : ''}
         </div>
         ${s.createdAt && !showEx ? `<p class="card-date">🕒 Added ${escapeHtml(formatAddedDate(s.createdAt))}</p>` : ''}
         ${(!showEx && s.edits && s.edits.length) ? `<button class="edits-toggle" onclick="this.nextElementSibling.classList.toggle('open')">${s.edits.length} edit${s.edits.length!==1?'s':''} — view log</button><div class="edits-log">${s.edits.slice().reverse().map(e=>{
@@ -4630,6 +4637,7 @@ function songCardHtml(s, clusterCounts){
           return `<div class="edits-entry"><div class="edits-entry-time">${ts}</div>${e.changes.map(c=>`<div class="edits-entry-change"><span class="edits-entry-field">${escapeHtml(c.field)}</span><span class="edits-entry-old">${escapeHtml(valStr(c.old))}</span><span class="edits-entry-arrow">→</span><span class="edits-entry-new">${escapeHtml(valStr(c.now))}</span></div>`).join('')}</div>`;
         }).join('')}</div>` : ''}
         ${!showEx ? cardBackHtml(s) : ''}
+        ${!showEx ? `<button type="button" class="cb-flip-fab" data-action="flip" title="Ratings & vibes" aria-label="Ratings and vibes">ℹ</button>` : ''}
       </div>
     `;
 }

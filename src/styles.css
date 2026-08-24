@@ -1466,8 +1466,11 @@
   .star-ico.on{ color:#f5c84c; }
   .cb-star-num{ margin-left:auto; font-size:10.5px; opacity:.55; font-variant-numeric:tabular-nums; }
   .cb-meta{ margin:0; font-size:12px; opacity:.7; }
+  .vibe-slider-line{ display:flex; align-items:center; gap:8px; }
+  .vibe-slider-line input{ flex:1; }
+  .vibe-end-ico{ font-size:16px; line-height:1; flex:none; }
   .cb-flip-fab{
-    position:absolute; top:8px; right:8px; z-index:6;
+    position:absolute; bottom:6px; right:6px; z-index:6;
     width:26px; height:26px; border-radius:50%;
     border:1.5px solid rgba(var(--on-paper-rgb),0.35);
     background:rgba(var(--on-paper-rgb),0.06);
@@ -1480,7 +1483,8 @@
   .cr-stars{ display:flex; gap:9px; font-size:11px; }
   .cr-stars > span{ display:inline-flex; align-items:center; gap:3px; }
   .cr-stars .star-ico{ font-size:10.5px; letter-spacing:0; }
-  .cr-vibes{ display:flex; gap:6px; flex:1; min-width:110px; max-width:180px; }
+  .cr-vibes{ display:flex; gap:6px; flex:1; min-width:110px; max-width:200px; align-items:center; }
+  .cr-ve{ font-size:11px; line-height:1; }
   .vb{
     flex:1; height:6px; border-radius:4px;
     background:rgba(var(--on-paper-rgb),0.14);

@@ -558,8 +558,12 @@ function cardRatingsStripHtml(s){
   let out = '<div class="card-ratings">';
   if(hasVibes){
     out += `<div class="cr-vibes">`
+      + `<span class="cr-ve" title="chill">😴</span>`
       + `<span class="vb energy" title="⚡ Energy ${s.vibeEnergy}"><i style="width:${clampNum(s.vibeEnergy,0,100)}%;"></i></span>`
+      + `<span class="cr-ve" title="electric">⚡</span>`
+      + `<span class="cr-ve" title="stormy">🌧️</span>`
       + `<span class="vb mood" title="🌗 Mood ${s.vibeMood != null ? s.vibeMood : 0}"><i style="width:${clampNum(s.vibeMood||0,0,100)}%;"></i></span>`
+      + `<span class="cr-ve" title="sunny">☀️</span>`
       + `</div>`;
   }
   if(hasStars){
@@ -786,7 +790,6 @@ function songCardHtml(s, clusterCounts){
           <button data-action="archive">${s.archived ? 'UNARCHIVE' : 'ARCHIVE'}</button>
           <button data-action="delete" class="del">DELETE</button>
           ${!showEx ? `<button data-action="share" class="share-card-btn" title="Generate a shareable card for this song">↗ SHARE</button>` : ''}
-          ${!showEx ? `<button type="button" data-action="flip" title="Ratings & vibes">ℹ INFO</button>` : ''}
         </div>
         ${s.createdAt && !showEx ? `<p class="card-date">🕒 Added ${escapeHtml(formatAddedDate(s.createdAt))}</p>` : ''}
         ${(!showEx && s.edits && s.edits.length) ? `<button class="edits-toggle" onclick="this.nextElementSibling.classList.toggle('open')">${s.edits.length} edit${s.edits.length!==1?'s':''} — view log</button><div class="edits-log">${s.edits.slice().reverse().map(e=>{
@@ -795,6 +798,7 @@ function songCardHtml(s, clusterCounts){
           return `<div class="edits-entry"><div class="edits-entry-time">${ts}</div>${e.changes.map(c=>`<div class="edits-entry-change"><span class="edits-entry-field">${escapeHtml(c.field)}</span><span class="edits-entry-old">${escapeHtml(valStr(c.old))}</span><span class="edits-entry-arrow">→</span><span class="edits-entry-new">${escapeHtml(valStr(c.now))}</span></div>`).join('')}</div>`;
         }).join('')}</div>` : ''}
         ${!showEx ? cardBackHtml(s) : ''}
+        ${!showEx ? `<button type="button" class="cb-flip-fab" data-action="flip" title="Ratings & vibes" aria-label="Ratings and vibes">ℹ</button>` : ''}
       </div>
     `;
 }
