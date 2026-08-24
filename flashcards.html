@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Build School — timbre.fm</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,700;1,400;1,700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#141210;
+    --ink-2:#1d1a17;
+    --paper:#f4ead8;
+    --on-paper:#241f1a;
+    --gold:#eedd95;
+    --text-dim:#8f887c;
+    --good:#9ad0c2;
+    --bad:#e8a1a1;
+    --lav:#b8b3e0;
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  body{
+    min-height:100vh;
+    background:radial-gradient(1200px 800px at 50% -10%, #26221d 0%, var(--ink) 60%);
+    color:var(--paper);
+    font-family:'IBM Plex Mono', ui-monospace, monospace;
+    display:flex; flex-direction:column; align-items:center;
+    padding:28px 16px 40px;
+  }
+  header{ text-align:center; margin-bottom:20px; width:100%; max-width:640px; }
+  .kicker{ font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--text-dim); margin-bottom:8px; }
+  h1{ font-family:'Fraunces', Georgia, serif; font-style:italic; font-weight:700; font-size:clamp(24px,5vw,36px); color:var(--gold); }
+  .sub{ font-size:12px; color:var(--text-dim); margin-top:6px; }
+
+  .screen{ display:none; flex-direction:column; align-items:center; gap:18px; width:100%; }
+  .screen.active{ display:flex; }
+
+  .deck-choice{
+    width:min(420px,92vw); text-align:left; cursor:pointer;
+    background:var(--ink-2); border:1px solid rgba(244,234,216,0.25);
+    border-radius:14px; padding:20px 22px; color:var(--paper);
+    transition:border-color .15s ease, transform .1s ease;
+  }
+  .deck-choice:hover{ border-color:var(--gold); transform:translateY(-2px); }
+  .deck-choice h2{ font-family:'Fraunces', Georgia, serif; font-style:italic; font-size:22px; margin-bottom:6px; }
+  .deck-choice p{ font-size:11px; color:var(--text-dim); letter-spacing:1px; }
+
+  .stage{ perspective:1400px; }
+  .card{
+    position:relative; width:min(600px,92vw); aspect-ratio:4/3;
+    transform-style:preserve-3d; transition:transform .55s cubic-bezier(.35,.15,.25,1);
+    cursor:pointer;
+  }
+  .card.flipped{ transform:rotateY(180deg); }
+  .face{
+    position:absolute; inset:0; backface-visibility:hidden; -webkit-backface-visibility:hidden;
+    border-radius:16px; padding:28px 26px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:14px; text-align:center; overflow:hidden;
+    box-shadow:0 14px 34px rgba(0,0,0,0.45);
+  }
+  .front{ background:var(--paper); color:var(--on-paper); }
+  .front::after{ content:""; position:absolute; top:0; right:18px; bottom:0; border-right:2px dashed rgba(36,31,26,0.15); }
+  .back{
+    background:var(--ink-2); color:var(--paper);
+    border:1px solid rgba(238,221,149,0.3);
+    transform:rotateY(180deg);
+  }
+  .chip{
+    font-size:10px; letter-spacing:2px; text-transform:uppercase; font-weight:600;
+    padding:4px 12px; border-radius:99px; border:1px solid currentColor;
+  }
+  .chip.TABLES{ color:var(--gold); }
+  .chip.FORMS{ color:var(--good); }
+  .chip.ATTRS{ color:var(--lav); }
+  .q{ font-family:'Fraunces', Georgia, serif; font-weight:700; font-style:italic; font-size:clamp(19px,3.4vw,27px); line-height:1.25; }
+  .a{ font-size:clamp(13px,2.3vw,15px); line-height:1.65; overflow-y:auto; max-height:100%; }
+  .a p{ margin-bottom:8px; }
+  .hint{ font-size:10px; letter-spacing:2px; text-transform:uppercase; opacity:0.5; }
+  pre{
+    font-family:inherit; font-size:clamp(12px,2.2vw,14px); line-height:1.6;
+    background:rgba(244,234,216,0.07); border:1px solid rgba(244,234,216,0.18);
+    border-radius:10px; padding:12px 16px; text-align:left; overflow-x:auto;
+    white-space:pre; color:var(--gold);
+  }
+  .front pre{ background:rgba(36,31,26,0.08); border-color:rgba(36,31,26,0.2); color:var(--on-paper); }
+
+  .quiz-zone{ display:flex; flex-direction:column; align-items:center; gap:14px; width:min(600px,92vw); }
+  .answer-row{ display:flex; gap:10px; width:100%; }
+  #answerInput{
+    flex:1; font-family:inherit; font-size:15px; letter-spacing:1px;
+    padding:12px 18px; border-radius:99px; outline:none;
+    background:var(--ink-2); color:var(--paper);
+    border:1px solid rgba(244,234,216,0.35);
+  }
+  #answerInput:focus{ border-color:var(--gold); }
+  #answerInput.bad{ border-color:var(--bad); animation:shake .3s ease; }
+  @keyframes shake{ 0%,100%{ transform:translateX(0);} 25%{ transform:translateX(-6px);} 75%{ transform:translateX(6px);} }
+  .banner{ font-size:13px; letter-spacing:1px; padding:10px 20px; border-radius:99px; display:none; }
+  .banner.ok{ display:block; background:rgba(154,208,194,0.15); color:var(--good); border:1px solid var(--good); }
+  .banner.miss{ display:block; background:rgba(232,161,161,0.12); color:var(--bad); border:1px solid var(--bad); }
+  .scoreline{ font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--text-dim); }
+
+  .controls{ display:flex; gap:10px; flex-wrap:wrap; justify-content:center; }
+  button{
+    font-family:inherit; font-size:12px; letter-spacing:1px;
+    padding:10px 18px; border-radius:99px; cursor:pointer;
+    background:transparent; color:var(--paper);
+    border:1px solid rgba(244,234,216,0.35);
+    transition:background .15s ease, border-color .15s ease, transform .1s ease;
+  }
+  button:hover{ background:rgba(244,234,216,0.08); border-color:var(--gold); }
+  button:active{ transform:scale(0.97); }
+  button.primary{ background:var(--gold); color:var(--ink); border-color:var(--gold); font-weight:600; }
+  button.primary:hover{ background:#f6ecb4; }
+  button.learned-on{ background:rgba(154,208,194,0.15); border-color:var(--good); color:var(--good); }
+
+  .counter{ font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--text-dim); }
+  .dots{ display:flex; gap:7px; flex-wrap:wrap; justify-content:center; max-width:600px; }
+  .dot{
+    width:9px; height:9px; border-radius:50%;
+    background:rgba(244,234,216,0.18); cursor:pointer; padding:0; border:none;
+    transition:background .15s ease, transform .15s ease;
+  }
+  .dot:hover{ transform:scale(1.3); }
+  .dot.current{ background:var(--gold); }
+  .dot.done{ background:var(--good); }
+  .dot.missed-dot{ background:var(--bad); }
+
+  .result-big{
+    font-family:'Fraunces', Georgia, serif; font-style:italic; font-weight:700;
+    font-size:clamp(48px,10vw,84px); color:var(--gold); line-height:1;
+  }
+  .result-msg{ font-size:14px; letter-spacing:1px; text-align:center; }
+  .keys{ font-size:10px; letter-spacing:1px; color:var(--text-dim); text-align:center; }
+  @media (max-width:480px){ .face{ padding:22px 16px; } }
+
+  .progress-wrap{
+    height:6px; border-radius:99px; flex:1; max-width:320px;
+    background:rgba(244,234,216,0.12); overflow:hidden;
+  }
+  .progress-bar{
+    height:100%; width:0%;
+    background:linear-gradient(90deg, var(--gold), #d9b96a);
+    transition:width .35s ease;
+  }
+
+  .course-wrap{ display:flex; gap:18px; width:min(1000px,96vw); align-items:flex-start; }
+  #lessonList{ width:240px; flex-shrink:0; display:flex; flex-direction:column; gap:6px; position:sticky; top:14px; }
+  .lesson-item{ text-align:left; border-radius:10px; padding:10px 14px; font-size:12px; line-height:1.4; }
+  .lesson-item.current{ border-color:var(--gold); background:rgba(238,221,149,0.1); }
+  .lesson-item .num{ color:var(--text-dim); margin-right:8px; }
+  .lesson-item .tick{ color:var(--good); float:right; }
+  .lesson-main{
+    flex:1; min-width:0;
+    background:var(--ink-2); border:1px solid rgba(244,234,216,0.18);
+    border-radius:16px; padding:26px;
+    display:flex; flex-direction:column; gap:16px;
+  }
+  .lesson-title{ font-family:'Fraunces', Georgia, serif; font-style:italic; font-weight:700; font-size:clamp(22px,4vw,30px); color:var(--gold); }
+  .lesson-prose{ font-size:13px; line-height:1.75; }
+  .lesson-prose strong{ color:var(--gold); }
+  .lesson-prose em{ color:var(--lav); font-style:normal; }
+  .demo-zone{
+    border:1px dashed rgba(238,221,149,0.5); border-radius:12px;
+    padding:18px; display:flex; flex-direction:column; gap:12px; align-items:center;
+  }
+  .demo-label{ font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--gold); }
+  .quiz-box{ border-top:1px solid rgba(244,234,216,0.15); padding-top:16px; display:flex; flex-direction:column; gap:4px; }
+  .quiz-q{ font-size:13px; letter-spacing:0.5px; margin-bottom:6px; }
+  .mc-opt{ display:block; width:100%; text-align:left; margin-top:8px; border-radius:10px; }
+  .mc-opt.correct{ border-color:var(--good); background:rgba(154,208,194,0.15); color:var(--good); }
+  .mc-opt.wrong{ border-color:var(--bad); background:rgba(232,161,161,0.12); color:var(--bad); }
+  .mc-opt:disabled{ opacity:0.85; cursor:default; }
+  .explain{ font-size:12px; color:var(--text-dim); line-height:1.6; display:none; margin-top:10px; }
+  .explain.show{ display:block; }
+  .mini-card{
+    width:230px; border-radius:12px; padding:16px;
+    background:var(--mp,#f4ead8); color:var(--mi,#241f1a);
+    font-family:'Fraunces', Georgia, serif;
+    box-shadow:0 8px 20px rgba(0,0,0,0.35);
+  }
+  .mini-card h3{ font-style:italic; font-size:18px; margin-bottom:4px; }
+  .mini-card p{ font-family:'IBM Plex Mono', monospace; font-size:10px; opacity:0.75; letter-spacing:1px; }
+  .raw-card{
+    width:230px; padding:16px; border:2px solid currentColor;
+    font-family:'IBM Plex Mono', monospace; font-size:12px;
+  }
+  .like-btn{ margin-top:10px; font-size:11px; padding:6px 14px; }
+  .chk-row{ display:flex; gap:16px; flex-wrap:wrap; justify-content:center; font-size:12px; }
+  .chk-row label{ display:flex; align-items:center; gap:6px; cursor:pointer; }
+  .swatch-row{ display:flex; gap:14px; align-items:center; font-size:12px; flex-wrap:wrap; justify-content:center; }
+  .swatch-row input[type=color]{ width:44px; height:32px; border:none; background:none; cursor:pointer; }
+  .song-chip{
+    display:inline-block; margin:3px; padding:6px 12px; border-radius:99px;
+    font-size:11px; border:1px solid rgba(238,221,149,0.4); background:rgba(238,221,149,0.08);
+  }
+  .state-view{
+    width:100%; max-width:420px; max-height:150px; overflow:auto;
+    font-size:11px; line-height:1.5; text-align:left;
+  }
+  .sync-dot{ width:14px; height:14px; border-radius:50%; display:inline-block; vertical-align:-2px; background:#555; transition:background .3s ease; }
+  .sync-dot.on{ background:var(--good); }
+  .sync-dot.pulse{ animation:pulseDot .5s ease infinite alternate; }
+  @keyframes pulseDot{ from{ background:#555; } to{ background:var(--gold); } }
+  .cover-ph{
+    width:120px; height:120px; border-radius:10px;
+    background:linear-gradient(135deg, var(--c1,#7c5cff), var(--c2,#eedd95));
+    box-shadow:0 8px 20px rgba(0,0,0,0.4);
+  }
+  @media (max-width:760px){
+    .course-wrap{ flex-direction:column; }
+    #lessonList{ width:100%; position:static; flex-direction:row; flex-wrap:wrap; }
+    .lesson-item{ width:auto; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <p class="kicker">build school</p>
+  <h1 id="pageTitle">Build School</h1>
+  <p class="sub" id="pageSub">Pick a deck or start the course.</p>
+</header>
+
+<div class="screen active" id="deckScreen">
+  <button type="button" class="deck-choice" id="deckHtmlBtn">
+    <h2>HTML — Tables, Forms &amp; Basics</h2>
+    <p id="deckHtmlMeta"></p>
+  </button>
+  <button type="button" class="deck-choice" id="deckBuildBtn">
+    <h2>How timbre.fm was built</h2>
+    <p id="deckBuildMeta"></p>
+  </button>
+</div>
+
+<div class="screen" id="studyScreen">
+  <div class="stage">
+    <div class="card" id="card" title="Click to flip">
+      <div class="face front" id="frontFace"></div>
+      <div class="face back" id="backFace"></div>
+    </div>
+  </div>
+  <div class="controls">
+    <button type="button" id="shuffleBtn">🔀 Shuffle</button>
+    <button type="button" id="prevBtn">← Prev</button>
+    <button type="button" class="primary" id="flipBtn">Flip</button>
+    <button type="button" id="nextBtn">Next →</button>
+    <button type="button" id="learnedBtn">✓ Mark learned</button>
+  </div>
+  <p class="counter" id="studyCounter"></p>
+  <div class="dots" id="studyDots"></div>
+  <div class="controls">
+    <button type="button" id="toQuizBtn">🎯 Quiz me</button>
+    <button type="button" id="studyBackBtn">← Decks</button>
+  </div>
+  <p class="keys">space = flip · ← → = navigate · l = mark learned · s = shuffle</p>
+</div>
+
+<div class="screen" id="quizScreen">
+  <div class="scoreline" id="scoreLine"></div>
+  <div class="stage">
+    <div class="card" id="quizCard">
+      <div class="face front" id="quizFront"></div>
+      <div class="face back" id="quizBack"></div>
+    </div>
+  </div>
+  <div class="quiz-zone" id="quizZone"></div>
+  <div class="dots" id="quizDots"></div>
+  <div class="controls">
+    <button type="button" id="quizQuitBtn">← Quit quiz</button>
+  </div>
+</div>
+
+<div class="screen" id="resultScreen">
+  <div class="result-big" id="resultPct"></div>
+  <p class="result-msg" id="resultMsg"></p>
+  <div class="controls">
+    <button type="button" class="primary" id="retryMissedBtn">🔁 Retry missed</button>
+    <button type="button" id="retryAllBtn">↺ Retry all</button>
+    <button type="button" id="resultBackBtn">← Decks</button>
+  </div>
+</div>
+
+<div class="screen" id="courseScreen">
+  <div class="controls" style="width:min(1000px,96vw); justify-content:space-between;">
+    <button type="button" id="courseBackBtn">← Decks</button>
+    <div class="progress-wrap"><div class="progress-bar" id="courseBar"></div></div>
+    <span class="scoreline" id="courseLabel"></span>
+  </div>
+  <div class="course-wrap">
+    <aside id="lessonList"></aside>
+    <section class="lesson-main" id="lessonMain"></section>
+  </div>
+</div>
+
+<script>
+const FLASH_DECK = {
+  name: 'HTML — Tables, Forms & Basics',
+  storageKey: 'html-flashcards-progress',
+  cards: [
+    { cat:'TABLES', q:'What HTML tag is used to create a table?',
+      a:'<pre>&lt;table&gt;\n&lt;/table&gt;</pre><p>A table contains rows and cells of information.</p>',
+      quiz:{ mode:'type', test:n=>n==='table', ph:'your answer… e.g. table' } },
+    { cat:'TABLES', q:'What HTML tag creates a row in a table?',
+      a:'<pre>&lt;tr&gt;\n&lt;/tr&gt;</pre><p><code>tr</code> stands for <strong>t</strong>able <strong>r</strong>ow.</p>',
+      quiz:{ mode:'type', test:n=>n==='tr', ph:'your answer… e.g. tr' } },
+    { cat:'TABLES', q:'What HTML tag creates a header cell in a table?',
+      a:'<pre>&lt;th&gt;\n&lt;/th&gt;</pre><p><code>th</code> stands for <strong>t</strong>able <strong>h</strong>eader.</p>',
+      quiz:{ mode:'type', test:n=>n==='th', ph:'your answer… e.g. th' } },
+    { cat:'TABLES', q:'What HTML tag is used for regular data inside a table?',
+      a:'<pre>&lt;td&gt;\n&lt;/td&gt;</pre><p><code>td</code> stands for <strong>t</strong>able <strong>d</strong>ata.</p>',
+      quiz:{ mode:'type', test:n=>n==='td', ph:'your answer… e.g. td' } },
+    { cat:'TABLES', q:'What does a basic HTML table look like?',
+      a:'<pre>&lt;table&gt;\n  &lt;tr&gt;\n    &lt;th&gt;Name&lt;/th&gt;\n    &lt;th&gt;Age&lt;/th&gt;\n  &lt;/tr&gt;\n  &lt;tr&gt;\n    &lt;td&gt;Samantha&lt;/td&gt;\n    &lt;td&gt;21&lt;/td&gt;\n  &lt;/tr&gt;\n&lt;/table&gt;</pre>',
+      quiz:{ mode:'self' } },
+    { cat:'FORMS', q:'What is the &lt;form&gt; tag used for?',
+      a:'<p>It creates a section where users can enter and submit information — login, sign-up, search or contact forms.</p>',
+      quiz:{ mode:'self' } },
+    { cat:'FORMS', q:'What HTML tag creates an input field?',
+      a:'<pre>&lt;input&gt;</pre><p>Example:</p><pre>&lt;input placeholder="Search songs…"&gt;</pre>',
+      quiz:{ mode:'type', test:n=>n==='input', ph:'your answer… e.g. input' } },
+    { cat:'FORMS', q:'What does the type attribute do on an &lt;input&gt;?',
+      a:'<p>It tells the browser what kind of input field to create — for example <code>text</code>, <code>password</code>, <code>email</code> or <code>number</code>.</p>',
+      quiz:{ mode:'self' } },
+    { cat:'FORMS', q:'How do you create a password field?',
+      a:'<pre>&lt;input type="password"&gt;</pre><p>The characters the user types are hidden.</p>',
+      quiz:{ mode:'type', test:n=>n.includes('password'), ph:'type the full tag…' } },
+    { cat:'FORMS', q:'How do you create an email input?',
+      a:'<pre>&lt;input type="email"&gt;</pre><p>This tells the browser the user should enter an email address.</p>',
+      quiz:{ mode:'type', test:n=>n.includes('email'), ph:'type the full tag…' } },
+    { cat:'FORMS', q:'What does the placeholder attribute do?',
+      a:'<p>It displays temporary text inside an input field to give the user a hint about what to enter.</p><pre>&lt;input placeholder="Username"&gt;</pre>',
+      quiz:{ mode:'self' } },
+    { cat:'FORMS', q:'What HTML tag creates a button?',
+      a:'<pre>&lt;button&gt;Log In&lt;/button&gt;</pre>',
+      quiz:{ mode:'type', test:n=>n==='button', ph:'your answer… e.g. button' } },
+    { cat:'FORMS', q:'What is the &lt;label&gt; tag used for?',
+      a:'<p>It gives an input field a name or description.</p><pre>&lt;label&gt;Username&lt;/label&gt;</pre>',
+      quiz:{ mode:'type', test:n=>n==='label', ph:'your answer… e.g. label' } },
+    { cat:'ATTRS', q:'What does the id attribute do?',
+      a:'<p>It gives an HTML element a unique name or identifier.</p><pre>&lt;h1 id="title"&gt;My Songs&lt;/h1&gt;</pre>',
+      quiz:{ mode:'type', test:n=>n==='id', ph:'your answer… e.g. id' } },
+    { cat:'ATTRS', q:'What does the class attribute do?',
+      a:'<p>It gives an element a class name that can be shared by multiple elements.</p><pre>&lt;p class="song"&gt;…&lt;/p&gt;</pre>',
+      quiz:{ mode:'type', test:n=>n==='class', ph:'your answer… e.g. class' } },
+    { cat:'ATTRS', q:"What's the difference between id and class?",
+      a:'<p><code>id</code> normally identifies <strong>one specific element</strong>. <code>class</code> can be used on <strong>multiple elements</strong>.</p><pre>&lt;h1 id="title"&gt;My Songs&lt;/h1&gt;\n&lt;p class="song"&gt;…&lt;/p&gt;\n&lt;p class="song"&gt;…&lt;/p&gt;</pre>',
+      quiz:{ mode:'self' } }
+  ]
+};
+
+const COURSE_KEY = 'timbre-build-course';
+let doneLessons = new Set(JSON.parse(localStorage.getItem(COURSE_KEY) || '[]'));
+
+const LESSONS = [
+  {
+    title:'One file, three languages',
+    prose:`<p>timbre.fm is a <strong>single index.html file</strong>. Everything lives together:</p>
+      <p><em>HTML</em> is the skeleton — the boxes and buttons.<br>
+      <em>CSS</em> is the paint — colours, fonts, layout.<br>
+      <em>JavaScript</em> is the muscles — what happens when you click.</p>
+      <p>Uncheck a language below and watch what the page loses.</p>`,
+    mount(zone){
+      zone.innerHTML = `
+        <div class="chk-row">
+          <label><input type="checkbox" id="cssChk" checked> Styles (CSS)</label>
+          <label><input type="checkbox" id="jsChk" checked> Behaviour (JS)</label>
+        </div>
+        <div id="layerPreview"></div>`;
+      const preview = zone.querySelector('#layerPreview');
+      const cssChk = zone.querySelector('#cssChk');
+      const jsChk = zone.querySelector('#jsChk');
+      let likes = 0;
+      const render = () => {
+        preview.innerHTML = `
+          <div class="${cssChk.checked ? 'mini-card' : 'raw-card'}">
+            <h3>Samantha's mixtape</h3>
+            <p>12 SONGS · TIER S</p>
+            <button type="button" class="like-btn" id="likeBtn">♥ Like · <span id="likeCount">${likes}</span></button>
+          </div>`;
+        preview.querySelector('#likeBtn').addEventListener('click', () => {
+          if(!jsChk.checked) return;
+          likes++;
+          preview.querySelector('#likeCount').textContent = likes;
+        });
+      };
+      cssChk.addEventListener('change', render);
+      jsChk.addEventListener('change', () => {
+        if(!jsChk.checked){ likes = 0; }
+        render();
+      });
+      render();
+    },
+    quiz:{
+      q:'Which language makes the page DO things when you click?',
+      opts:['HTML','CSS','JavaScript'],
+      answer:2,
+      why:'JavaScript adds behaviour. HTML is structure, CSS is appearance.'
+    }
+  },
+  {
+    title:'The HTML skeleton',
+    prose:`<p>Open timbre.fm's source and most of the page is <strong>empty containers with ids</strong>:</p>
+      <pre>&lt;main id="appWrap"&gt;
+  &lt;div id="grid"&gt;&lt;/div&gt;
+  &lt;div id="emptyState"&gt;&lt;/div&gt;
+&lt;/main&gt;</pre>
+      <p>The grid starts empty! JavaScript later fills it with hundreds of song cards. An <strong>id</strong> is a unique name that lets JS grab exactly one element.</p>`,
+    mount:null,
+    quiz:{
+      q:'Why do elements need ids like id="grid"?',
+      opts:['To make them load faster','So JavaScript can find them with getElementById','Ids are required in HTML'],
+      answer:1,
+      why:'document.getElementById("grid") returns that exact element so JS can fill it, hide it, or change it.'
+    }
+  },
+  {
+    title:'CSS variables power the themes',
+    prose:`<p>Every colour on timbre.fm is a <strong>variable</strong> defined once:</p>
+      <pre>:root { --paper:#f4ead8; --ink:#141210; }
+.card { background:var(--paper); color:var(--ink); }</pre>
+      <p>Change the variable → every element using it updates instantly. That is the entire secret behind the Theme picker. Try it:</p>`,
+    mount(zone){
+      zone.innerHTML = `
+        <div class="swatch-row">
+          <label>background <input type="color" id="bgPick" value="#f4ead8"></label>
+          <label>text <input type="color" id="txPick" value="#241f1a"></label>
+          <button type="button" id="darkPreset">🌙 dark preset</button>
+        </div>
+        <div class="mini-card" id="themeCard">
+          <h3>Blinding Lights</h3>
+          <p>THE WEEKND · TIER S</p>
+        </div>`;
+      const card = zone.querySelector('#themeCard');
+      zone.querySelector('#bgPick').addEventListener('input', e => card.style.setProperty('--mp', e.target.value));
+      zone.querySelector('#txPick').addEventListener('input', e => card.style.setProperty('--mi', e.target.value));
+      zone.querySelector('#darkPreset').addEventListener('click', () => {
+        card.style.setProperty('--mp', '#241f1a');
+        card.style.setProperty('--mi', '#f4ead8');
+      });
+    },
+    quiz:{
+      q:'You change --paper once in :root. What happens?',
+      opts:['Nothing — you must edit every element','Only the first element updates','Everything using var(--paper) updates'],
+      answer:2,
+      why:'Variables cascade. One change re-themes the whole site — no repeated edits.'
+    }
+  },
+  {
+    title:'The DOM: JS grabs HTML',
+    prose:`<p>When the browser reads your HTML it builds the <strong>DOM</strong> — a live tree of objects JavaScript can touch:</p>
+      <pre>document.getElementById('domOut').textContent = 'hi!';
+document.getElementById('domOut').innerHTML = '&lt;strong&gt;hi!&lt;/strong&gt;';</pre>
+      <p><em>textContent</em> writes plain text. <em>innerHTML</em> writes real HTML tags. Press the buttons:</p>`,
+    mount(zone){
+      zone.innerHTML = `
+        <p id="domOut" style="font-size:18px;">original text</p>
+        <div class="controls">
+          <button type="button" id="txtBtn">Change text</button>
+          <button type="button" id="htmlBtn">Make it bold</button>
+          <button type="button" id="rstBtn">Reset</button>
+        </div>
+        <pre id="domCode">// press a button to see its code</pre>`;
+      const out = zone.querySelector('#domOut');
+      const code = zone.querySelector('#domCode');
+      zone.querySelector('#txtBtn').addEventListener('click', () => {
+        out.textContent = 'changed by JavaScript!';
+        code.textContent = `document.getElementById('domOut').textContent = 'changed by JavaScript!';`;
+      });
+      zone.querySelector('#htmlBtn').addEventListener('click', () => {
+        out.innerHTML = '<strong>bold via innerHTML!</strong>';
+        code.textContent = `document.getElementById('domOut').innerHTML = '<strong>bold via innerHTML!</strong>';`;
+      });
+      zone.querySelector('#rstBtn').addEventListener('click', () => {
+        out.textContent = 'original text';
+        code.textContent = '// press a button to see its code';
+      });
+    },
+    quiz:{
+      q:"What does document.getElementById('grid') give you?",
+      opts:['A copy of the element as text','The actual live element, ready to change','The id attribute'],
+      answer:1,
+      why:'You get the real element object — change it and the page updates immediately.'
+    }
+  },
+  {
+    title:'Events: clicks & typing',
+    prose:`<p>An <strong>event listener</strong> runs your function when something happens:</p>
+      <pre>btn.addEventListener('click', () =&gt; { ... });
+field.addEventListener('input', () =&gt; { ... });</pre>
+      <p>'click' fires on presses, 'input' fires on <em>every keystroke</em>. That second one is how the search box filters songs live.</p>`,
+    mount(zone){
+      zone.innerHTML = `
+        <div class="controls">
+          <button type="button" class="primary" id="countBtn">Click me</button>
+          <span id="clickCount" style="font-size:13px;">0 clicks</span>
+        </div>
+        <input id="echoIn" placeholder="type here…" autocomplete="off"
+          style="padding:10px 16px;border-radius:99px;border:1px solid rgba(244,234,216,.35);background:var(--ink);color:var(--paper);font-family:inherit;width:min(280px,80vw);">
+        <p style="font-size:13px;">echo: <span id="echoOut" style="color:var(--gold);"></span></p>`;
+      let n = 0;
+      zone.querySelector('#countBtn').addEventListener('click', () => {
+        n++;
+        zone.querySelector('#clickCount').textContent = n + ' clicks';
+      });
+      zone.querySelector('#echoIn').addEventListener('input', e => {
+        zone.querySelector('#echoOut').textContent = e.target.value;
+      });
+    },
+    quiz:{
+      q:"addEventListener('input', fn) runs fn when…",
+      opts:['the user clicks','the user types in the field','the page loads'],
+      answer:1,
+      why:"'input' fires on every keystroke — perfect for live search."
+    }
+  },
+  {
+    title:'State → save() → render()',
+    prose:`<p>The most important pattern in timbre.fm. Data lives in a plain <strong>array</strong> (the "state"). The screen is always <strong>redrawn from that array</strong> — never edited by hand:</p>
+      <pre>songs.push(newSong);   // 1. change the data
+saveSongs();           // 2. persist it
+renderGrid();          // 3. redraw the screen</pre>
+      <p>Add a song below, then watch the raw array underneath — that array IS your app.</p>`,
+    mount(zone){
+      zone.innerHTML = `
+        <div class="controls">
+          <input id="newSongIn" placeholder="song title…" autocomplete="off"
+            style="padding:10px 16px;border-radius:99px;border:1px solid rgba(244,234,216,.35);background:var(--ink);color:var(--paper);font-family:inherit;">
+          <button type="button" class="primary" id="addSongBtn">+ Add song</button>
+        </div>
+        <div id="chipRow" style="max-width:420px;text-align:center;"></div>
+        <p class="demo-label">the state (what is actually stored)</p>
+        <pre class="state-view" id="stateView"></pre>`;
+      const songs = [{ title:'Levitating', tier:'S' }, { title:'Drivers License', tier:'A' }];
+      const render = () => {
+        zone.querySelector('#chipRow').innerHTML =
+          songs.map(s => `<span class="song-chip">${s.title} · ${s.tier}</span>`).join('');
+        zone.querySelector('#stateView').textContent = 'const songs = ' + JSON.stringify(songs, null, 1) + ';';
+      };
+      zone.querySelector('#addSongBtn').addEventListener('click', () => {
+        const inp = zone.querySelector('#newSongIn');
+        if(!inp.value.trim()) return;
+        songs.push({ title: inp.value.trim(), tier:'B' });
+        inp.value = '';
+        render();
+      });
+      render();
+    },
+    quiz:{
+      q:'After pushing a new song into the array, what must you do?',
+      opts:['Nothing — the page updates itself','Call render() to redraw the screen from the array','Reload the browser'],
+      answer:1,
+      why:'JS never auto-redraws. render() rebuilds the visible UI from the data every time.'
+    }
+  },
+  {
+    title:'localStorage: the browser database',
+    prose:`<p>localStorage is a tiny database built into every browser. It survives closing the tab — this is how your catalogue comes back after a refresh:</p>
+      <pre>localStorage.setItem('name', JSON.stringify(data));
+const data = JSON.parse(localStorage.getItem('name'));</pre>
+      <p>Values are always <strong>strings</strong>, so objects go through JSON. Type something and save it:</p>`,
+    mount(zone){
+      zone.innerHTML = `
+        <div class="controls">
+          <input id="lsIn" placeholder="anything…" autocomplete="off"
+            style="padding:10px 16px;border-radius:99px;border:1px solid rgba(244,234,216,.35);background:var(--ink);color:var(--paper);font-family:inherit;">
+          <button type="button" class="primary" id="lsSave">Save</button>
+          <button type="button" id="lsLoad">Load</button>
+        </div>
+        <p style="font-size:12px;color:var(--text-dim);" id="lsStatus">nothing saved yet</p>`;
+      const KEY = 'build-school-demo';
+      const status = zone.querySelector('#lsStatus');
+      zone.querySelector('#lsSave').addEventListener('click', () => {
+        const v = zone.querySelector('#lsIn').value;
+        localStorage.setItem(KEY, JSON.stringify({ text:v, at:new Date().toLocaleTimeString() }));
+        status.textContent = 'saved raw: ' + localStorage.getItem(KEY);
+      });
+      zone.querySelector('#lsLoad').addEventListener('click', () => {
+        const raw = localStorage.getItem(KEY);
+        if(!raw){ status.textContent = 'nothing saved yet'; return; }
+        const obj = JSON.parse(raw);
+        zone.querySelector('#lsIn').value = obj.text;
+        status.textContent = 'loaded (saved at ' + obj.at + ') — try refreshing the page, it stays!';
+      });
+    },
+    quiz:{
+      q:'localStorage stores values as…',
+      opts:['objects','numbers','strings — use JSON.stringify / parse'],
+      answer:2,
+      why:'Everything becomes a string. JSON.stringify packs objects in, JSON.parse unpacks them.'
+    }
+  },
+  {
+    title:'Template literals build the UI',
+    prose:`<p>Backtick strings with <strong>\${…}</strong> holes let you compose HTML from data — this is how every song card is born:</p>
+      <pre>const html = \`&lt;div class="song"&gt;
+  &lt;h2&gt;\${title}&lt;/h2&gt;
+  &lt;p&gt;\${artist}&lt;/p&gt;
+&lt;/div&gt;\`;</pre>
+      <p>Edit the fields and watch both the code and the result:</p>`,
+    mount(zone){
+      zone.innerHTML = `
+        <div class="controls">
+          <input id="tlTitle" value="Espresso" autocomplete="off"
+            style="padding:10px 16px;border-radius:99px;border:1px solid rgba(244,234,216,.35);background:var(--ink);color:var(--paper);font-family:inherit;">
+          <input id="tlArtist" value="Sabrina Carpenter" autocomplete="off"
+            style="padding:10px 16px;border-radius:99px;border:1px solid rgba(244,234,216,.35);background:var(--ink);color:var(--paper);font-family:inherit;">
+        </div>
+        <pre id="tlCode" style="align-self:stretch;"></pre>
+        <div class="mini-card" id="tlPreview"></div>`;
+      const upd = () => {
+        const t = zone.querySelector('#tlTitle').value || '…';
+        const a = zone.querySelector('#tlArtist').value || '…';
+        const code = '<div class="song">\n  <h2>' + t + '</h2>\n  <p>' + a + '</p>\n</div>';
+        zone.querySelector('#tlCode').textContent = code;
+        zone.querySelector('#tlPreview').innerHTML = '<h3>' + t + '</h3><p>' + a.toUpperCase() + ' · TIER S</p>';
+      };
+      zone.querySelector('#tlTitle').addEventListener('input', upd);
+      zone.querySelector('#tlArtist').addEventListener('input', upd);
+      upd();
+    },
+    quiz:{
+      q:'`Hello ${name}` — what is this syntax called?',
+      opts:['A template literal','String addition','A regex'],
+      answer:0,
+      why:'Template literals: backticks + ${} holes. Cleaner than gluing strings with +.'
+    }
+  },
+  {
+    title:'Array superpowers: filter / map / find',
+    prose:`<p>Three methods do most of the work in timbre.fm:</p>
+      <pre>songs.filter(s =&gt; s.tier === 'S')   // keep some
+songs.map(s =&gt; cardHtml(s))         // transform each
+songs.find(s =&gt; s.id === id)        // locate one</pre>
+      <p>Pick a tier and watch <em>filter</em> work live:</p>`,
+    mount(zone){
+      const songs = [
+        { title:'Levitating', tier:'S' }, { title:'Heat Waves', tier:'S' },
+        { title:'good 4 u', tier:'A' }, { title:'Peaches', tier:'B' }
+      ];
+      zone.innerHTML = `
+        <div class="controls" id="tierBtns">
+          <button type="button" data-t="">All</button>
+          <button type="button" data-t="S">Tier S</button>
+          <button type="button" data-t="A">Tier A</button>
+          <button type="button" data-t="B">Tier B</button>
+        </div>
+        <div id="filteredRow" style="max-width:420px;text-align:center;"></div>
+        <pre id="filterCode"></pre>`;
+      const row = zone.querySelector('#filteredRow');
+      const code = zone.querySelector('#filterCode');
+      const render = t => {
+        const list = songs.filter(s => !t || s.tier === t);
+        row.innerHTML = list.map(s => `<span class="song-chip">${s.title} · ${s.tier}</span>`).join('')
+          || '<span style="color:var(--text-dim);font-size:12px;">none</span>';
+        code.textContent = `songs.filter(s => s.tier === '${t || '*'}')  // ${list.length} result${list.length === 1 ? '' : 's'}`;
+      };
+      zone.querySelectorAll('#tierBtns button').forEach(b =>
+        b.addEventListener('click', () => render(b.dataset.t)));
+      render('');
+    },
+    quiz:{
+      q:"What does songs.filter(s => s.tier === 'S') return?",
+      opts:['The first S song','A NEW array containing only the S songs','true or false'],
+      answer:1,
+      why:'filter builds a new array from everything that passes the test. find() returns just the first match.'
+    }
+  },
+  {
+    title:'Talking to servers: fetch & APIs',
+    prose:`<p>Album covers and 30-second previews come from Apple's <strong>iTunes API</strong> over the network:</p>
+      <pre>fetch(url)                    // ask the server
+  .then(r =&gt; r.json())        // parse the reply
+  .then(data =&gt; render(data)); // use it</pre>
+      <p>fetch is <em>asynchronous</em> — the page doesn't freeze while waiting. Browsers also block cross-site requests (<strong>CORS</strong>), which timbre.fm sidesteps with JSONP and proxy servers.</p>`,
+    mount(zone){
+      const palettes = [['#7c5cff','#eedd95'],['#ff6b81','#ffd6a5'],['#06d6a0','#118ab2'],['#e8a1a1','#b8b3e0']];
+      zone.innerHTML = `
+        <button type="button" class="primary" id="fetchBtn">⬇ Fetch a cover</button>
+        <div id="fetchResult" style="display:flex;gap:14px;align-items:center;min-height:120px;">
+          <span style="font-size:12px;color:var(--text-dim);">no data yet</span>
+        </div>`;
+      const res = zone.querySelector('#fetchResult');
+      zone.querySelector('#fetchBtn').addEventListener('click', function(){
+        this.disabled = true;
+        res.innerHTML = '<span style="font-size:12px;color:var(--gold);">waiting for server…</span>';
+        setTimeout(() => {
+          const i = Math.floor(Math.random() * palettes.length);
+          res.innerHTML = `
+            <div class="cover-ph" style="--c1:${palettes[i][0]};--c2:${palettes[i][1]}"></div>
+            <div style="font-size:12px;line-height:1.6;">data arrived ✔<br>
+            <span style="color:var(--text-dim);">(simulated — real version calls the iTunes API)</span></div>`;
+          this.disabled = false;
+        }, 900);
+      });
+    },
+    quiz:{
+      q:'What does fetch(url) do?',
+      opts:['Loads a local file','Requests data from a server over the internet','Saves to localStorage'],
+      answer:1,
+      why:'fetch asks a remote API for data and hands you a promise of the response.'
+    }
+  },
+  {
+    title:'Supabase: saving to the cloud',
+    prose:`<p>localStorage dies if you clear your browser. So timbre.fm also syncs to <strong>Supabase</strong> — a hosted cloud database with logins built in:</p>
+      <pre>supabase.auth.signInWithPassword({ email, password });
+supabase.from('user_data').upsert({ user_id, data });</pre>
+      <p>Strategy: save to localStorage <em>instantly</em>, then quietly push to the cloud in the background. Best of both worlds.</p>`,
+    mount(zone){
+      zone.innerHTML = `
+        <div style="display:flex;gap:40px;font-size:12px;text-align:center;">
+          <div><span class="sync-dot" id="dotLocal"></span><br><br>this browser<br><span style="color:var(--text-dim)">instant</span></div>
+          <div><span class="sync-dot" id="dotCloud"></span><br><br>☁ supabase<br><span style="color:var(--text-dim)">background</span></div>
+        </div>
+        <button type="button" class="primary" id="syncBtn">💾 Save a song</button>
+        <p id="syncMsg" style="font-size:12px;color:var(--text-dim);min-height:18px;"></p>`;
+      const local = zone.querySelector('#dotLocal');
+      const cloud = zone.querySelector('#dotCloud');
+      const msg = zone.querySelector('#syncMsg');
+      zone.querySelector('#syncBtn').addEventListener('click', function(){
+        this.disabled = true;
+        local.classList.add('on');
+        msg.textContent = 'saved locally ✔ — syncing to cloud…';
+        cloud.classList.add('pulse');
+        setTimeout(() => {
+          cloud.classList.remove('pulse');
+          cloud.classList.add('on');
+          msg.textContent = 'cloud synced ✔ — safe even if the browser is wiped';
+          this.disabled = false;
+        }, 1100);
+      });
+    },
+    quiz:{
+      q:'What does Supabase add to timbre.fm?',
+      opts:['Faster CSS','A cloud database + user accounts','A better search engine'],
+      answer:1,
+      why:'Accounts, login, and data that follows you across devices — stored in Postgres in the cloud.'
+    }
+  }
+];
+
+let deck = null;
+let order = [];
+let pos = 0;
+let flipped = false;
+let phase = 'ask';
+let results = [];
+let learned = new Set();
+let lessonIdx = 0;
+
+const screens = {
+  deck: document.getElementById('deckScreen'),
+  study: document.getElementById('studyScreen'),
+  quiz: document.getElementById('quizScreen'),
+  result: document.getElementById('resultScreen'),
+  course: document.getElementById('courseScreen')
+};
+function show(name){
+  Object.entries(screens).forEach(([k, el]) => el.classList.toggle('active', k === name));
+}
+function loadLearned(){
+  const saved = JSON.parse(localStorage.getItem(deck.storageKey) || '{}');
+  learned = new Set(saved.learned || []);
+}
+function persistLearned(){
+  localStorage.setItem(deck.storageKey, JSON.stringify({ learned:[...learned], best: bestScore() }));
+}
+function bestScore(){
+  const saved = JSON.parse(localStorage.getItem(deck.storageKey) || '{}');
+  return saved.best ?? null;
+}
+
+function normalize(s){
+  const stop = new Set(['the','a','an','tag','tags','attribute','attributes','element','elements']);
+  return s.toLowerCase()
+    .replace(/[<>/="'`]/g, ' ')
+    .split(/\s+/)
+    .filter(w => w && !stop.has(w))
+    .join('');
+}
+
+function openDeck(key){
+  deck = FLASH_DECK;
+  loadLearned();
+  order = deck.cards.map((_, i) => i);
+  pos = 0;
+  flipped = false;
+  document.getElementById('pageTitle').textContent = deck.name;
+  document.getElementById('pageSub').textContent = `${deck.cards.length} cards · ${learned.size} learned`;
+  renderStudy();
+  show('study');
+}
+function renderStudy(){
+  const idx = order[pos];
+  const c = deck.cards[idx];
+  document.getElementById('frontFace').innerHTML =
+    `<span class="chip ${c.cat}">${c.cat}</span><p class="q">${c.q}</p><span class="hint">tap to reveal</span>`;
+  document.getElementById('backFace').innerHTML =
+    `<span class="chip ${c.cat}">${c.cat}</span><p class="a">${c.a}</p>`;
+  setFlipped(false);
+  document.getElementById('studyCounter').textContent = `card ${pos + 1} of ${order.length}`;
+  const lb = document.getElementById('learnedBtn');
+  lb.textContent = learned.has(idx) ? '✓ Learned' : '✓ Mark learned';
+  lb.classList.toggle('learned-on', learned.has(idx));
+  renderStudyDots();
+  document.getElementById('pageSub').textContent = `${deck.cards.length} cards · ${learned.size} learned`;
+}
+function setFlipped(v){
+  flipped = v;
+  document.getElementById('card').classList.toggle('flipped', v);
+}
+function renderStudyDots(){
+  const wrap = document.getElementById('studyDots');
+  wrap.innerHTML = '';
+  order.forEach((idx, i) => {
+    const d = document.createElement('button');
+    d.type = 'button';
+    d.className = 'dot' + (i === pos ? ' current' : '') + (learned.has(idx) ? ' done' : '');
+    d.addEventListener('click', () => { pos = i; renderStudy(); });
+    wrap.appendChild(d);
+  });
+}
+function studyNext(){ pos = (pos + 1) % order.length; renderStudy(); }
+function studyPrev(){ pos = (pos - 1 + order.length) % order.length; renderStudy(); }
+function studyShuffle(){
+  for(let i = order.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [order[i], order[j]] = [order[j], order[i]];
+  }
+  pos = 0;
+  renderStudy();
+}
+function toggleLearned(){
+  const idx = order[pos];
+  if(learned.has(idx)){ learned.delete(idx); } else { learned.add(idx); }
+  persistLearned();
+  renderStudy();
+}
+
+function startQuiz(list){
+  order = list;
+  pos = 0;
+  results = new Array(list.length).fill(null);
+  phase = 'ask';
+  renderQuiz();
+  show('quiz');
+}
+function renderQuiz(){
+  const idx = order[pos];
+  const c = deck.cards[idx];
+  document.getElementById('quizFront').innerHTML =
+    `<span class="chip ${c.cat}">${c.cat}</span><p class="q">${c.q}</p>`;
+  document.getElementById('quizBack').innerHTML =
+    `<span class="chip ${c.cat}">${c.cat}</span><p class="a">${c.a}</p>`;
+  document.getElementById('quizCard').classList.remove('flipped');
+  flipped = false;
+  phase = 'ask';
+  const done = results.filter(r => r !== null).length;
+  const right = results.filter(r => r === true).length;
+  document.getElementById('scoreLine').textContent =
+    `question ${pos + 1} of ${order.length} · ${right}/${done} correct`;
+  renderQuizDots();
+  const zone = document.getElementById('quizZone');
+  zone.innerHTML = '';
+  if(c.quiz.mode === 'type'){
+    const row = document.createElement('div');
+    row.className = 'answer-row';
+    const input = document.createElement('input');
+    input.id = 'answerInput';
+    input.type = 'text';
+    input.autocomplete = 'off';
+    input.spellcheck = false;
+    input.placeholder = c.quiz.ph;
+    const go = document.createElement('button');
+    go.type = 'button';
+    go.className = 'primary';
+    go.textContent = 'Check';
+    go.addEventListener('click', () => checkAnswer(input.value, c));
+    input.addEventListener('keydown', e => {
+      if(e.key === 'Enter'){ e.preventDefault(); checkAnswer(input.value, c); }
+    });
+    row.appendChild(input);
+    row.appendChild(go);
+    zone.appendChild(row);
+    setTimeout(() => input.focus(), 50);
+  } else {
+    const reveal = document.createElement('button');
+    reveal.type = 'button';
+    reveal.className = 'primary';
+    reveal.textContent = 'Show answer';
+    reveal.addEventListener('click', () => selfReveal());
+    zone.appendChild(reveal);
+    const k = document.createElement('p');
+    k.className = 'keys';
+    k.textContent = 'think first — then grade yourself honestly';
+    zone.appendChild(k);
+  }
+}
+function checkAnswer(raw, c){
+  const ok = c.quiz.test(normalize(raw || ''));
+  results[pos] = ok;
+  phase = 'feedback';
+  const input = document.getElementById('answerInput');
+  if(input){ input.classList.toggle('bad', !ok); input.disabled = true; }
+  document.querySelectorAll('#quizZone button').forEach(b => b.disabled = true);
+  const banner = document.createElement('p');
+  banner.className = 'banner ' + (ok ? 'ok' : 'miss');
+  banner.textContent = ok ? '✓ Correct!' : '✗ Not quite — this is the answer:';
+  document.getElementById('quizZone').appendChild(banner);
+  const nxt = document.createElement('button');
+  nxt.type = 'button';
+  nxt.className = 'primary';
+  nxt.textContent = pos + 1 < order.length ? 'Next →' : 'See results';
+  nxt.addEventListener('click', quizNext);
+  document.getElementById('quizZone').appendChild(nxt);
+  document.getElementById('quizCard').classList.add('flipped');
+  flipped = true;
+  renderQuizDots();
+}
+function selfReveal(){
+  results[pos] = null;
+  phase = 'grade';
+  document.querySelector('#quizZone .primary').style.display = 'none';
+  document.getElementById('quizCard').classList.add('flipped');
+  flipped = true;
+  const zone = document.getElementById('quizZone');
+  const got = document.createElement('button');
+  got.type = 'button';
+  got.textContent = '✓ I knew it';
+  got.style.borderColor = 'var(--good)';
+  got.style.color = 'var(--good)';
+  got.addEventListener('click', () => { results[pos] = true; quizNext(); });
+  const missed = document.createElement('button');
+  missed.type = 'button';
+  missed.textContent = '✗ Still learning';
+  missed.style.borderColor = 'var(--bad)';
+  missed.style.color = 'var(--bad)';
+  missed.addEventListener('click', () => { results[pos] = false; quizNext(); });
+  zone.appendChild(got);
+  zone.appendChild(missed);
+}
+function quizNext(){
+  if(pos + 1 < order.length){
+    pos++;
+    renderQuiz();
+  } else {
+    showResults();
+  }
+}
+function renderQuizDots(){
+  const wrap = document.getElementById('quizDots');
+  wrap.innerHTML = '';
+  order.forEach((_, i) => {
+    const d = document.createElement('button');
+    d.type = 'button';
+    let cls = 'dot';
+    if(results[i] === true) cls += ' done';
+    if(results[i] === false) cls += ' missed-dot';
+    if(i === pos) cls += ' current';
+    d.className = cls;
+    wrap.appendChild(d);
+  });
+}
+function showResults(){
+  const graded = results.filter(r => r !== null);
+  const right = graded.filter(Boolean).length;
+  const pct = graded.length ? Math.round(right / graded.length * 100) : 0;
+  const missed = order.filter((_, i) => results[i] === false);
+  document.getElementById('resultPct').textContent = pct + '%';
+  const msg = pct === 100 ? 'Perfect run — you are ready to build.'
+    : pct >= 80 ? 'Strong! Review the red ones and go again.'
+    : pct >= 50 ? 'Halfway there. Flip through study mode, then retry.'
+    : 'No stress — study mode first, then come back.';
+  document.getElementById('resultMsg').textContent =
+    `${right} of ${graded.length} correct. ${msg}`;
+  const rm = document.getElementById('retryMissedBtn');
+  rm.disabled = missed.length === 0;
+  rm.style.opacity = missed.length === 0 ? '0.4' : '1';
+  const saved = JSON.parse(localStorage.getItem(deck.storageKey) || '{}');
+  if(saved.best == null || pct > saved.best){
+    localStorage.setItem(deck.storageKey, JSON.stringify({ learned:[...learned], best:pct }));
+  }
+  show('result');
+}
+function retryMissed(){
+  const missed = order.filter((_, i) => results[i] === false);
+  if(missed.length) startQuiz(missed);
+}
+
+function openCourse(startIdx){
+  lessonIdx = typeof startIdx === 'number' ? startIdx : firstIncomplete();
+  document.getElementById('pageTitle').textContent = 'How timbre.fm was built';
+  document.getElementById('pageSub').textContent = `An interactive course — ${LESSONS.length} short lessons`;
+  renderCourse();
+  show('course');
+}
+function firstIncomplete(){
+  for(let i = 0; i < LESSONS.length; i++){
+    if(!doneLessons.has(i)) return i;
+  }
+  return 0;
+}
+function persistCourse(){
+  localStorage.setItem(COURSE_KEY, JSON.stringify([...doneLessons]));
+}
+function renderCourseProgress(){
+  const pct = Math.round(doneLessons.size / LESSONS.length * 100);
+  document.getElementById('courseBar').style.width = pct + '%';
+  document.getElementById('courseLabel').textContent =
+    `${doneLessons.size}/${LESSONS.length} lessons`;
+}
+function renderCourseList(){
+  const wrap = document.getElementById('lessonList');
+  wrap.innerHTML = '';
+  LESSONS.forEach((l, i) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'lesson-item' + (i === lessonIdx ? ' current' : '');
+    b.innerHTML = `<span class="num">${String(i + 1).padStart(2, '0')}</span>${l.title}` +
+      (doneLessons.has(i) ? '<span class="tick">✓</span>' : '');
+    b.addEventListener('click', () => { lessonIdx = i; renderCourse(); });
+    wrap.appendChild(b);
+  });
+}
+function renderCourse(){
+  renderCourseProgress();
+  renderCourseList();
+  const l = LESSONS[lessonIdx];
+  const main = document.getElementById('lessonMain');
+  main.innerHTML = `
+    <h2 class="lesson-title">${lessonIdx + 1}. ${l.title}</h2>
+    <div class="lesson-prose">${l.prose}</div>
+    ${l.mount ? '<div class="demo-zone"><span class="demo-label">try it — this is live</span><div id="demoMount" style="display:flex;flex-direction:column;gap:12px;align-items:center;width:100%;"></div></div>' : ''}
+    <div class="quiz-box">
+      <p class="quiz-q"><strong>Check:</strong> ${l.quiz.q}</p>
+      <div id="mcWrap"></div>
+      <p class="explain" id="mcExplain">${l.quiz.why}</p>
+    </div>
+    <div class="controls" style="justify-content:space-between;">
+      <button type="button" id="lessonPrev" ${lessonIdx === 0 ? 'disabled style="opacity:0.4;"' : ''}>← Previous</button>
+      <button type="button" class="primary" id="lessonNext">${lessonIdx === LESSONS.length - 1 ? 'Finish 🎉' : 'Next lesson →'}</button>
+    </div>`;
+  if(l.mount){
+    l.mount(document.getElementById('demoMount'));
+  }
+  const mcWrap = main.querySelector('#mcWrap');
+  l.quiz.opts.forEach((opt, oi) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'mc-opt';
+    b.textContent = opt;
+    b.addEventListener('click', () => {
+      const correct = oi === l.quiz.answer;
+      main.querySelectorAll('.mc-opt').forEach(x => x.disabled = true);
+      b.classList.add(correct ? 'correct' : 'wrong');
+      if(!correct){
+        main.querySelectorAll('.mc-opt')[l.quiz.answer].classList.add('correct');
+      }
+      main.querySelector('#mcExplain').classList.add('show');
+      if(correct && !doneLessons.has(lessonIdx)){
+        doneLessons.add(lessonIdx);
+        persistCourse();
+        renderCourseProgress();
+        renderCourseList();
+      }
+    });
+    mcWrap.appendChild(b);
+  });
+  main.querySelector('#lessonPrev').addEventListener('click', () => {
+    if(lessonIdx > 0){ lessonIdx--; renderCourse(); }
+  });
+  main.querySelector('#lessonNext').addEventListener('click', () => {
+    if(lessonIdx < LESSONS.length - 1){
+      lessonIdx++;
+      renderCourse();
+    } else {
+      goHome();
+    }
+  });
+}
+function goHome(){
+  document.getElementById('pageTitle').textContent = 'Build School';
+  document.getElementById('pageSub').textContent = 'Pick a deck or start the course.';
+  refreshDeckMeta();
+  show('deck');
+}
+
+document.getElementById('deckHtmlBtn').addEventListener('click', () => openDeck());
+document.getElementById('deckBuildBtn').addEventListener('click', () => openCourse());
+document.getElementById('shuffleBtn').addEventListener('click', studyShuffle);
+document.getElementById('prevBtn').addEventListener('click', studyPrev);
+document.getElementById('nextBtn').addEventListener('click', studyNext);
+document.getElementById('flipBtn').addEventListener('click', () => setFlipped(!flipped));
+document.getElementById('card').addEventListener('click', () => setFlipped(!flipped));
+document.getElementById('learnedBtn').addEventListener('click', toggleLearned);
+document.getElementById('toQuizBtn').addEventListener('click', () => startQuiz(order.slice()));
+document.getElementById('studyBackBtn').addEventListener('click', goHome);
+document.getElementById('quizQuitBtn').addEventListener('click', () => { renderStudy(); show('study'); });
+document.getElementById('retryMissedBtn').addEventListener('click', retryMissed);
+document.getElementById('retryAllBtn').addEventListener('click', () => startQuiz(FLASH_DECK.cards.map((_, i) => i)));
+document.getElementById('resultBackBtn').addEventListener('click', goHome);
+document.getElementById('courseBackBtn').addEventListener('click', goHome);
+
+function refreshDeckMeta(){
+  const saved = JSON.parse(localStorage.getItem(FLASH_DECK.storageKey) || '{}');
+  const count = (saved.learned || []).length;
+  document.getElementById('deckHtmlMeta').textContent =
+    `${FLASH_DECK.cards.length} cards · ${count} learned` +
+    (saved.best != null ? ` · best quiz score ${saved.best}%` : '');
+  document.getElementById('deckBuildMeta').textContent =
+    `${LESSONS.length} interactive lessons · ${doneLessons.size} completed`;
+}
+refreshDeckMeta();
+
+document.addEventListener('keydown', e => {
+  const typing = (e.target.tagName || '').toLowerCase() === 'input';
+  if(typing) return;
+  if(screens.study.classList.contains('active')){
+    if(e.key === ' ' || e.key === 'Enter'){ e.preventDefault(); setFlipped(!flipped); }
+    else if(e.key === 'ArrowRight'){ studyNext(); }
+    else if(e.key === 'ArrowLeft'){ studyPrev(); }
+    else if(e.key.toLowerCase() === 'l'){ toggleLearned(); }
+    else if(e.key.toLowerCase() === 's'){ studyShuffle(); }
+  } else if(screens.quiz.classList.contains('active') && phase === 'ask'){
+    const c = deck.cards[order[pos]];
+    if(c.quiz.mode === 'self' && (e.key === ' ' || e.key === 'Enter')){
+      e.preventDefault();
+      selfReveal();
+    }
+  } else if(screens.quiz.classList.contains('active') && phase === 'feedback'){
+    if(e.key === ' ' || e.key === 'Enter'){
+      e.preventDefault();
+      quizNext();
+    }
+  }
+});
+</script>
+</body>
+</html>

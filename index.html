@@ -7766,7 +7766,13 @@ document.getElementById('discoverList').addEventListener('click', async e=>{
     return;
   }
   const row = e.target.closest('[data-user-id]');
-  if(row) openOtherProfile(row.dataset.userId);
+  if(row){
+    const p = allProfilesCache.find(x=>x.user_id === row.dataset.userId);
+    if(p && p.username){
+      document.getElementById('discoverOverlay').classList.remove('open');
+      goToFriendCataloguex(p.username);
+    }
+  }
 });
 function openOtherProfile(userId){
   trackEvent('view_profile');
@@ -8171,7 +8177,13 @@ document.getElementById('leaderboardOverlay').addEventListener('click', e=>{
 });
 document.getElementById('leaderboardList').addEventListener('click', e=>{
   const row = e.target.closest('[data-user-id]');
-  if(row) openOtherProfile(row.dataset.userId);
+  if(row){
+    const p = allProfilesCache.find(x=>x.user_id === row.dataset.userId);
+    if(p && p.username){
+      document.getElementById('leaderboardOverlay').classList.remove('open');
+      goToFriendCataloguex(p.username);
+    }
+  }
 });
 function renderFriendGrid(list){
   const grid = document.getElementById('friendGrid');
@@ -8485,10 +8497,6 @@ async function openFriendCataloguex(username){
   // show this listener's own theme while browsing their cataloguex; restore ours on the way out
   applyTheme(isSelf ? loadTheme() : (p.theme || DEFAULT_THEME));
 
-  if(!isSelf && !isFriend){
-    document.getElementById('friendLockedState').style.display = 'block';
-    return;
-  }
   document.getElementById('friendTierBoardBtn').style.display = '';
   document.getElementById('friendShareBtn').style.display = '';
   const friendSongs = isSelf ? songs : await fetchReadOnlySongs(p.user_id);
