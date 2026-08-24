@@ -1561,9 +1561,10 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
   .vibe-bar-row{ display:flex; align-items:center; gap:8px; font-size:11px; }
   .vibe-bar-label{ width:66px; white-space:nowrap; opacity:.8; }
   .vibe-bar-track{ flex:1; height:7px; border-radius:4px; background:rgba(var(--on-paper-rgb),0.14); overflow:hidden; display:block; }
-  .card-back .vibe-bars{ padding-left:0; padding-right:32px; }
-  .card-back .vibe-bar-label{ width:90px; }
-  .card-back .vibe-bar-track{ flex:none; width:104px; }
+  .card-back .vibe-bars{ padding-left:0; padding-right:12px; }
+  .card-back .vibe-bar-label{ width:80px; }
+  .card-back .vibe-bar-track{ flex:none; width:62px; }
+  .vb-ends{ font-size:9.5px; opacity:.55; white-space:nowrap; letter-spacing:.3px; }
   .card-thought{
     margin:7px 0 0;
     font-family:Georgia, 'Times New Roman', serif;
@@ -4404,8 +4405,8 @@ function starsHtml(n){
   for(let i=1;i<=5;i++) out += `<span class="${i <= n ? 'star-ico on' : 'star-ico'}">★</span>`;
   return out;
 }
-function vibeBarHtml(label, v, cls){
-  return `<div class="vibe-bar-row"><span class="vibe-bar-label">${label}</span><span class="vibe-bar-track"><span class="vibe-bar-fill ${cls}" style="width:${clampNum(v||0,0,100)}%;"></span></span></div>`;
+function vibeBarHtml(label, v, cls, ends){
+  return `<div class="vibe-bar-row"><span class="vibe-bar-label">${label}</span><span class="vibe-bar-track"><span class="vibe-bar-fill ${cls}" style="width:${clampNum(v||0,0,100)}%;"></span></span>${ends ? `<span class="vb-ends">${ends}</span>` : ''}</div>`;
 }
 function cardRatingsStripHtml(s){
   const st = s.stars || {};
@@ -4483,9 +4484,9 @@ function cardBackHtml(s){
         ${cbField('🔁 Replay-ability', starsHtml(st.replay) + ` <span class="cb-star-num">${st.replay||0}/5</span>`)}
       </div>
       <div class="vibe-bars">
-        ${vibeBarHtml('⚡ Energy', s.vibeEnergy, 'energy')}
-        ${vibeBarHtml('🌗 Mood', s.vibeMood, 'mood')}
-        ${vibeBarHtml('🕰️ Nostalgia', s.vibeNostalgia, 'nostalgia')}
+        ${vibeBarHtml('⚡ Energy', s.vibeEnergy, 'energy', 'chill ↔ electric')}
+        ${vibeBarHtml('🌗 Mood', s.vibeMood, 'mood', 'stormy ↔ sunny')}
+        ${vibeBarHtml('🕰️ Nostalgia', s.vibeNostalgia, 'nostalgia', 'new ↔ familiar')}
       </div>
       <div class="cb-fields">
         ${cbField('Quick thought', s.quickThought ? `“${escapeHtml(s.quickThought)}”` : '')}

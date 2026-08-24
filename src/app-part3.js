@@ -541,8 +541,8 @@ function starsHtml(n){
   for(let i=1;i<=5;i++) out += `<span class="${i <= n ? 'star-ico on' : 'star-ico'}">★</span>`;
   return out;
 }
-function vibeBarHtml(label, v, cls){
-  return `<div class="vibe-bar-row"><span class="vibe-bar-label">${label}</span><span class="vibe-bar-track"><span class="vibe-bar-fill ${cls}" style="width:${clampNum(v||0,0,100)}%;"></span></span></div>`;
+function vibeBarHtml(label, v, cls, ends){
+  return `<div class="vibe-bar-row"><span class="vibe-bar-label">${label}</span><span class="vibe-bar-track"><span class="vibe-bar-fill ${cls}" style="width:${clampNum(v||0,0,100)}%;"></span></span>${ends ? `<span class="vb-ends">${ends}</span>` : ''}</div>`;
 }
 function cardRatingsStripHtml(s){
   const st = s.stars || {};
@@ -620,9 +620,9 @@ function cardBackHtml(s){
         ${cbField('🔁 Replay-ability', starsHtml(st.replay) + ` <span class="cb-star-num">${st.replay||0}/5</span>`)}
       </div>
       <div class="vibe-bars">
-        ${vibeBarHtml('⚡ Energy', s.vibeEnergy, 'energy')}
-        ${vibeBarHtml('🌗 Mood', s.vibeMood, 'mood')}
-        ${vibeBarHtml('🕰️ Nostalgia', s.vibeNostalgia, 'nostalgia')}
+        ${vibeBarHtml('⚡ Energy', s.vibeEnergy, 'energy', 'chill ↔ electric')}
+        ${vibeBarHtml('🌗 Mood', s.vibeMood, 'mood', 'stormy ↔ sunny')}
+        ${vibeBarHtml('🕰️ Nostalgia', s.vibeNostalgia, 'nostalgia', 'new ↔ familiar')}
       </div>
       <div class="cb-fields">
         ${cbField('Quick thought', s.quickThought ? `“${escapeHtml(s.quickThought)}”` : '')}
