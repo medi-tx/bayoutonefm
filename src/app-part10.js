@@ -70,7 +70,7 @@
       const song = day.song;
       const currentHtml = song
         ? `<div class="sotd-dock-head" style="margin-bottom:8px;">
-            ${song.cover ? `<img class="sotd-cover" src="${escapeAttr(song.cover)}" alt="Album cover">` : '<span class="sotd-cover" style="display:flex;align-items:center;justify-content:center;font-size:18px;">🎵</span>'}
+            ${song.cover ? `<img loading="lazy" decoding="async" class="sotd-cover" src="${escapeAttr(song.cover)}" alt="Album cover">` : '<span class="sotd-cover" style="display:flex;align-items:center;justify-content:center;font-size:18px;">🎵</span>'}
             <div class="sotd-meta">
               <div class="sotd-title">${escapeHtml(song.title || 'Unknown song')}</div>
               <div class="sotd-artist">${escapeHtml(song.artist || '')}</div>
@@ -87,7 +87,7 @@
         resultsHtml = '<div class="discover-list">' + st.results.map((r, ri)=>{
           const mapped = schedMapItunes(r);
           return `<div class="discover-row" data-sched-pick="${day.date}" data-sched-idx="${ri}" style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:6px 0;">
-            ${mapped.cover ? `<img src="${escapeAttr(mapped.cover)}" alt="Album cover" style="width:36px;height:36px;border-radius:6px;object-fit:cover;">` : ''}
+            ${mapped.cover ? `<img loading="lazy" decoding="async" src="${escapeAttr(mapped.cover)}" alt="Album cover" style="width:36px;height:36px;border-radius:6px;object-fit:cover;">` : ''}
             <div>
               <div style="font-weight:600;">${escapeHtml(mapped.title)}</div>
               <div style="font-size:12px;opacity:0.75;">${escapeHtml(mapped.artist)}</div>

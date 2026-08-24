@@ -23,7 +23,7 @@ function renderClusterSearchResults(query){
   }
   wrap.innerHTML = matches.map(s=>`
     <button type="button" class="discover-row" data-song-id="${s.id}">
-      ${s.coverArt ? `<img src="${escapeAttr(s.coverArt)}" alt="Album cover">` : `<span class="drow-fallback">${escapeHtml((s.title||'?').charAt(0).toUpperCase())}</span>`}
+      ${s.coverArt ? `<img loading="lazy" decoding="async" src="${escapeAttr(s.coverArt)}" alt="Album cover">` : `<span class="drow-fallback">${escapeHtml((s.title||'?').charAt(0).toUpperCase())}</span>`}
       <span>
         <span class="drow-name">${escapeHtml(s.title||'Untitled')}</span><br>
         <span class="drow-bio">${escapeHtml((s.artists||[]).join(', ') || 'Unknown artist')}</span>
@@ -113,7 +113,7 @@ document.getElementById('collabFriendsSearch').addEventListener('input', e=>{
   if(!friends.length){ wrap.innerHTML = '<p class="profile-empty-note">No matching friends.</p>'; return; }
   wrap.innerHTML = friends.map(p=>`
     <button type="button" class="discover-row" data-collab-id="${p.user_id}">
-      ${p.photo ? `<img src="${escapeAttr(p.photo)}" alt="Profile photo">` : `<span class="drow-fallback is-pfp"></span>`}
+      ${p.photo ? `<img loading="lazy" decoding="async" src="${escapeAttr(p.photo)}" alt="Profile photo">` : `<span class="drow-fallback is-pfp"></span>`}
       <span><span class="drow-name">@${escapeHtml(p.username||'')}</span></span>
     </button>
   `).join('');
@@ -238,7 +238,7 @@ async function renderClusterDetail(id){
         if(isCollab && addedBy){
           const adderProfile = addedBy === currentUserId ? myProfile : allProfilesCache.find(p=>p.user_id===addedBy);
           if(adderProfile && adderProfile.photo){
-            whoPfp = `<img class="cluster-added-by-pfp" src="${escapeAttr(adderProfile.photo)}" title="Added by @${escapeHtml(adderProfile.username||'you')}" loading="lazy" alt="Profile photo">`;
+            whoPfp = `<img loading="lazy" decoding="async" class="cluster-added-by-pfp" src="${escapeAttr(adderProfile.photo)}" title="Added by @${escapeHtml(adderProfile.username||'you')}" loading="lazy" alt="Profile photo">`;
           } else {
             const uname = addedBy === currentUserId ? (myProfile?.username||'?') : (allProfilesCache.find(p=>p.user_id===addedBy)?.username || '?');
             whoPfp = `<span class="cluster-added-by-pfp cluster-added-by-fallback" title="Added by @${escapeHtml(uname)}">${escapeHtml(uname.charAt(0).toUpperCase())}</span>`;
@@ -246,7 +246,7 @@ async function renderClusterDetail(id){
         }
         return `
         <div class="profile-song-row">
-          ${s.coverArt ? `<img src="${escapeAttr(s.coverArt)}" alt="Album cover">` : ''}
+          ${s.coverArt ? `<img loading="lazy" decoding="async" src="${escapeAttr(s.coverArt)}" alt="Album cover">` : ''}
           <span class="psr-title">${escapeHtml(s.title||'Untitled')}</span>
           <span class="psr-artist">${escapeHtml((s.artists||[]).join(', '))}</span>
           ${whoPfp}

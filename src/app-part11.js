@@ -157,15 +157,15 @@ const FEED_REACTION_EMOJIS = ['🔥','❤️','🤯','😎','😭','💯'];
 function feedImportCardHtml(clusterName, entries, who, profile, ownerId, when){
   const initial = who === 'you' ? 'You' : ((who || '?').charAt(0).toUpperCase());
   const avatar = (profile && profile.photo)
-    ? `<span class="feed-card-avatar"><img src="${escapeAttr(profile.photo)}" alt="Profile photo"></span>`
+    ? `<span class="feed-card-avatar"><img loading="lazy" decoding="async" src="${escapeAttr(profile.photo)}" alt="Profile photo"></span>`
     : `<span class="feed-card-avatar">${escapeHtml(initial)}</span>`;
   const whoLabel = who === 'you'
     ? `<span class="feed-card-who"><b>You</b> imported a playlist</span>`
     : `<span class="feed-card-who"><b>@${escapeHtml(who)}</b> imported a playlist</span>`;
   const whenStr = when ? `<div class="feed-card-when">${new Date(when).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'})}</div>` : '';
-  const previewCovers = entries.slice(0,3).map(e=> e.song.coverArt ? `<img src="${escapeAttr(e.song.coverArt)}" style="width:32px;height:32px;border-radius:4px;object-fit:cover;" alt="Album cover">` : '').join('');
+  const previewCovers = entries.slice(0,3).map(e=> e.song.coverArt ? `<img loading="lazy" decoding="async" src="${escapeAttr(e.song.coverArt)}" style="width:32px;height:32px;border-radius:4px;object-fit:cover;" alt="Album cover">` : '').join('');
   const songList = entries.map(e=>`<div style="display:flex;align-items:center;gap:8px;padding:4px 0;font-size:13px;border-bottom:1px solid rgba(var(--on-paper-rgb),0.08);">
-    ${e.song.coverArt ? `<img src="${escapeAttr(e.song.coverArt)}" style="width:28px;height:28px;border-radius:3px;object-fit:cover;flex-shrink:0;" alt="Album cover">` : ''}
+    ${e.song.coverArt ? `<img loading="lazy" decoding="async" src="${escapeAttr(e.song.coverArt)}" style="width:28px;height:28px;border-radius:3px;object-fit:cover;flex-shrink:0;" alt="Album cover">` : ''}
     <span><b>${escapeHtml(e.song.title||'Untitled')}</b> <span style="opacity:0.6;">${escapeHtml(formatArtists(e.song.artists))}</span></span>
   </div>`).join('');
   return `
@@ -195,10 +195,10 @@ function feedCardHtml(entry){
   const reactions = entry.reactions || [];
   const initial = isMe ? 'You' : ((who || '?').charAt(0).toUpperCase());
   const avatar = (p && p.photo)
-    ? `<span class="feed-card-avatar"><img src="${escapeAttr(p.photo)}" alt="Profile photo"></span>`
+    ? `<span class="feed-card-avatar"><img loading="lazy" decoding="async" src="${escapeAttr(p.photo)}" alt="Profile photo"></span>`
     : `<span class="feed-card-avatar">${escapeHtml(initial)}</span>`;
   const cover = s.coverArt
-    ? `<img class="feed-card-cover" src="${escapeAttr(s.coverArt)}" loading="lazy" decoding="async" alt="Album cover">`
+    ? `<img loading="lazy" decoding="async" class="feed-card-cover" src="${escapeAttr(s.coverArt)}" loading="lazy" decoding="async" alt="Album cover">`
     : `<div class="feed-card-cover-fallback">${escapeHtml((s.title||'?').charAt(0).toUpperCase())}</div>`;
   const tierBadge = s.tier ? renderTierBadge(s.tier) : '';
   const feedPreviewId = 'feed:' + (s.id || Math.random().toString(36).slice(2));

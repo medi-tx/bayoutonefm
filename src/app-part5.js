@@ -87,7 +87,7 @@ function renderFriendRequests(){
     const initial = username.charAt(0).toUpperCase();
     return `
       <div class="discover-row">
-        ${p && p.photo ? `<img src="${escapeHtml(p.photo)}" alt="Profile photo">` : `<span class="drow-fallback is-pfp"></span>`}
+        ${p && p.photo ? `<img loading="lazy" decoding="async" src="${escapeHtml(p.photo)}" alt="Profile photo">` : `<span class="drow-fallback is-pfp"></span>`}
         <span style="flex:1;">
           <span class="drow-name">@${escapeHtml(username)}</span><br>
           <span class="drow-bio">wants to be friends</span>
@@ -118,7 +118,7 @@ function renderDiscoverList(filter){
     else if(isRequested) btnLabel = 'Requested';
     return `
       <div class="discover-row" data-user-id="${p.user_id}">
-        ${p.photo ? `<img src="${escapeAttr(p.photo)}" loading="lazy" alt="Profile photo">` : `<span class="drow-fallback is-pfp"></span>`}
+        ${p.photo ? `<img loading="lazy" decoding="async" src="${escapeAttr(p.photo)}" loading="lazy" alt="Profile photo">` : `<span class="drow-fallback is-pfp"></span>`}
         <span style="flex:1;">
           <span class="drow-name">@${escapeHtml(p.username)}</span>${p.bio ? `<br><span class="drow-bio">${escapeHtml(p.bio)}</span>` : ''}
         </span>
@@ -340,10 +340,10 @@ function linkedToMeCardHtml(entry){
   const who = entry.who;
   const initial = (who || '?').charAt(0).toUpperCase();
   const avatar = (p && p.photo)
-    ? `<span class="feed-card-avatar"><img src="${escapeAttr(p.photo)}" alt="Profile photo"></span>`
+    ? `<span class="feed-card-avatar"><img loading="lazy" decoding="async" src="${escapeAttr(p.photo)}" alt="Profile photo"></span>`
     : `<span class="feed-card-avatar">${escapeHtml(initial)}</span>`;
   const cover = s.coverArt
-    ? `<img class="feed-card-cover" src="${escapeAttr(s.coverArt)}" loading="lazy" decoding="async" alt="Album cover">`
+    ? `<img loading="lazy" decoding="async" class="feed-card-cover" src="${escapeAttr(s.coverArt)}" loading="lazy" decoding="async" alt="Album cover">`
     : `<div class="feed-card-cover-fallback">${escapeHtml((s.title||'?').charAt(0).toUpperCase())}</div>`;
   const tierBadge = s.tier ? renderTierBadge(s.tier) : '';
   const why = s.why ? `<div class="feed-card-why">"${escapeHtml(s.why)}"</div>` : '';
@@ -461,7 +461,7 @@ function renderTasteMatch(mySongs, theirSongs){
     favsWrap.style.display = 'block';
     favsList.innerHTML = sharedTracks.slice(0,10).map(s=>`
       <div class="shared-fav-chip">
-        ${s.coverArt ? `<img src="${escapeAttr(s.coverArt)}" alt="Album cover">` : ''}
+        ${s.coverArt ? `<img loading="lazy" decoding="async" src="${escapeAttr(s.coverArt)}" alt="Album cover">` : ''}
         <span>${escapeHtml(s.title||'Untitled')}<br><small>${escapeHtml(formatArtists(s.artists))}</small></span>
       </div>
     `).join('');
@@ -542,7 +542,7 @@ async function loadLeaderboard(){
     const medal = medals[i] || '';
     return `
       <div class="discover-row leaderboard-row" data-user-id="${userId}" style="cursor:pointer;">
-        ${p && p.photo ? `<img src="${escapeHtml(p.photo)}" alt="Profile photo">` : `<span class="drow-fallback is-pfp"></span>`}
+        ${p && p.photo ? `<img loading="lazy" decoding="async" src="${escapeHtml(p.photo)}" alt="Profile photo">` : `<span class="drow-fallback is-pfp"></span>`}
         <span style="flex:1;">
           <span class="drow-name">${medal} @${escapeHtml(name)}${isMe ? ' (you)' : ''}</span><br>
           <span class="drow-bio">${n} ${n === 1 ? 'reaction' : 'reactions'} to songs of the day</span>
@@ -579,7 +579,7 @@ function renderFriendGrid(list){
   grid.innerHTML = active.map(s=>`
     <div class="card" data-song-id="${escapeAttr(s.id)}">
       <div class="card-top">
-        ${s.coverArt ? `<img class="cover-thumb" src="${escapeAttr(s.coverArt)}" alt="Album cover">` : ''}
+        ${s.coverArt ? `<img loading="lazy" decoding="async" class="cover-thumb" src="${escapeAttr(s.coverArt)}" alt="Album cover">` : ''}
         <div class="title-stack">
           <p class="track-title" style="${s.tier ? 'color:'+tierColor(s.tier) : ''}">${escapeHtml(s.title||'Untitled')}</p>
           <p class="track-artist">${escapeHtml(formatArtists(s.artists))}${s.album ? ' · '+escapeHtml(s.album) : ''}</p>
@@ -691,14 +691,14 @@ function renderCompareView(){
 
   const tierPfpHtml = (tier, photo, initial) => `
     <div class="cmp-tier-pick">
-      ${photo ? `<img class="cmp-tier-pick-pfp" src="${escapeAttr(photo)}" alt="Image">` : `<div class="cmp-tier-pick-fallback">♪</div>`}
+      ${photo ? `<img loading="lazy" decoding="async" class="cmp-tier-pick-pfp" src="${escapeAttr(photo)}" alt="Image">` : `<div class="cmp-tier-pick-fallback">♪</div>`}
       <span class="tier-badge tier-${tier||'none'}">${tier||'—'}</span>
     </div>`;
 
   const readOnlyCardHtml = (s) => `
     <div class="cmp-detail-card">
       <div class="card-top">
-        ${s.coverArt ? `<img class="cover-thumb" src="${escapeAttr(s.coverArt)}" alt="Album cover">` : ''}
+        ${s.coverArt ? `<img loading="lazy" decoding="async" class="cover-thumb" src="${escapeAttr(s.coverArt)}" alt="Album cover">` : ''}
         <div class="title-stack">
           <p class="track-title" style="${s.tier ? 'color:'+tierColor(s.tier) : ''}">${escapeHtml(s.title||'Untitled')}</p>
           <p class="track-artist">${escapeHtml(formatArtists(s.artists))}${s.album ? ' · '+escapeHtml(s.album) : ''}</p>
@@ -715,20 +715,20 @@ function renderCompareView(){
 
   const detailHeaderHtml = (photo, name, initial) => `
     <div class="cmp-detail-header">
-      ${photo ? `<img src="${escapeAttr(photo)}" alt="Image">` : `<div class="cmp-detail-header-fb">♪</div>`}
+      ${photo ? `<img loading="lazy" decoding="async" src="${escapeAttr(photo)}" alt="Image">` : `<div class="cmp-detail-header-fb">♪</div>`}
       <span class="cmp-detail-header-name">@${escapeHtml(name)}</span>
     </div>`;
 
   content.innerHTML = `
     <div class="cmp-header">
       <div class="cmp-side">
-        ${myPhoto ? `<img class="cmp-side-avatar" src="${escapeAttr(myPhoto)}" alt="Profile photo">` : `<div class="cmp-side-fallback">♪</div>`}
+        ${myPhoto ? `<img loading="lazy" decoding="async" class="cmp-side-avatar" src="${escapeAttr(myPhoto)}" alt="Profile photo">` : `<div class="cmp-side-fallback">♪</div>`}
         <div class="cmp-side-name">@${escapeHtml(myName)}</div>
         <div class="cmp-side-stats">${mySongs.length} songs</div>
       </div>
       <div class="cmp-vs">vs</div>
       <div class="cmp-side">
-        ${theirPhoto ? `<img class="cmp-side-avatar" src="${escapeAttr(theirPhoto)}" alt="Profile photo">` : `<div class="cmp-side-fallback">♪</div>`}
+        ${theirPhoto ? `<img loading="lazy" decoding="async" class="cmp-side-avatar" src="${escapeAttr(theirPhoto)}" alt="Profile photo">` : `<div class="cmp-side-fallback">♪</div>`}
         <div class="cmp-side-name">@${escapeHtml(theirName)}</div>
         <div class="cmp-side-stats">${theirSongs.length} songs</div>
       </div>
@@ -753,7 +753,7 @@ function renderCompareView(){
       <div class="cmp-shared-list">
         ${sharedPairs.map((p,i)=>`
           <div class="cmp-shared-track" data-cmp-idx="${i}">
-            ${p.mine.coverArt ? `<img class="cmp-shared-cover" src="${escapeAttr(p.mine.coverArt)}" alt="Album cover">` : ''}
+            ${p.mine.coverArt ? `<img loading="lazy" decoding="async" class="cmp-shared-cover" src="${escapeAttr(p.mine.coverArt)}" alt="Album cover">` : ''}
             <div class="cmp-shared-info">
               <div class="cmp-shared-title">${escapeHtml(p.mine.title||'Untitled')}</div>
               <div class="cmp-shared-artist">${escapeHtml(formatArtists(p.mine.artists))}</div>
@@ -1069,7 +1069,7 @@ function renderPFriendList(){
     const sel = f.user_id === pFriendSelectedUserId;
     const initial = (f.username || '?').charAt(0).toUpperCase();
     return `<button type="button" class="discover-row${sel ? ' sel' : ''}" data-p-friend="${escapeAttr(f.user_id)}">
-      ${f.photo ? `<img src="${escapeAttr(f.photo)}" alt="Profile photo">` : `<span class="drow-fallback is-pfp"></span>`}
+      ${f.photo ? `<img loading="lazy" decoding="async" src="${escapeAttr(f.photo)}" alt="Profile photo">` : `<span class="drow-fallback is-pfp"></span>`}
       <span>
         <span class="drow-name">@${escapeHtml(f.username)}</span><br>
         <span class="drow-bio">${sel ? 'Linked ✓' : 'Tap to link'}</span>
@@ -1172,7 +1172,7 @@ async function fetchReadOnlyStickers(userId){
 }
 
 function stickerShelfHtml(list){
-  return (list || []).filter(s=>s&&s.url).map((s,i)=>`<span class="sticker" data-i="${i}"><img class="sticker-img" src="${escapeAttr(s.url)}" alt="sticker"></span>`).join('');
+  return (list || []).filter(s=>s&&s.url).map((s,i)=>`<span class="sticker" data-i="${i}"><img loading="lazy" decoding="async" class="sticker-img" src="${escapeAttr(s.url)}" alt="sticker"></span>`).join('');
 }
 
 function renderStickerSections(){
@@ -1182,7 +1182,7 @@ function renderStickerSections(){
 function renderStickerLayer(){
   const layer = document.getElementById('stickerLayer');
   if(!layer) return;
-  layer.innerHTML = stickers.filter(s=>s&&s.url).map((s,i)=>`<span class="sticker-drag" data-i="${i}" style="left:${clampNum(s.x,0,100)}%;top:${clampNum(s.y,0,100)}%;transform:translate(-50%,-50%) rotate(${clampNum(s.r||0,-45,45)}deg);"><button type="button" class="sticker-remove" data-rm="${i}" aria-label="Remove sticker">✕</button><img class="sticker-img" src="${escapeAttr(s.url)}" alt="sticker"></span>`).join('');
+  layer.innerHTML = stickers.filter(s=>s&&s.url).map((s,i)=>`<span class="sticker-drag" data-i="${i}" style="left:${clampNum(s.x,0,100)}%;top:${clampNum(s.y,0,100)}%;transform:translate(-50%,-50%) rotate(${clampNum(s.r||0,-45,45)}deg);"><button type="button" class="sticker-remove" data-rm="${i}" aria-label="Remove sticker">✕</button><img loading="lazy" decoding="async" class="sticker-img" src="${escapeAttr(s.url)}" alt="sticker"></span>`).join('');
   [...layer.querySelectorAll('.sticker-drag')].forEach(attachStickerDrag);
   layer.querySelectorAll('.sticker-remove').forEach(btn=>{
     btn.addEventListener('click', e=>{
@@ -1201,7 +1201,7 @@ function renderFriendStickerLayer(){
   const layer = document.getElementById('friendStickerLayer');
   if(!layer) return;
   const list = (currentFriendStickers || []).filter(s=>s&&s.url);
-  layer.innerHTML = list.map((s,i)=>`<span class="sticker-drag friend" data-i="${i}" style="left:${clampNum(s.x,0,100)}%;top:${clampNum(s.y,0,100)}%;transform:translate(-50%,-50%) rotate(${clampNum(s.r||0,-45,45)}deg);"><img class="sticker-img" src="${escapeAttr(s.url)}" alt="sticker"></span>`).join('');
+  layer.innerHTML = list.map((s,i)=>`<span class="sticker-drag friend" data-i="${i}" style="left:${clampNum(s.x,0,100)}%;top:${clampNum(s.y,0,100)}%;transform:translate(-50%,-50%) rotate(${clampNum(s.r||0,-45,45)}deg);"><img loading="lazy" decoding="async" class="sticker-img" src="${escapeAttr(s.url)}" alt="sticker"></span>`).join('');
 }
 
 function attachStickerDrag(el){
@@ -1542,7 +1542,7 @@ function renderWishSearchResults(query){
   }
   wrap.innerHTML = matches.map(s=>`
     <button type="button" class="discover-row" data-song-id="${s.id}">
-      ${s.coverArt ? `<img src="${escapeAttr(s.coverArt)}" alt="Album cover">` : `<span class="drow-fallback">${escapeHtml((s.title||'?').charAt(0).toUpperCase())}</span>`}
+      ${s.coverArt ? `<img loading="lazy" decoding="async" src="${escapeAttr(s.coverArt)}" alt="Album cover">` : `<span class="drow-fallback">${escapeHtml((s.title||'?').charAt(0).toUpperCase())}</span>`}
       <span>
         <span class="drow-name">${escapeHtml(s.title||'Untitled')}</span><br>
         <span class="drow-bio">${escapeHtml((s.artists||[]).join(', ') || 'Unknown artist')}</span>
