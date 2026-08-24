@@ -1479,7 +1479,7 @@
   .vibe-slider-line input{ flex:1; }
   .vibe-end-ico{ font-size:16px; line-height:1; flex:none; }
   .cb-flip-fab{
-    position:absolute; bottom:6px; right:6px; z-index:6;
+    position:absolute; top:9px; right:24px; z-index:6;
     width:26px; height:26px; border-radius:50%;
     border:1.5px solid rgba(var(--on-paper-rgb),0.35);
     background:rgba(var(--on-paper-rgb),0.06);
@@ -1487,6 +1487,7 @@
     font-size:13px; line-height:1; cursor:pointer;
   }
   .cb-flip-fab:hover{ background:color-mix(in srgb, var(--gold) 22%, transparent); border-color:var(--gold); }
+  .pin-btn ~ .cb-flip-fab{ right:60px; }
   /* COMPACT RATINGS STRIP ON CARD FRONT */
   .card-ratings{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
   .cr-stars{ display:flex; gap:9px; font-size:11px; }
