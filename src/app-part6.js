@@ -706,7 +706,7 @@ async function deezerSearch(q, limit){
     script.onerror = ()=>{ if(!settled){ settled = true; cleanup(); reject(new Error('deezer_jsonp_failed')); } };
     script.src = 'https://api.deezer.com/search?q=' + encodeURIComponent(q) + '&limit=' + (limit||25) + '&output=jsonp&callback=' + cbName;
     document.body.appendChild(script);
-    setTimeout(()=>{ if(!settled){ settled = true; cleanup(); reject(new Error('deezer_timeout')); } }, 10000);
+    setTimeout(()=>{ if(!settled){ settled = true; cleanup(); reject(new Error('deezer_timeout')); } }, 4000);
   });
   return (data.data || []).map(r=>({
     trackId: 'dz-' + r.id,

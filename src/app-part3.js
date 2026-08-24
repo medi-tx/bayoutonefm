@@ -1845,33 +1845,40 @@ async function fetchPreviewUrl(song){
   if(song.previewUrl){ previewCache[id] = song.previewUrl; return song.previewUrl; }
   previewInflight.add(id);
   const term = [song.title, (song.artists||[])[0]].filter(Boolean).join(' ').replace(/\//g, ' ');
-  let url = null;
+  const wantTitle = String(song.title||'').trim().toLowerCase();
+  const wantArtist = String((song.artists||[])[0]||'').trim().toLowerCase();
   const now = Date.now();
-  if(now > deezerCooldownUntil){
-    try{
-      const dzHits = await deezerSearch(term, 10) || [];
-      const wantTitle = String(song.title||'').trim().toLowerCase();
-      const wantArtist = String((song.artists||[])[0]||'').trim().toLowerCase();
-      let hit = dzHits.find(r=> r.previewUrl && String(r.trackName||'').trim().toLowerCase() === wantTitle && wantArtist && String(r.artistName||'').trim().toLowerCase() === wantArtist);
-      if(!hit) hit = dzHits.find(r=> r.previewUrl && wantTitle && String(r.trackName||'').trim().toLowerCase().includes(wantTitle) && wantArtist && String(r.artistName||'').trim().toLowerCase().includes(wantArtist));
-      if(!hit) hit = dzHits.find(r=> r.previewUrl && String(r.trackName||'').trim().toLowerCase() === wantTitle && wantArtist && wantArtist.split(' ').some(w => w.length > 2 && String(r.artistName||'').toLowerCase().includes(w)));
-      if(hit) url = hit.previewUrl;
-    }catch(e){
-      deezerCooldownUntil = Date.now() + 60000;
-    }
+  function pickHit(rows){
+    let hit = rows.find(r=> r.previewUrl && String(r.trackName||'').trim().toLowerCase() === wantTitle && wantArtist && String(r.artistName||'').trim().toLowerCase() === wantArtist);
+    if(!hit) hit = rows.find(r=> r.previewUrl && wantTitle && String(r.trackName||'').trim().toLowerCase().includes(wantTitle) && wantArtist && String(r.artistName||'').trim().toLowerCase().includes(wantArtist));
+    if(!hit) hit = rows.find(r=> r.previewUrl && String(r.trackName||'').trim().toLowerCase() === wantTitle && wantArtist && wantArtist.split(' ').some(w => w.length > 2 && String(r.artistName||'').toLowerCase().includes(w)));
+    return hit ? hit.previewUrl : null;
   }
-  if(!url && now > itunesCooldownUntil){
-    try{
-      const rows = await itunesSearch(term, 'song', 10) || [];
-      const wantTitle = String(song.title||'').trim().toLowerCase();
-      const wantArtist = String((song.artists||[])[0]||'').trim().toLowerCase();
-      let hit = rows.find(r=> r.previewUrl && String(r.trackName||'').trim().toLowerCase() === wantTitle && wantArtist && String(r.artistName||'').trim().toLowerCase() === wantArtist);
-      if(!hit) hit = rows.find(r=> r.previewUrl && wantTitle && String(r.trackName||'').trim().toLowerCase().includes(wantTitle) && wantArtist && String(r.artistName||'').trim().toLowerCase().includes(wantArtist));
-      if(!hit) hit = rows.find(r=> r.previewUrl && String(r.trackName||'').trim().toLowerCase() === wantTitle && wantArtist && wantArtist.split(' ').some(w => w.length > 2 && String(r.artistName||'').toLowerCase().includes(w)));
-      if(hit) url = hit.previewUrl;
-    }catch(err){
-      itunesCooldownUntil = Date.now() + 60000;
-    }
+  const jobs = [];
+  if(now > deezerCooldownUntil){
+    jobs.push(
+      deezerSearch(term, 10)
+        .then(rows=> pickHit(rows))
+        .catch(()=>{ deezerCooldownUntil = Date.now() + 60000; return null; })
+    );
+  }
+  if(now > itunesCooldownUntil){
+    jobs.push(
+      itunesSearch(term, 'song', 10)
+        .then(rows=> pickHit(rows))
+        .catch(()=>{ itunesCooldownUntil = Date.now() + 60000; return null; })
+    );
+  }
+  let url = null;
+  if(jobs.length === 1){
+    url = await jobs[0];
+  } else if(jobs.length >= 2){
+    // Race both sources in parallel; take the first useful URL without waiting for the slower one.
+    url = await new Promise((resolve)=>{
+      let pending = jobs.length, settledDone = false;
+      const finish = (v)=>{ if(!settledDone){ settledDone = true; resolve(v); } };
+      jobs.forEach(p=> p.then(v=>{ pending--; if(v){ finish(v); } else if(pending === 0){ finish(null); } }).catch(()=>{ pending--; if(pending === 0){ finish(null); } }));
+    });
   }
   previewInflight.delete(id);
   if(url) previewCache[id] = url;
