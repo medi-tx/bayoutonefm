@@ -902,6 +902,7 @@
   .card-actions .del{ color:var(--sage); }
   .card-actions .del:hover{ color:var(--rose); }
   .card-actions .share-card-btn{ margin-left:auto; color:var(--teal); }
+  .card-actions .card-sticker-btn{ color:var(--teal); }
   .card-actions a{ color:var(--gold);
     background:none;
     border:none;
@@ -1430,6 +1431,8 @@
     padding:6px 8px;
     box-shadow:0 4px 10px rgba(0,0,0,.28);
   }
+  .card .sticker-drag{ z-index:9; }
+  .card .sticker-img{ width:38px; height:38px; }
   .sticker-drag .sticker-emoji{ display:block; }
   .sticker-remove{
     position:absolute;

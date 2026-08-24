@@ -706,6 +706,7 @@ function songCardHtml(s, clusterCounts){
           <button data-action="archive">${s.archived ? 'UNARCHIVE' : 'ARCHIVE'}</button>
           <button data-action="delete" class="del">DELETE</button>
           ${!showEx ? `<button data-action="share" class="share-card-btn" title="Generate a shareable card for this song">↗ SHARE</button>` : ''}
+          ${!showEx ? `<button type="button" data-action="sticker" class="card-sticker-btn" title="Put a sticker on this song">😀 STICKER</button>` : ''}
         </div>
         ${s.createdAt && !showEx ? `<p class="card-date">🕒 Added ${escapeHtml(formatAddedDate(s.createdAt))}</p>` : ''}
         ${(!showEx && s.edits && s.edits.length) ? `<button class="edits-toggle" onclick="this.nextElementSibling.classList.toggle('open')">${s.edits.length} edit${s.edits.length!==1?'s':''} — view log</button><div class="edits-log">${s.edits.slice().reverse().map(e=>{
@@ -724,6 +725,7 @@ function renderNextGridBatch(){
   if(slice.length){
     grid.insertAdjacentHTML('beforeend', slice.map(s=>songCardHtml(s, currentClusterCounts)).join(''));
     renderedCount += slice.length;
+    if(typeof renderStickerLayer === 'function' && stickers && stickers.some(s=>s&&s.url)) renderStickerLayer();
   }
   if(renderedCount < currentGridList.length){
     sentinel.style.display = 'block';
@@ -2654,6 +2656,9 @@ document.getElementById('grid').addEventListener('click', e=>{
   } else if(action === 'share'){
     trackEvent('share_song');
     openShareCard({ mode:'song', song, username: (myProfile && myProfile.username) || 'you', friendName: false });
+  } else if(action === 'sticker'){
+    trackEvent('card_sticker_open');
+    if(typeof openStickerPickerForSong === 'function') openStickerPickerForSong(song);
   } else if(action === 'delete'){
     trackEvent('delete_song');
     if(confirm(`Remove "${song.title}" from your cataloguex?`)){

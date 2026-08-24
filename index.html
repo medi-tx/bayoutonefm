@@ -953,6 +953,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
   .card-actions .del{ color:var(--sage); }
   .card-actions .del:hover{ color:var(--rose); }
   .card-actions .share-card-btn{ margin-left:auto; color:var(--teal); }
+  .card-actions .card-sticker-btn{ color:var(--teal); }
   .card-actions a{ color:var(--gold);
     background:none;
     border:none;
@@ -1481,6 +1482,8 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
     padding:6px 8px;
     box-shadow:0 4px 10px rgba(0,0,0,.28);
   }
+  .card .sticker-drag{ z-index:9; }
+  .card .sticker-img{ width:38px; height:38px; }
   .sticker-drag .sticker-emoji{ display:block; }
   .sticker-remove{
     position:absolute;
@@ -3324,8 +3327,8 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
 
 <div class="overlay" id="stickerOverlay">
   <div class="modal">
-    <h3>Stickers</h3>
-    <p class="sticker-modal-hint">Upload sticker images, then drag them anywhere on your page. Friends see them when they visit.</p>
+    <h3 id="stickerTitle">Stickers</h3>
+    <p class="sticker-modal-hint" id="stickerHint">Upload sticker images, then drag them anywhere on your page. Friends see them when they visit.</p>
     <div class="sticker-defaults-section">
       <p class="theme-section-label">Sticker Library</p>
       <p class="sticker-modal-hint">Tap a sheet to crop individual stickers from it.</p>
@@ -4403,6 +4406,7 @@ function songCardHtml(s, clusterCounts){
           <button data-action="archive">${s.archived ? 'UNARCHIVE' : 'ARCHIVE'}</button>
           <button data-action="delete" class="del">DELETE</button>
           ${!showEx ? `<button data-action="share" class="share-card-btn" title="Generate a shareable card for this song">↗ SHARE</button>` : ''}
+          ${!showEx ? `<button type="button" data-action="sticker" class="card-sticker-btn" title="Put a sticker on this song">😀 STICKER</button>` : ''}
         </div>
         ${s.createdAt && !showEx ? `<p class="card-date">🕒 Added ${escapeHtml(formatAddedDate(s.createdAt))}</p>` : ''}
         ${(!showEx && s.edits && s.edits.length) ? `<button class="edits-toggle" onclick="this.nextElementSibling.classList.toggle('open')">${s.edits.length} edit${s.edits.length!==1?'s':''} — view log</button><div class="edits-log">${s.edits.slice().reverse().map(e=>{
@@ -4421,6 +4425,7 @@ function renderNextGridBatch(){
   if(slice.length){
     grid.insertAdjacentHTML('beforeend', slice.map(s=>songCardHtml(s, currentClusterCounts)).join(''));
     renderedCount += slice.length;
+    if(typeof renderStickerLayer === 'function' && stickers && stickers.some(s=>s&&s.url)) renderStickerLayer();
   }
   if(renderedCount < currentGridList.length){
     sentinel.style.display = 'block';
@@ -6351,6 +6356,9 @@ document.getElementById('grid').addEventListener('click', e=>{
   } else if(action === 'share'){
     trackEvent('share_song');
     openShareCard({ mode:'song', song, username: (myProfile && myProfile.username) || 'you', friendName: false });
+  } else if(action === 'sticker'){
+    trackEvent('card_sticker_open');
+    if(typeof openStickerPickerForSong === 'function') openStickerPickerForSong(song);
   } else if(action === 'delete'){
     trackEvent('delete_song');
     if(confirm(`Remove "${song.title}" from your cataloguex?`)){
@@ -8758,7 +8766,7 @@ async function loadStickers(){
     const source = (account !== null) ? account : local;
     stickers = source.filter(s=> s && typeof s === 'object' && s.url).map((s,i)=>{
       const p = stickerDefaultPos(i);
-      return { url:s.url, x:s.x!=null?s.x:p.x, y:s.y!=null?s.y:p.y, r:s.r||0 };
+      return { url:s.url, song:s.song||null, x:s.x!=null?s.x:p.x, y:s.y!=null?s.y:p.y, r:s.r||0 };
     });
     if(account !== null && JSON.stringify(account) !== JSON.stringify(local)){
       localStorage.setItem(STICKERS_KEY, JSON.stringify(stickers));
@@ -8794,29 +8802,73 @@ function renderStickerSections(){
   renderStickerLayer();
   renderFriendStickerLayer();
 }
+function stickerSpanHtml(s, i, friend, isCard){
+  return `<span class="sticker-drag${friend?' friend':''}"${isCard?' data-song-sticker="1"':''} data-i="${i}" style="left:${clampNum(s.x,0,100)}%;top:${clampNum(s.y,0,100)}%;transform:translate(-50%,-50%) rotate(${clampNum(s.r||0,-45,45)}deg);">${friend?'':`<button type="button" class="sticker-remove" data-rm="${i}" aria-label="Remove sticker">✕</button>`}<img loading="lazy" decoding="async" class="sticker-img" src="${escapeAttr(s.url)}" alt="sticker"></span>`;
+}
+function splitStickersBySong(list){
+  const free = [], byCard = {};
+  (list||[]).forEach((s,i)=>{
+    if(!s || !s.url) return;
+    if(s.song){ (byCard[s.song] = byCard[s.song] || []).push({ s, i }); }
+    else free.push({ s, i });
+  });
+  return { free, byCard };
+}
 function renderStickerLayer(){
   const layer = document.getElementById('stickerLayer');
-  if(!layer) return;
-  layer.innerHTML = stickers.filter(s=>s&&s.url).map((s,i)=>`<span class="sticker-drag" data-i="${i}" style="left:${clampNum(s.x,0,100)}%;top:${clampNum(s.y,0,100)}%;transform:translate(-50%,-50%) rotate(${clampNum(s.r||0,-45,45)}deg);"><button type="button" class="sticker-remove" data-rm="${i}" aria-label="Remove sticker">✕</button><img loading="lazy" decoding="async" class="sticker-img" src="${escapeAttr(s.url)}" alt="sticker"></span>`).join('');
-  [...layer.querySelectorAll('.sticker-drag')].forEach(attachStickerDrag);
-  layer.querySelectorAll('.sticker-remove').forEach(btn=>{
-    btn.addEventListener('click', e=>{
-      e.stopPropagation();
-      const idx = Number(btn.dataset.rm);
-      if(idx >= 0 && stickers[idx]){
-        stickers.splice(idx, 1);
-        saveStickers();
-        renderStickerLayer();
-        renderStickerPicker();
-      }
+  const grid = document.getElementById('grid');
+  if(grid) grid.querySelectorAll('.sticker-drag[data-song-sticker]').forEach(n=>n.remove());
+  const { free, byCard } = splitStickersBySong(stickers);
+  if(layer){
+    layer.innerHTML = free.map(({s,i})=>stickerSpanHtml(s,i,false)).join('');
+    [...layer.querySelectorAll('.sticker-drag')].forEach(attachStickerDrag);
+    layer.querySelectorAll('.sticker-remove').forEach(btn=>{
+      btn.addEventListener('click', e=>{
+        e.stopPropagation();
+        const idx = Number(btn.dataset.rm);
+        if(idx >= 0 && stickers[idx]){
+          stickers.splice(idx, 1);
+          saveStickers();
+          renderStickerLayer();
+          renderStickerPicker();
+        }
+      });
     });
-  });
+  }
+  if(grid && Object.keys(byCard).length){
+    Object.keys(byCard).forEach(sid=>{
+      const card = grid.querySelector('.card[data-id="'+CSS.escape(sid)+'"]');
+      if(card) byCard[sid].forEach(({s,i})=>card.insertAdjacentHTML('beforeend', stickerSpanHtml(s,i,false,true)));
+    });
+    grid.querySelectorAll('.sticker-drag[data-song-sticker]').forEach(el=>{
+      attachStickerDrag(el);
+      const rm = el.querySelector('.sticker-remove');
+      if(rm) rm.addEventListener('click', e=>{
+        e.stopPropagation();
+        const idx = Number(rm.dataset.rm);
+        if(idx >= 0 && stickers[idx]){
+          stickers.splice(idx, 1);
+          saveStickers();
+          renderStickerLayer();
+          renderStickerPicker();
+        }
+      });
+    });
+  }
 }
 function renderFriendStickerLayer(){
   const layer = document.getElementById('friendStickerLayer');
-  if(!layer) return;
-  const list = (currentFriendStickers || []).filter(s=>s&&s.url);
-  layer.innerHTML = list.map((s,i)=>`<span class="sticker-drag friend" data-i="${i}" style="left:${clampNum(s.x,0,100)}%;top:${clampNum(s.y,0,100)}%;transform:translate(-50%,-50%) rotate(${clampNum(s.r||0,-45,45)}deg);"><img loading="lazy" decoding="async" class="sticker-img" src="${escapeAttr(s.url)}" alt="sticker"></span>`).join('');
+  const grid = document.getElementById('friendGrid');
+  if(grid) grid.querySelectorAll('.sticker-drag[data-song-sticker]').forEach(n=>n.remove());
+  if(layer) layer.innerHTML = '';
+  const { free, byCard } = splitStickersBySong(currentFriendStickers);
+  if(layer) layer.innerHTML = free.map(({s,i})=>stickerSpanHtml(s,i,true)).join('');
+  if(grid && Object.keys(byCard).length){
+    Object.keys(byCard).forEach(sid=>{
+      const card = grid.querySelector('.card[data-song-id="'+CSS.escape(sid)+'"]');
+      if(card) byCard[sid].forEach(({s,i})=>card.insertAdjacentHTML('beforeend', stickerSpanHtml(s,i,true,true)));
+    });
+  }
 }
 
 function attachStickerDrag(el){
@@ -8831,6 +8883,18 @@ function attachStickerDrag(el){
     startX = e.clientX; startY = e.clientY;
     origX = (r.left - rect.left) / rect.width * 100;
     origY = (r.top - rect.top) / rect.height * 100;
+    if(el.hasAttribute('data-song-sticker')){
+      const layerEl = document.getElementById('stickerLayer');
+      if(layerEl){
+        const lr = layerEl.getBoundingClientRect();
+        const cx = r.left + r.width/2;
+        const cy = r.top + r.height/2;
+        layerEl.appendChild(el);
+        el.removeAttribute('data-song-sticker');
+        el.style.left = ((cx - lr.left) / lr.width * 100) + '%';
+        el.style.top = ((cy - lr.top) / lr.height * 100) + '%';
+      }
+    }
     el.classList.add('dragging');
     try{ el.setPointerCapture(e.pointerId); }catch(err){}
   });
@@ -8840,14 +8904,34 @@ function attachStickerDrag(el){
     el.style.left = clampNum(origX + (e.clientX - startX) / rect.width * 100, 0, 100) + '%';
     el.style.top = clampNum(origY + (e.clientY - startY) / rect.height * 100, 0, 100) + '%';
   });
-  const end = ()=>{
+  const end = (e)=>{
     if(!dragging) return;
     dragging = false;
     el.classList.remove('dragging');
-    const x = Math.round(clampNum(parseFloat(el.style.left)||0, 0, 100));
-    const y = Math.round(clampNum(parseFloat(el.style.top)||0, 0, 100));
-    if(stickers[idx]){ stickers[idx].x = x; stickers[idx].y = y; }
+    const idx2 = Number(el.dataset.i);
+    if(!stickers[idx2]) return;
+    if(e && e.type === 'pointercancel'){ saveStickers(); renderStickerSections(); return; }
+    let target = null;
+    if(e && typeof e.clientX === 'number'){
+      el.style.display = 'none';
+      const hit = document.elementFromPoint(e.clientX, e.clientY);
+      el.style.display = '';
+      target = hit ? hit.closest('.card') : null;
+      if(target && !target.dataset.id && !target.dataset.songId) target = null;
+    }
+    if(target && e){
+      const tr = target.getBoundingClientRect();
+      stickers[idx2].song = target.dataset.id || target.dataset.songId;
+      stickers[idx2].x = Math.round(clampNum((e.clientX - tr.left) / tr.width * 100, 5, 95));
+      stickers[idx2].y = Math.round(clampNum((e.clientY - tr.top) / tr.height * 100, 5, 95));
+    } else {
+      const lr = document.getElementById('stickerLayer').getBoundingClientRect();
+      stickers[idx2].song = null;
+      stickers[idx2].x = Math.round(clampNum((e.clientX - lr.left) / lr.width * 100, 0, 100));
+      stickers[idx2].y = Math.round(clampNum((e.clientY - lr.top) / lr.height * 100, 0, 100));
+    }
     saveStickers();
+    renderStickerSections();
   };
   el.addEventListener('pointerup', end);
   el.addEventListener('pointercancel', end);
@@ -8881,20 +8965,47 @@ document.getElementById('stickerWipOkBtn').addEventListener('click', ()=>{
 document.getElementById('stickerWipOverlay').addEventListener('click', e=>{
   if(e.target.id === 'stickerWipOverlay') document.getElementById('stickerWipOverlay').classList.remove('open');
 });
+let _attachSongId = null;
+function setStickerModalMode(){
+  const t = document.getElementById('stickerTitle');
+  const hint = document.getElementById('stickerHint');
+  if(_attachSongId){
+    const song = songs.find(s=>s.id===_attachSongId);
+    if(t) t.textContent = 'Put a sticker on "' + ((song && song.title) || 'this song') + '"';
+    if(hint) hint.textContent = 'Tap a sticker below to stamp it onto this song card - or drag any existing sticker onto a card on your page.';
+  } else {
+    if(t) t.textContent = 'Stickers';
+    if(hint) hint.textContent = 'Upload sticker images, then drag them anywhere on your page. Drop one onto a song card to pin it to that song.';
+  }
+}
+function openStickerPickerForSong(song){
+  if(!song) return;
+  _attachSongId = song.id;
+  renderStickerPicker();
+  setStickerModalMode();
+  document.getElementById('stickerOverlay').classList.add('open');
+}
 document.getElementById('editStickersBtn')?.addEventListener('click', ()=>{
   trackEvent('open_stickers');
+  _attachSongId = null;
   if(!localStorage.getItem('bayoutonefm-sticker-wip-dismissed')){
     document.getElementById('stickerWipOverlay').classList.add('open');
   } else {
     renderStickerPicker();
+    setStickerModalMode();
     document.getElementById('stickerOverlay').classList.add('open');
   }
 });
+function closeStickerOverlay(){
+  _attachSongId = null;
+  setStickerModalMode();
+  document.getElementById('stickerOverlay').classList.remove('open');
+}
 document.getElementById('stickerOverlay').addEventListener('click', e=>{
-  if(e.target.id==='stickerOverlay') document.getElementById('stickerOverlay').classList.remove('open');
+  if(e.target.id==='stickerOverlay') closeStickerOverlay();
 });
 document.getElementById('stickerDoneBtn').addEventListener('click', ()=>{
-  document.getElementById('stickerOverlay').classList.remove('open');
+  closeStickerOverlay();
 });
 document.getElementById('stickerClearBtn').addEventListener('click', ()=>{
   trackEvent('sticker_clear_all');
@@ -8907,19 +9018,34 @@ document.getElementById('stickerClearBtn').addEventListener('click', ()=>{
 });
 
 document.getElementById('stickerPickerShelf').addEventListener('click', e=>{
-  trackEvent('remove_sticker');
   const st = e.target.closest('.sticker');
   if(!st) return;
   const idx = Number(st.dataset.i);
   const imgStickers = stickers.filter(s=>s&&s.url);
-  if(idx >= 0 && imgStickers[idx]){
-    const realIdx = stickers.indexOf(imgStickers[idx]);
-    if(realIdx >= 0){
-      stickers.splice(realIdx, 1);
-      saveStickers();
-      renderStickerPicker();
-      renderStickerSections();
+  if(idx < 0 || !imgStickers[idx]) return;
+  if(_attachSongId){
+    trackEvent('stamp_sticker_on_song');
+    if(stickers.length >= MAX_STICKERS){
+      alert('Sticker limit reached (' + MAX_STICKERS + '). Remove one first.');
+      return;
     }
+    const src = imgStickers[idx];
+    const n = stickers.filter(x=>x && x.song === _attachSongId).length;
+    const offs = [[50,36],[64,28],[34,30],[58,60],[32,62],[50,76]];
+    const o = offs[n % offs.length];
+    stickers.push({ url: src.url, song: _attachSongId, x:o[0], y:o[1], r:0 });
+    saveStickers();
+    renderStickerPicker();
+    renderStickerSections();
+    return;
+  }
+  trackEvent('remove_sticker');
+  const realIdx = stickers.indexOf(imgStickers[idx]);
+  if(realIdx >= 0){
+    stickers.splice(realIdx, 1);
+    saveStickers();
+    renderStickerPicker();
+    renderStickerSections();
   }
 });
 
@@ -9081,8 +9207,15 @@ document.getElementById('stickerCropSaveBtn').addEventListener('click', async ()
       url = tmpCanvas.toDataURL('image/png');
     }
     if(url){
-      const p = stickerDefaultPos(stickers.length);
-      stickers.push({ url, x:p.x, y:p.y, r:0 });
+      if(_attachSongId){
+        const n = stickers.filter(x=>x && x.song === _attachSongId).length;
+        const offs = [[50,36],[64,28],[34,30],[58,60],[32,62],[50,76]];
+        const o = offs[n % offs.length];
+        stickers.push({ url, song:_attachSongId, x:o[0], y:o[1], r:0 });
+      } else {
+        const p = stickerDefaultPos(stickers.length);
+        stickers.push({ url, x:p.x, y:p.y, r:0 });
+      }
       saveStickers();
       renderStickerPicker();
       renderStickerSections();
