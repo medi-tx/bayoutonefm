@@ -4469,7 +4469,6 @@ function cardBackHtml(s){
         ${cbField('🎤 Lyrics', starsHtml(st.lyrics) + ` <span class="cb-star-num">${st.lyrics||0}/5</span>`)}
         ${cbField('🎶 Vocals', starsHtml(st.vocals) + ` <span class="cb-star-num">${st.vocals||0}/5</span>`)}
         ${cbField('🔁 Replay-ability', starsHtml(st.replay) + ` <span class="cb-star-num">${st.replay||0}/5</span>`)}
-        ${cbField('🎛️ Production', starsHtml(st.production) + ` <span class="cb-star-num">${st.production||0}/5</span>`)}
       </div>
       <div class="vibe-bars">
         ${vibeBarHtml('⚡ Energy · chill ↔ electric '+(s.vibeEnergy != null ? s.vibeEnergy : 0), s.vibeEnergy, 'energy')}
