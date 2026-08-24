@@ -1511,6 +1511,8 @@
   .vibe-bar-label{ width:66px; white-space:nowrap; opacity:.8; }
   .vibe-bar-track{ flex:1; height:7px; border-radius:4px; background:rgba(var(--on-paper-rgb),0.14); overflow:hidden; display:block; }
   .card-back .vibe-bars{ padding-left:0; padding-right:32px; }
+  .card-back .vibe-bar-label{ width:84px; }
+  .card-back .vibe-bar-track{ flex:none; width:104px; }
   .vibe-bar-fill{ display:block; height:100%; border-radius:4px; }
   .vibe-bar-fill.energy{ background:linear-gradient(90deg,#7ec8e3,#ffd166,#ff4d6d); }
   .vibe-bar-fill.mood{ background:linear-gradient(90deg,#5b4b8a,#b39ddb,#ffe08a); }
