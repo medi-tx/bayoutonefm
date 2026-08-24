@@ -594,7 +594,7 @@ function renderFriendGrid(list){
         ${s.coverArt ? `<img loading="lazy" decoding="async" class="cover-thumb" src="${escapeAttr(s.coverArt)}" alt="Album cover">` : ''}
         <div class="title-stack">
           <p class="track-title" style="${s.tier ? 'color:'+tierColor(s.tier) : ''}">${escapeHtml(s.title||'Untitled')}</p>
-          <p class="track-artist">${escapeHtml(formatArtists(s.artists))}${s.album ? ' · '+escapeHtml(s.album) : ''}${s.trackNumber ? ' · #'+escapeHtml(String(s.trackNumber)) : ''}</p>
+          <p class="track-artist">${escapeHtml(formatArtists(s.artists))}${s.album ? ' · '+escapeHtml(s.album) : ''}${trackNoDisplay(s)}</p>
         </div>
       </div>
       <div class="meta-row">
@@ -721,7 +721,7 @@ function renderCompareView(){
         ${s.coverArt ? `<img loading="lazy" decoding="async" class="cover-thumb" src="${escapeAttr(s.coverArt)}" alt="Album cover">` : ''}
         <div class="title-stack">
           <p class="track-title" style="${s.tier ? 'color:'+tierColor(s.tier) : ''}">${escapeHtml(s.title||'Untitled')}</p>
-          <p class="track-artist">${escapeHtml(formatArtists(s.artists))}${s.album ? ' · '+escapeHtml(s.album) : ''}${s.trackNumber ? ' · #'+escapeHtml(String(s.trackNumber)) : ''}</p>
+          <p class="track-artist">${escapeHtml(formatArtists(s.artists))}${s.album ? ' · '+escapeHtml(s.album) : ''}${trackNoDisplay(s)}</p>
         </div>
       </div>
       <div class="meta-row">

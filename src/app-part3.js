@@ -596,6 +596,19 @@ function songStackBadgesHtml(s, clusterCounts){
   if(ids.length === 1) return `<span class="link-badge" data-cluster="${ids[0]}">🔗 ${clusterCounts[ids[0]]} linked</span>`;
   return `<button type="button" class="stacks-btn" data-stacks-for="${s.id}" title="Show all stacks">Stacks</button>`;
 }
+function trackNoDisplay(s){
+  if(!s.trackNumber) return '';
+  const v = String(s.trackNumber).toUpperCase();
+  return v === 'S' ? ' · S' : ' · #'+escapeHtml(v);
+}
+function validateTrackNo(raw){
+  const t = String(raw||'').trim().toUpperCase();
+  if(!t) return { ok:true, value:null };
+  if(t === 'S') return { ok:true, value:'S' };
+  const n = Number(t);
+  if(Number.isInteger(n) && n >= 1 && n <= 1111) return { ok:true, value:String(n) };
+  return { ok:false };
+}
 let _friendPeopleCache = null;
 function cbField(label, val){
   if(val === null || val === undefined || val === '' || (Array.isArray(val) && !val.length)) return '';
@@ -805,7 +818,7 @@ function songCardHtml(s, clusterCounts){
           <div class="title-stack">
             ${s.archived ? '<span class="archived-badge">ARCHIVED</span>' : ''}
             <p class="track-title" style="${s.tier ? 'color:'+tierColor(s.tier) : ''}">${escapeHtml(s.title||'Untitled')}</p>
-            <p class="track-artist">${escapeHtml(formatArtists(s.artists))}${s.album ? ' · '+escapeHtml(s.album) : ''}${s.trackNumber ? ' · #'+escapeHtml(String(s.trackNumber)) : ''}</p>
+            <p class="track-artist">${escapeHtml(formatArtists(s.artists))}${s.album ? ' · '+escapeHtml(s.album) : ''}${trackNoDisplay(s)}</p>
             ${(s.score !== null && s.score !== undefined && s.score !== '' && s.tier) ? `<div class="cover-score">${renderTierBadge(s.tier)}<span class="score-chip">${escapeHtml(String(s.score))}</span><span class="cs-band">→ ${escapeHtml(tierBandLabel(s.tier))}</span></div>` : ''}
           </div>
         </div>
@@ -2383,7 +2396,7 @@ function renderWishlistGrid(){
           ${coverThumbHtml(s)}
           <div class="title-stack">
             <p class="track-title" style="${s.tier ? 'color:'+tierColor(s.tier) : ''}">${escapeHtml(s.title||'Untitled')}</p>
-            <p class="track-artist">${escapeHtml(formatArtists(s.artists))}${s.album ? ' · '+escapeHtml(s.album) : ''}${s.trackNumber ? ' · #'+escapeHtml(String(s.trackNumber)) : ''}</p>
+            <p class="track-artist">${escapeHtml(formatArtists(s.artists))}${s.album ? ' · '+escapeHtml(s.album) : ''}${trackNoDisplay(s)}</p>
           </div>
         </div>
         <div class="meta-row">${s.year ? `<span>${escapeHtml(s.year)}</span>`:''}</div>
@@ -2538,6 +2551,12 @@ document.getElementById('dupOverlay').addEventListener('click', e=>{ if(e.target
 function handleSave(){
   const title = document.getElementById('f-title').value.trim();
   if(!title){ document.getElementById('f-title').focus(); return; }
+  const trackCheck = validateTrackNo(document.getElementById('f-track').value);
+  if(!trackCheck.ok){
+    alert('Only Track numbers up to 1,111 and S for a Single are available put in the Track # input.');
+    document.getElementById('f-track').focus();
+    return;
+  }
   const data = {
     title,
     artists: document.getElementById('f-artist').value.split(',').map(a=>a.trim()).filter(Boolean),
@@ -2551,7 +2570,7 @@ function handleSave(){
     coverArt: currentCoverArt,
     remindsOf: getSelectedReminds('f'),
     tier: currentTier,
-    trackNumber: document.getElementById('f-track').value.trim() || null,
+    trackNumber: trackCheck.value,
     score: (()=>{ const v = parseInt(document.getElementById('f-score').value, 10); return isNaN(v) ? null : Math.max(0, Math.min(100, v)); })(),
     stars: { lyrics: currentStars.lyrics || 0, vocals: currentStars.vocals || 0, replay: currentStars.replay || 0 },
     vibeEnergy: clampNum(parseInt(document.getElementById('f-vibe-energy').value, 10) || 0, 0, 100),
