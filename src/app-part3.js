@@ -556,17 +556,17 @@ function cardRatingsStripHtml(s){
   const hasVibes = s.vibeEnergy !== null && s.vibeEnergy !== undefined;
   if(!hasStars && !hasVibes) return '';
   let out = '<div class="card-ratings">';
+  if(hasVibes){
+    out += `<div class="cr-vibes">`
+      + `<span class="vb energy" title="⚡ Energy ${s.vibeEnergy}"><i style="width:${clampNum(s.vibeEnergy,0,100)}%;"></i></span>`
+      + `<span class="vb mood" title="🌗 Mood ${s.vibeMood != null ? s.vibeMood : 0}"><i style="width:${clampNum(s.vibeMood||0,0,100)}%;"></i></span>`
+      + `</div>`;
+  }
   if(hasStars){
     out += `<div class="cr-stars">`
       + `<span title="Lyrics ${(st.lyrics||0)}/5">🎤${starsHtml(st.lyrics)}</span>`
       + `<span title="Vocals ${(st.vocals||0)}/5">🎶${starsHtml(st.vocals)}</span>`
       + `<span title="Aesthetic ${(st.aesthetic||0)}/5">🎨${starsHtml(st.aesthetic)}</span>`
-      + `</div>`;
-  }
-  if(hasVibes){
-    out += `<div class="cr-vibes">`
-      + `<span class="vb energy" title="⚡ Energy ${s.vibeEnergy}"><i style="width:${clampNum(s.vibeEnergy,0,100)}%;"></i></span>`
-      + `<span class="vb mood" title="🌗 Mood ${s.vibeMood != null ? s.vibeMood : 0}"><i style="width:${clampNum(s.vibeMood||0,0,100)}%;"></i></span>`
       + `</div>`;
   }
   return out + '</div>';

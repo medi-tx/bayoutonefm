@@ -1531,7 +1531,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
   .cr-stars{ display:flex; gap:9px; font-size:11px; }
   .cr-stars > span{ display:inline-flex; align-items:center; gap:3px; }
   .cr-stars .star-ico{ font-size:10.5px; letter-spacing:0; }
-  .cr-vibes{ display:flex; gap:6px; flex:1; min-width:110px; max-width:180px; margin-left:auto; }
+  .cr-vibes{ display:flex; gap:6px; flex:1; min-width:110px; max-width:180px; }
   .vb{
     flex:1; height:6px; border-radius:4px;
     background:rgba(var(--on-paper-rgb),0.14);
@@ -4391,17 +4391,17 @@ function cardRatingsStripHtml(s){
   const hasVibes = s.vibeEnergy !== null && s.vibeEnergy !== undefined;
   if(!hasStars && !hasVibes) return '';
   let out = '<div class="card-ratings">';
+  if(hasVibes){
+    out += `<div class="cr-vibes">`
+      + `<span class="vb energy" title="⚡ Energy ${s.vibeEnergy}"><i style="width:${clampNum(s.vibeEnergy,0,100)}%;"></i></span>`
+      + `<span class="vb mood" title="🌗 Mood ${s.vibeMood != null ? s.vibeMood : 0}"><i style="width:${clampNum(s.vibeMood||0,0,100)}%;"></i></span>`
+      + `</div>`;
+  }
   if(hasStars){
     out += `<div class="cr-stars">`
       + `<span title="Lyrics ${(st.lyrics||0)}/5">🎤${starsHtml(st.lyrics)}</span>`
       + `<span title="Vocals ${(st.vocals||0)}/5">🎶${starsHtml(st.vocals)}</span>`
       + `<span title="Aesthetic ${(st.aesthetic||0)}/5">🎨${starsHtml(st.aesthetic)}</span>`
-      + `</div>`;
-  }
-  if(hasVibes){
-    out += `<div class="cr-vibes">`
-      + `<span class="vb energy" title="⚡ Energy ${s.vibeEnergy}"><i style="width:${clampNum(s.vibeEnergy,0,100)}%;"></i></span>`
-      + `<span class="vb mood" title="🌗 Mood ${s.vibeMood != null ? s.vibeMood : 0}"><i style="width:${clampNum(s.vibeMood||0,0,100)}%;"></i></span>`
       + `</div>`;
   }
   return out + '</div>';
