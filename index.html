@@ -3068,7 +3068,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
     <h3>📤 Send to friend</h3>
     <p class="share-sub" id="sendFriendSub">Choose who should get this song.</p>
     <div id="sendFriendList" class="discover-list" style="max-height:320px; overflow-y:auto;"></div>
-    <div class="modal-actions"><button class="btn-cancel" id="sendFriendCloseBtn">Cancel</button></div>
+    <div class="modal-actions"><button class="btn-cancel" id="sendFriendCloseBtn">Cancel</button><button type="button" class="modal-action-btn accent" id="sendFriendDoneBtn">Done</button></div>
   </div>
 </div>
 <div class="overlay" id="songStacksOverlay">
@@ -5619,8 +5619,8 @@ async function drawSongShareCard(opts){
   ctx.fillStyle = t.ink || '#11131b';
   ctx.font = '700 26px "IBM Plex Mono", monospace';
   ctx.fillText(tier || '—', W/2, coverY + coverS + 295);
-  if(s.why){
-    const lines = cardWrapText(ctx, '\u201c' + s.why + '\u201d', W - 260, 'italic 500 28px Georgia, serif');
+  if(s.quickThought){
+    const lines = cardWrapText(ctx, '\u201c' + s.quickThought + '\u201d', W - 260, 'italic 500 28px Georgia, serif');
     ctx.fillStyle = t.paper ? t.paper + 'BF' : 'rgba(238,221,149,0.75)';
     ctx.font = 'italic 500 28px Georgia, serif';
     lines.forEach((ln,i)=>{ ctx.fillText(cardTruncate(ctx, ln, W - 260, ctx.font), W/2, coverY + coverS + 348 + i*40); });
@@ -5801,6 +5801,7 @@ async function openSendFriendPicker(){
 }
 document.getElementById('shareSendFriendBtn').addEventListener('click', ()=>{
   trackEvent('share_send_friend_open');
+  document.getElementById('shareOverlay').classList.remove('open');
   openSendFriendPicker();
 });
 document.getElementById('sendFriendCloseBtn').addEventListener('click', ()=>{
@@ -5840,10 +5841,15 @@ document.getElementById('sendFriendList').addEventListener('click', async e=>{
   trackEvent('share_send_friend_done');
   const me = (myProfile && myProfile.username) ? '@' + myProfile.username : 'Someone';
   sendNotif(friendId, 'message', me + ' sent you a song: ' + payload.title);
-  _sendFriendSong = null;
+  row.style.opacity = '';
+  row.disabled = true;
+  const tag = row.querySelector('.modal-action-btn.accent');
+  if(tag) tag.textContent = 'Sent ✓';
+});
+document.getElementById('sendFriendDoneBtn').addEventListener('click', ()=>{
+  trackEvent('share_send_done_open_messages');
   document.getElementById('sendFriendOverlay').classList.remove('open');
-  document.getElementById('shareOverlay').classList.remove('open');
-  if(typeof window.btfOpenChatWith === 'function') window.btfOpenChatWith(friendId);
+  if(typeof window.btfOpenMessages === 'function') window.btfOpenMessages();
 });
 document.getElementById('shareOverlay').addEventListener('click', e=>{
   if(e.target === e.currentTarget) e.currentTarget.classList.remove('open');
@@ -11683,6 +11689,7 @@ document.getElementById('passwordSaveBtn').addEventListener('click', async ()=>{
     await openMessagesModal();
     if(msgFriendProfiles.some(p=>p.user_id === friendId)) openMsgConversation(friendId);
   };
+  window.btfOpenMessages = function(){ return openMessagesModal(); };
   function renderMsgBubble(m){
     const mine = m.sender_id === currentUserId;
     const cls = mine ? 'msg-bubble mine' : 'msg-bubble';
