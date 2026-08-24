@@ -137,9 +137,6 @@ document.getElementById('myProfileBtn').addEventListener('click', ()=>{
 document.getElementById('myProfileCloseBtn').addEventListener('click', ()=>{
   document.getElementById('myProfileOverlay').classList.remove('open');
 });
-document.getElementById('myProfileOverlay').addEventListener('click', e=>{
-  if(e.target.id==='myProfileOverlay') document.getElementById('myProfileOverlay').classList.remove('open');
-});
 document.getElementById('shareProfileBtn').addEventListener('click', ()=>{
   trackEvent('share_profile_link');
   if(!myProfile || !myProfile.username) return;
@@ -171,10 +168,6 @@ document.getElementById('openEditProfileBtn').addEventListener('click', ()=>{ tr
 document.getElementById('editProfileCancelBtn').addEventListener('click', ()=>{
   document.getElementById('editProfileOverlay').classList.remove('open');
 });
-document.getElementById('editProfileOverlay').addEventListener('click', e=>{
-  if(e.target.id==='editProfileOverlay') document.getElementById('editProfileOverlay').classList.remove('open');
-});
-
 /* ---- DATA EXPORT (GDPR Art. 20) ---- */
 function mergeById(current, incoming, tsFn){
   const map = new Map();
@@ -332,9 +325,6 @@ document.getElementById('openChangePasswordBtn').addEventListener('click', ()=>{
 });
 document.getElementById('passwordCancelBtn').addEventListener('click', ()=>{
   document.getElementById('passwordOverlay').classList.remove('open');
-});
-document.getElementById('passwordOverlay').addEventListener('click', e=>{
-  if(e.target.id==='passwordOverlay') document.getElementById('passwordOverlay').classList.remove('open');
 });
 document.getElementById('passwordSaveBtn').addEventListener('click', async ()=>{
   trackEvent('change_password');

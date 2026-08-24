@@ -238,9 +238,6 @@ document.getElementById('otherProfileFriendBtn').addEventListener('click', async
 document.getElementById('otherProfileCloseBtn').addEventListener('click', ()=>{
   document.getElementById('otherProfileOverlay').classList.remove('open');
 });
-document.getElementById('otherProfileOverlay').addEventListener('click', e=>{
-  if(e.target.id==='otherProfileOverlay') document.getElementById('otherProfileOverlay').classList.remove('open');
-});
 document.getElementById('friendRequestsList').addEventListener('click', async e=>{
   trackEvent('friend_request_respond');
   const acceptBtn = e.target.closest('[data-accept-request]');
@@ -265,10 +262,6 @@ document.getElementById('friendRequestsList').addEventListener('click', async e=
 document.getElementById('discoverCloseBtn').addEventListener('click', ()=>{
   document.getElementById('discoverOverlay').classList.remove('open');
 });
-document.getElementById('discoverOverlay').addEventListener('click', e=>{
-  if(e.target.id==='discoverOverlay') document.getElementById('discoverOverlay').classList.remove('open');
-});
-
 /* =========================================================
    FRIEND CATALOGUEX PAGE  (routed at #/u/username)
    ========================================================= */
@@ -411,10 +404,6 @@ document.getElementById('openLinkedToMeBtn').addEventListener('click', ()=>{
 document.getElementById('linkedToMeCloseBtn').addEventListener('click', ()=>{
   document.getElementById('linkedToMeOverlay').classList.remove('open');
 });
-document.getElementById('linkedToMeOverlay').addEventListener('click', e=>{
-  if(e.target.id === 'linkedToMeOverlay') document.getElementById('linkedToMeOverlay').classList.remove('open');
-});
-
 /* ---- TASTE MATCH (fun social feature #1 + #2) ---- */
 function jaccardSets(setA, setB){
   if(setA.size===0 && setB.size===0) return 0;
@@ -565,9 +554,6 @@ document.getElementById('leaderboardBtn').addEventListener('click', ()=>{
 document.getElementById('leaderboardCloseBtn').addEventListener('click', ()=>{
   document.getElementById('leaderboardOverlay').classList.remove('open');
 });
-document.getElementById('leaderboardOverlay').addEventListener('click', e=>{
-  if(e.target.id === 'leaderboardOverlay') document.getElementById('leaderboardOverlay').classList.remove('open');
-});
 document.getElementById('leaderboardList').addEventListener('click', e=>{
   const row = e.target.closest('[data-user-id]');
   if(row){
@@ -659,16 +645,9 @@ document.getElementById('friendCompareBtn').addEventListener('click', ()=>{
 document.getElementById('compareCloseBtn').addEventListener('click', ()=>{
   document.getElementById('compareOverlay').classList.remove('open');
 });
-document.getElementById('compareOverlay').addEventListener('click', e=>{
-  if(e.target.id === 'compareOverlay') document.getElementById('compareOverlay').classList.remove('open');
-});
 document.getElementById('compareTrackCloseBtn').addEventListener('click', ()=>{
   document.getElementById('compareTrackOverlay').classList.remove('open');
 });
-document.getElementById('compareTrackOverlay').addEventListener('click', e=>{
-  if(e.target.id === 'compareTrackOverlay') document.getElementById('compareTrackOverlay').classList.remove('open');
-});
-
 function renderCompareView(){
   const content = document.getElementById('compareContent');
   const mySongs = songs.filter(s=>!s.archived);
@@ -997,7 +976,6 @@ window.addEventListener('hashchange', checkRoute);
 document.getElementById('addTitleBox').addEventListener('click', ()=>addTitleBoxRow(true));
 document.getElementById('multiCancelBtn').addEventListener('click', closeMultiModal);
 document.getElementById('multiSaveBtn').addEventListener('click', handleMultiSave);
-document.getElementById('multiOverlay').addEventListener('click', e=>{ if(e.target.id==='multiOverlay') closeMultiModal(); });
 document.getElementById('clearClusterFilter').addEventListener('click', ()=>{ trackEvent('clear_cluster_filter'); clusterFilterId = null; render(); });
 document.getElementById('clearRemindsFilter').addEventListener('click', ()=>{ trackEvent('clear_reminds_filter'); remindsFilterId = null; render(); });
 let searchDebounceTimer = null;
@@ -1110,9 +1088,6 @@ document.getElementById('p-friend-list').addEventListener('click', e=>{
 });
 document.getElementById('personCancelBtn').addEventListener('click', ()=>{
   document.getElementById('personOverlay').classList.remove('open');
-});
-document.getElementById('personOverlay').addEventListener('click', e=>{
-  if(e.target.id==='personOverlay') document.getElementById('personOverlay').classList.remove('open');
 });
 document.getElementById('personSaveBtn').addEventListener('click', ()=>{
   trackEvent('save_person');
@@ -1387,9 +1362,6 @@ document.getElementById('stickerWipOkBtn').addEventListener('click', ()=>{
   }
   document.getElementById('stickerWipOverlay').classList.remove('open');
 });
-document.getElementById('stickerWipOverlay').addEventListener('click', e=>{
-  if(e.target.id === 'stickerWipOverlay') document.getElementById('stickerWipOverlay').classList.remove('open');
-});
 let _attachSongId = null;
 function setStickerModalMode(){
   const t = document.getElementById('stickerTitle');
@@ -1426,9 +1398,6 @@ function closeStickerOverlay(){
   setStickerModalMode();
   document.getElementById('stickerOverlay').classList.remove('open');
 }
-document.getElementById('stickerOverlay').addEventListener('click', e=>{
-  if(e.target.id==='stickerOverlay') closeStickerOverlay();
-});
 document.getElementById('stickerDoneBtn').addEventListener('click', ()=>{
   closeStickerOverlay();
 });
@@ -1659,13 +1628,6 @@ document.getElementById('stickerCropCancelBtn').addEventListener('click', ()=>{
   _cropQueue = [];
   document.getElementById('stickerCropOverlay').classList.remove('open');
 });
-document.getElementById('stickerCropOverlay').addEventListener('click', e=>{
-  if(e.target.id==='stickerCropOverlay'){
-    _cropQueue = [];
-    document.getElementById('stickerCropOverlay').classList.remove('open');
-  }
-});
-
 async function uploadStickerBlob(blob){
   if(!currentUserId || !sb || !sb.storage) return null;
   try{
@@ -1741,7 +1703,6 @@ document.getElementById('wishSearchResults').addEventListener('click', e=>{
 });
 document.getElementById('openWish').addEventListener('click', ()=>{ trackEvent('open_wishlist_add'); openWishModal(null); });
 document.getElementById('wishCancelBtn').addEventListener('click', closeWishModal);
-document.getElementById('wishOverlay').addEventListener('click', e=>{ if(e.target.id==='wishOverlay') closeWishModal(); });
 document.getElementById('wishSaveBtn').addEventListener('click', ()=>{
   trackEvent('save_wishlist');
   const title = document.getElementById('w-title').value.trim();

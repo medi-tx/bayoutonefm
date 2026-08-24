@@ -4226,9 +4226,6 @@ document.addEventListener('DOMContentLoaded', ()=>{
   document.getElementById('themeCloseBtn').addEventListener('click', ()=>{
     document.getElementById('themeOverlay').classList.remove('open');
   });
-  document.getElementById('themeOverlay').addEventListener('click', e=>{
-    if(e.target.id==='themeOverlay') document.getElementById('themeOverlay').classList.remove('open');
-  });
   document.addEventListener('keydown', e=>{
     if(e.key==='Escape') document.getElementById('themeOverlay').classList.remove('open');
   });
@@ -5038,9 +5035,6 @@ document.getElementById('statsBtn').addEventListener('click', ()=>{ trackEvent('
 document.getElementById('statsCloseBtn').addEventListener('click', ()=>{
   document.getElementById('statsOverlay').classList.remove('open');
 });
-document.getElementById('statsOverlay').addEventListener('click', e=>{
-  if(e.target === e.currentTarget) e.currentTarget.classList.remove('open');
-});
 document.getElementById('songDbBtn').addEventListener('click', ()=>{
   if(localStorage.getItem('bayoutonefm-songdb-info-seen')){
     window.location.href = 'songdb.html';
@@ -5055,10 +5049,6 @@ document.getElementById('songDbInfoCloseBtn').addEventListener('click', ()=>{
   document.getElementById('songDbInfoOverlay').classList.remove('open');
   window.location.href = 'songdb.html';
 });
-document.getElementById('songDbInfoOverlay').addEventListener('click', e=>{
-  if(e.target === e.currentTarget) e.currentTarget.classList.remove('open');
-});
-
 /* ---- EXPORT BACKUP ---- */
 document.getElementById('exportBackupBtn').addEventListener('click', ()=>{
   trackEvent('export_backup');
@@ -5178,10 +5168,6 @@ document.getElementById('yearReviewBtn').addEventListener('click', ()=>{ trackEv
 document.getElementById('yrCloseBtn').addEventListener('click', ()=>{
   document.getElementById('yearReviewOverlay').classList.remove('open');
 });
-document.getElementById('yearReviewOverlay').addEventListener('click', e=>{
-  if(e.target.id === 'yearReviewOverlay') document.getElementById('yearReviewOverlay').classList.remove('open');
-});
-
 /* ---- FEATURE USAGE ANALYTICS EXPORT ---- */
 function showAnalyticsExport(){
   if(myProfile && myProfile.username === 'samannleblanc'){
@@ -5807,9 +5793,6 @@ document.getElementById('shareSendFriendBtn').addEventListener('click', ()=>{
 document.getElementById('sendFriendCloseBtn').addEventListener('click', ()=>{
   document.getElementById('sendFriendOverlay').classList.remove('open');
 });
-document.getElementById('sendFriendOverlay').addEventListener('click', e=>{
-  if(e.target.id === 'sendFriendOverlay') e.currentTarget.classList.remove('open');
-});
 document.getElementById('sendFriendList').addEventListener('click', async e=>{
   const row = e.target.closest('[data-send-friend]');
   if(!row) return;
@@ -5850,9 +5833,6 @@ document.getElementById('sendFriendDoneBtn').addEventListener('click', ()=>{
   trackEvent('share_send_done_open_messages');
   document.getElementById('sendFriendOverlay').classList.remove('open');
   if(typeof window.btfOpenMessages === 'function') window.btfOpenMessages();
-});
-document.getElementById('shareOverlay').addEventListener('click', e=>{
-  if(e.target === e.currentTarget) e.currentTarget.classList.remove('open');
 });
 document.getElementById('shareDownloadBtn').addEventListener('click', async ()=>{
   trackEvent('share_download');
@@ -6444,8 +6424,6 @@ function showDupModal(duplicates, onConfirm){
   cancelBtn.onclick = close;
   confirmBtn.onclick = ()=>{ close(); onConfirm(); };
 }
-document.getElementById('dupOverlay').addEventListener('click', e=>{ if(e.target.id==='dupOverlay') document.getElementById('dupOverlay').classList.remove('open'); });
-
 function handleSave(){
   const title = document.getElementById('f-title').value.trim();
   if(!title){ document.getElementById('f-title').focus(); return; }
@@ -6941,10 +6919,6 @@ document.getElementById('addMusicAlbumBtn').addEventListener('click', ()=>{
 document.getElementById('addMusicCancelBtn').addEventListener('click', ()=>{
   document.getElementById('addMusicOverlay').classList.remove('open');
 });
-document.getElementById('addMusicOverlay').addEventListener('click', e=>{
-  if(e.target.id === 'addMusicOverlay') document.getElementById('addMusicOverlay').classList.remove('open');
-});
-
 /* ---- TOAST NOTIFICATIONS ---- */
 function showToast(msg, duration){
   duration = duration || 5000;
@@ -7068,10 +7042,6 @@ document.getElementById('spotifyImportPauseBtn').addEventListener('click', ()=>{
     document.getElementById('spotifyImportPauseBtn').textContent = importProgressState.paused ? 'Resume' : 'Pause';
   }
 });
-document.getElementById('spotifyImportOverlay').addEventListener('click', e=>{
-  if(e.target.id === 'spotifyImportOverlay') document.getElementById('spotifyImportOverlay').classList.remove('open');
-});
-
 async function fetchSpotifyToken(){
   const CLIENT_ID = 'd53cc1de9d0c4ac0a45483affc63f998';
   const resp = await fetch('https://accounts.spotify.com/api/token', {
@@ -7725,9 +7695,6 @@ document.getElementById('f-explicit-btn').addEventListener('click', ()=>{
   btn.classList.toggle('on', currentExplicit);
   label.textContent = currentExplicit ? 'Explicit' : 'Not explicit';
 });
-document.getElementById('overlay').addEventListener('click', e=>{ if(e.target.id==='overlay') closeModal(); });
-
-
 </script>
 <script>
 /* =========================================================
@@ -7823,7 +7790,6 @@ document.getElementById('clusterSelectedList').addEventListener('click', e=>{
 });
 document.getElementById('clusterCancelBtn').addEventListener('click', closeClusterModal);
 document.getElementById('clusterSaveBtn').addEventListener('click', handleClusterSave);
-document.getElementById('clusterOverlay').addEventListener('click', e=>{ if(e.target.id==='clusterOverlay') closeClusterModal(); });
 document.getElementById('openCluster').addEventListener('click', ()=>{ trackEvent('create_stack'); openClusterModal(); });
 
 /* ---- COLLAB STACKS ---- */
@@ -8066,7 +8032,6 @@ document.getElementById('editClustersToggleBtn').addEventListener('click', ()=>{
   renderClustersList();
 });
 document.getElementById('viewClustersOverlay').addEventListener('click', e=>{
-  if(e.target.id==='viewClustersOverlay'){ document.getElementById('viewClustersOverlay').classList.remove('open'); return; }
   const deleteBtn = e.target.closest('[data-delete-cluster]');
   if(deleteBtn){ deleteCluster(deleteBtn.dataset.deleteCluster); return; }
   const editSongBtn = e.target.closest('[data-edit-song]');
@@ -8137,7 +8102,6 @@ function closeSongStacksPopover(){
 }
 document.getElementById('songStacksCloseBtn').addEventListener('click', closeSongStacksPopover);
 document.getElementById('songStacksOverlay').addEventListener('click', e=>{
-  if(e.target.id==='songStacksOverlay'){ closeSongStacksPopover(); return; }
   const row = e.target.closest('[data-pop-cluster]');
   if(row){
     closeSongStacksPopover();
@@ -8389,9 +8353,6 @@ document.getElementById('otherProfileFriendBtn').addEventListener('click', async
 document.getElementById('otherProfileCloseBtn').addEventListener('click', ()=>{
   document.getElementById('otherProfileOverlay').classList.remove('open');
 });
-document.getElementById('otherProfileOverlay').addEventListener('click', e=>{
-  if(e.target.id==='otherProfileOverlay') document.getElementById('otherProfileOverlay').classList.remove('open');
-});
 document.getElementById('friendRequestsList').addEventListener('click', async e=>{
   trackEvent('friend_request_respond');
   const acceptBtn = e.target.closest('[data-accept-request]');
@@ -8416,10 +8377,6 @@ document.getElementById('friendRequestsList').addEventListener('click', async e=
 document.getElementById('discoverCloseBtn').addEventListener('click', ()=>{
   document.getElementById('discoverOverlay').classList.remove('open');
 });
-document.getElementById('discoverOverlay').addEventListener('click', e=>{
-  if(e.target.id==='discoverOverlay') document.getElementById('discoverOverlay').classList.remove('open');
-});
-
 /* =========================================================
    FRIEND CATALOGUEX PAGE  (routed at #/u/username)
    ========================================================= */
@@ -8562,10 +8519,6 @@ document.getElementById('openLinkedToMeBtn').addEventListener('click', ()=>{
 document.getElementById('linkedToMeCloseBtn').addEventListener('click', ()=>{
   document.getElementById('linkedToMeOverlay').classList.remove('open');
 });
-document.getElementById('linkedToMeOverlay').addEventListener('click', e=>{
-  if(e.target.id === 'linkedToMeOverlay') document.getElementById('linkedToMeOverlay').classList.remove('open');
-});
-
 /* ---- TASTE MATCH (fun social feature #1 + #2) ---- */
 function jaccardSets(setA, setB){
   if(setA.size===0 && setB.size===0) return 0;
@@ -8716,9 +8669,6 @@ document.getElementById('leaderboardBtn').addEventListener('click', ()=>{
 document.getElementById('leaderboardCloseBtn').addEventListener('click', ()=>{
   document.getElementById('leaderboardOverlay').classList.remove('open');
 });
-document.getElementById('leaderboardOverlay').addEventListener('click', e=>{
-  if(e.target.id === 'leaderboardOverlay') document.getElementById('leaderboardOverlay').classList.remove('open');
-});
 document.getElementById('leaderboardList').addEventListener('click', e=>{
   const row = e.target.closest('[data-user-id]');
   if(row){
@@ -8810,16 +8760,9 @@ document.getElementById('friendCompareBtn').addEventListener('click', ()=>{
 document.getElementById('compareCloseBtn').addEventListener('click', ()=>{
   document.getElementById('compareOverlay').classList.remove('open');
 });
-document.getElementById('compareOverlay').addEventListener('click', e=>{
-  if(e.target.id === 'compareOverlay') document.getElementById('compareOverlay').classList.remove('open');
-});
 document.getElementById('compareTrackCloseBtn').addEventListener('click', ()=>{
   document.getElementById('compareTrackOverlay').classList.remove('open');
 });
-document.getElementById('compareTrackOverlay').addEventListener('click', e=>{
-  if(e.target.id === 'compareTrackOverlay') document.getElementById('compareTrackOverlay').classList.remove('open');
-});
-
 function renderCompareView(){
   const content = document.getElementById('compareContent');
   const mySongs = songs.filter(s=>!s.archived);
@@ -9148,7 +9091,6 @@ window.addEventListener('hashchange', checkRoute);
 document.getElementById('addTitleBox').addEventListener('click', ()=>addTitleBoxRow(true));
 document.getElementById('multiCancelBtn').addEventListener('click', closeMultiModal);
 document.getElementById('multiSaveBtn').addEventListener('click', handleMultiSave);
-document.getElementById('multiOverlay').addEventListener('click', e=>{ if(e.target.id==='multiOverlay') closeMultiModal(); });
 document.getElementById('clearClusterFilter').addEventListener('click', ()=>{ trackEvent('clear_cluster_filter'); clusterFilterId = null; render(); });
 document.getElementById('clearRemindsFilter').addEventListener('click', ()=>{ trackEvent('clear_reminds_filter'); remindsFilterId = null; render(); });
 let searchDebounceTimer = null;
@@ -9261,9 +9203,6 @@ document.getElementById('p-friend-list').addEventListener('click', e=>{
 });
 document.getElementById('personCancelBtn').addEventListener('click', ()=>{
   document.getElementById('personOverlay').classList.remove('open');
-});
-document.getElementById('personOverlay').addEventListener('click', e=>{
-  if(e.target.id==='personOverlay') document.getElementById('personOverlay').classList.remove('open');
 });
 document.getElementById('personSaveBtn').addEventListener('click', ()=>{
   trackEvent('save_person');
@@ -9538,9 +9477,6 @@ document.getElementById('stickerWipOkBtn').addEventListener('click', ()=>{
   }
   document.getElementById('stickerWipOverlay').classList.remove('open');
 });
-document.getElementById('stickerWipOverlay').addEventListener('click', e=>{
-  if(e.target.id === 'stickerWipOverlay') document.getElementById('stickerWipOverlay').classList.remove('open');
-});
 let _attachSongId = null;
 function setStickerModalMode(){
   const t = document.getElementById('stickerTitle');
@@ -9577,9 +9513,6 @@ function closeStickerOverlay(){
   setStickerModalMode();
   document.getElementById('stickerOverlay').classList.remove('open');
 }
-document.getElementById('stickerOverlay').addEventListener('click', e=>{
-  if(e.target.id==='stickerOverlay') closeStickerOverlay();
-});
 document.getElementById('stickerDoneBtn').addEventListener('click', ()=>{
   closeStickerOverlay();
 });
@@ -9810,13 +9743,6 @@ document.getElementById('stickerCropCancelBtn').addEventListener('click', ()=>{
   _cropQueue = [];
   document.getElementById('stickerCropOverlay').classList.remove('open');
 });
-document.getElementById('stickerCropOverlay').addEventListener('click', e=>{
-  if(e.target.id==='stickerCropOverlay'){
-    _cropQueue = [];
-    document.getElementById('stickerCropOverlay').classList.remove('open');
-  }
-});
-
 async function uploadStickerBlob(blob){
   if(!currentUserId || !sb || !sb.storage) return null;
   try{
@@ -9892,7 +9818,6 @@ document.getElementById('wishSearchResults').addEventListener('click', e=>{
 });
 document.getElementById('openWish').addEventListener('click', ()=>{ trackEvent('open_wishlist_add'); openWishModal(null); });
 document.getElementById('wishCancelBtn').addEventListener('click', closeWishModal);
-document.getElementById('wishOverlay').addEventListener('click', e=>{ if(e.target.id==='wishOverlay') closeWishModal(); });
 document.getElementById('wishSaveBtn').addEventListener('click', ()=>{
   trackEvent('save_wishlist');
   const title = document.getElementById('w-title').value.trim();
@@ -11315,9 +11240,6 @@ document.getElementById('myProfileBtn').addEventListener('click', ()=>{
 document.getElementById('myProfileCloseBtn').addEventListener('click', ()=>{
   document.getElementById('myProfileOverlay').classList.remove('open');
 });
-document.getElementById('myProfileOverlay').addEventListener('click', e=>{
-  if(e.target.id==='myProfileOverlay') document.getElementById('myProfileOverlay').classList.remove('open');
-});
 document.getElementById('shareProfileBtn').addEventListener('click', ()=>{
   trackEvent('share_profile_link');
   if(!myProfile || !myProfile.username) return;
@@ -11349,10 +11271,6 @@ document.getElementById('openEditProfileBtn').addEventListener('click', ()=>{ tr
 document.getElementById('editProfileCancelBtn').addEventListener('click', ()=>{
   document.getElementById('editProfileOverlay').classList.remove('open');
 });
-document.getElementById('editProfileOverlay').addEventListener('click', e=>{
-  if(e.target.id==='editProfileOverlay') document.getElementById('editProfileOverlay').classList.remove('open');
-});
-
 /* ---- DATA EXPORT (GDPR Art. 20) ---- */
 function mergeById(current, incoming, tsFn){
   const map = new Map();
@@ -11510,9 +11428,6 @@ document.getElementById('openChangePasswordBtn').addEventListener('click', ()=>{
 });
 document.getElementById('passwordCancelBtn').addEventListener('click', ()=>{
   document.getElementById('passwordOverlay').classList.remove('open');
-});
-document.getElementById('passwordOverlay').addEventListener('click', e=>{
-  if(e.target.id==='passwordOverlay') document.getElementById('passwordOverlay').classList.remove('open');
 });
 document.getElementById('passwordSaveBtn').addEventListener('click', async ()=>{
   trackEvent('change_password');
@@ -11827,9 +11742,6 @@ document.getElementById('passwordSaveBtn').addEventListener('click', async ()=>{
   function initMsgEvents(){
     document.getElementById('messagesBtn').addEventListener('click', ()=>{ trackEvent('open_messages'); openMessagesModal(); });
     document.getElementById('messagesCloseBtn').addEventListener('click', ()=>{ document.getElementById('messagesOverlay').classList.remove('open'); });
-    document.getElementById('messagesOverlay').addEventListener('click', e=>{
-      if(e.target.id === 'messagesOverlay') document.getElementById('messagesOverlay').classList.remove('open');
-    });
     document.getElementById('msgFriendList').addEventListener('click', e=>{
       trackEvent('switch_thread');
       const btn = e.target.closest('[data-msg-friend]');
@@ -11841,9 +11753,6 @@ document.getElementById('passwordSaveBtn').addEventListener('click', async ()=>{
     });
     document.getElementById('msgSongBtn').addEventListener('click', ()=>{ trackEvent('open_msg_song_picker'); openMsgSongPicker(); });
     document.getElementById('msgSongCancelBtn').addEventListener('click', ()=>{ document.getElementById('msgSongOverlay').classList.remove('open'); });
-    document.getElementById('msgSongOverlay').addEventListener('click', e=>{
-      if(e.target.id === 'msgSongOverlay') document.getElementById('msgSongOverlay').classList.remove('open');
-    });
     document.getElementById('msgSongSearch').addEventListener('input', e=>{
       clearTimeout(msgSongSearchDebounce);
       const q = e.target.value;
@@ -12741,7 +12650,6 @@ document.getElementById('passwordSaveBtn').addEventListener('click', async ()=>{
     if(closeBtn) closeBtn.addEventListener('click', closeSotdScheduler);
     const overlay = document.getElementById('sotdScheduleOverlay');
     if(overlay){
-      overlay.addEventListener('click', e=>{ if(e.target.id === 'sotdScheduleOverlay') closeSotdScheduler(); });
       overlay.addEventListener('click', e=>{
         const searchBtn = e.target.closest('[data-sched-search]');
         if(searchBtn){ schedSearch(searchBtn.dataset.schedSearch); return; }
@@ -12847,9 +12755,6 @@ document.getElementById('notifBtn').addEventListener('click', ()=>{
 });
 document.getElementById('notifCloseBtn').addEventListener('click', ()=>{
   document.getElementById('notifOverlay').classList.remove('open');
-});
-document.getElementById('notifOverlay').addEventListener('click', e=>{
-  if(e.target.id === 'notifOverlay') document.getElementById('notifOverlay').classList.remove('open');
 });
 document.getElementById('notifMarkReadBtn').addEventListener('click', ()=>{ trackEvent('mark_all_read'); markAllNotifsRead(); });
 
@@ -13201,10 +13106,6 @@ document.getElementById('feedBtn').addEventListener('click', ()=>{
 document.getElementById('feedCloseBtn').addEventListener('click', ()=>{
   document.getElementById('feedOverlay').classList.remove('open');
 });
-document.getElementById('feedOverlay').addEventListener('click', e=>{
-  if(e.target.id === 'feedOverlay') document.getElementById('feedOverlay').classList.remove('open');
-});
-
 /* ---- ANALYTICS CONSENT ---- */
 const ANALYTICS_CONSENT_KEY = 'bayoutonefm-analytics-consent';
 function getAnalyticsConsent(){ return localStorage.getItem(ANALYTICS_CONSENT_KEY); }

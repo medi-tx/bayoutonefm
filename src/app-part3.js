@@ -334,9 +334,6 @@ document.addEventListener('DOMContentLoaded', ()=>{
   document.getElementById('themeCloseBtn').addEventListener('click', ()=>{
     document.getElementById('themeOverlay').classList.remove('open');
   });
-  document.getElementById('themeOverlay').addEventListener('click', e=>{
-    if(e.target.id==='themeOverlay') document.getElementById('themeOverlay').classList.remove('open');
-  });
   document.addEventListener('keydown', e=>{
     if(e.key==='Escape') document.getElementById('themeOverlay').classList.remove('open');
   });
@@ -1146,9 +1143,6 @@ document.getElementById('statsBtn').addEventListener('click', ()=>{ trackEvent('
 document.getElementById('statsCloseBtn').addEventListener('click', ()=>{
   document.getElementById('statsOverlay').classList.remove('open');
 });
-document.getElementById('statsOverlay').addEventListener('click', e=>{
-  if(e.target === e.currentTarget) e.currentTarget.classList.remove('open');
-});
 document.getElementById('songDbBtn').addEventListener('click', ()=>{
   if(localStorage.getItem('bayoutonefm-songdb-info-seen')){
     window.location.href = 'songdb.html';
@@ -1163,10 +1157,6 @@ document.getElementById('songDbInfoCloseBtn').addEventListener('click', ()=>{
   document.getElementById('songDbInfoOverlay').classList.remove('open');
   window.location.href = 'songdb.html';
 });
-document.getElementById('songDbInfoOverlay').addEventListener('click', e=>{
-  if(e.target === e.currentTarget) e.currentTarget.classList.remove('open');
-});
-
 /* ---- EXPORT BACKUP ---- */
 document.getElementById('exportBackupBtn').addEventListener('click', ()=>{
   trackEvent('export_backup');
@@ -1286,10 +1276,6 @@ document.getElementById('yearReviewBtn').addEventListener('click', ()=>{ trackEv
 document.getElementById('yrCloseBtn').addEventListener('click', ()=>{
   document.getElementById('yearReviewOverlay').classList.remove('open');
 });
-document.getElementById('yearReviewOverlay').addEventListener('click', e=>{
-  if(e.target.id === 'yearReviewOverlay') document.getElementById('yearReviewOverlay').classList.remove('open');
-});
-
 /* ---- FEATURE USAGE ANALYTICS EXPORT ---- */
 function showAnalyticsExport(){
   if(myProfile && myProfile.username === 'samannleblanc'){
@@ -1915,9 +1901,6 @@ document.getElementById('shareSendFriendBtn').addEventListener('click', ()=>{
 document.getElementById('sendFriendCloseBtn').addEventListener('click', ()=>{
   document.getElementById('sendFriendOverlay').classList.remove('open');
 });
-document.getElementById('sendFriendOverlay').addEventListener('click', e=>{
-  if(e.target.id === 'sendFriendOverlay') e.currentTarget.classList.remove('open');
-});
 document.getElementById('sendFriendList').addEventListener('click', async e=>{
   const row = e.target.closest('[data-send-friend]');
   if(!row) return;
@@ -1958,9 +1941,6 @@ document.getElementById('sendFriendDoneBtn').addEventListener('click', ()=>{
   trackEvent('share_send_done_open_messages');
   document.getElementById('sendFriendOverlay').classList.remove('open');
   if(typeof window.btfOpenMessages === 'function') window.btfOpenMessages();
-});
-document.getElementById('shareOverlay').addEventListener('click', e=>{
-  if(e.target === e.currentTarget) e.currentTarget.classList.remove('open');
 });
 document.getElementById('shareDownloadBtn').addEventListener('click', async ()=>{
   trackEvent('share_download');
@@ -2552,8 +2532,6 @@ function showDupModal(duplicates, onConfirm){
   cancelBtn.onclick = close;
   confirmBtn.onclick = ()=>{ close(); onConfirm(); };
 }
-document.getElementById('dupOverlay').addEventListener('click', e=>{ if(e.target.id==='dupOverlay') document.getElementById('dupOverlay').classList.remove('open'); });
-
 function handleSave(){
   const title = document.getElementById('f-title').value.trim();
   if(!title){ document.getElementById('f-title').focus(); return; }
@@ -3049,10 +3027,6 @@ document.getElementById('addMusicAlbumBtn').addEventListener('click', ()=>{
 document.getElementById('addMusicCancelBtn').addEventListener('click', ()=>{
   document.getElementById('addMusicOverlay').classList.remove('open');
 });
-document.getElementById('addMusicOverlay').addEventListener('click', e=>{
-  if(e.target.id === 'addMusicOverlay') document.getElementById('addMusicOverlay').classList.remove('open');
-});
-
 /* ---- TOAST NOTIFICATIONS ---- */
 function showToast(msg, duration){
   duration = duration || 5000;
@@ -3176,10 +3150,6 @@ document.getElementById('spotifyImportPauseBtn').addEventListener('click', ()=>{
     document.getElementById('spotifyImportPauseBtn').textContent = importProgressState.paused ? 'Resume' : 'Pause';
   }
 });
-document.getElementById('spotifyImportOverlay').addEventListener('click', e=>{
-  if(e.target.id === 'spotifyImportOverlay') document.getElementById('spotifyImportOverlay').classList.remove('open');
-});
-
 async function fetchSpotifyToken(){
   const CLIENT_ID = 'd53cc1de9d0c4ac0a45483affc63f998';
   const resp = await fetch('https://accounts.spotify.com/api/token', {
@@ -3833,6 +3803,3 @@ document.getElementById('f-explicit-btn').addEventListener('click', ()=>{
   btn.classList.toggle('on', currentExplicit);
   label.textContent = currentExplicit ? 'Explicit' : 'Not explicit';
 });
-document.getElementById('overlay').addEventListener('click', e=>{ if(e.target.id==='overlay') closeModal(); });
-
-

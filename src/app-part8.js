@@ -292,9 +292,6 @@
   function initMsgEvents(){
     document.getElementById('messagesBtn').addEventListener('click', ()=>{ trackEvent('open_messages'); openMessagesModal(); });
     document.getElementById('messagesCloseBtn').addEventListener('click', ()=>{ document.getElementById('messagesOverlay').classList.remove('open'); });
-    document.getElementById('messagesOverlay').addEventListener('click', e=>{
-      if(e.target.id === 'messagesOverlay') document.getElementById('messagesOverlay').classList.remove('open');
-    });
     document.getElementById('msgFriendList').addEventListener('click', e=>{
       trackEvent('switch_thread');
       const btn = e.target.closest('[data-msg-friend]');
@@ -306,9 +303,6 @@
     });
     document.getElementById('msgSongBtn').addEventListener('click', ()=>{ trackEvent('open_msg_song_picker'); openMsgSongPicker(); });
     document.getElementById('msgSongCancelBtn').addEventListener('click', ()=>{ document.getElementById('msgSongOverlay').classList.remove('open'); });
-    document.getElementById('msgSongOverlay').addEventListener('click', e=>{
-      if(e.target.id === 'msgSongOverlay') document.getElementById('msgSongOverlay').classList.remove('open');
-    });
     document.getElementById('msgSongSearch').addEventListener('input', e=>{
       clearTimeout(msgSongSearchDebounce);
       const q = e.target.value;

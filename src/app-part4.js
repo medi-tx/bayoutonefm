@@ -92,7 +92,6 @@ document.getElementById('clusterSelectedList').addEventListener('click', e=>{
 });
 document.getElementById('clusterCancelBtn').addEventListener('click', closeClusterModal);
 document.getElementById('clusterSaveBtn').addEventListener('click', handleClusterSave);
-document.getElementById('clusterOverlay').addEventListener('click', e=>{ if(e.target.id==='clusterOverlay') closeClusterModal(); });
 document.getElementById('openCluster').addEventListener('click', ()=>{ trackEvent('create_stack'); openClusterModal(); });
 
 /* ---- COLLAB STACKS ---- */
@@ -335,7 +334,6 @@ document.getElementById('editClustersToggleBtn').addEventListener('click', ()=>{
   renderClustersList();
 });
 document.getElementById('viewClustersOverlay').addEventListener('click', e=>{
-  if(e.target.id==='viewClustersOverlay'){ document.getElementById('viewClustersOverlay').classList.remove('open'); return; }
   const deleteBtn = e.target.closest('[data-delete-cluster]');
   if(deleteBtn){ deleteCluster(deleteBtn.dataset.deleteCluster); return; }
   const editSongBtn = e.target.closest('[data-edit-song]');
@@ -406,7 +404,6 @@ function closeSongStacksPopover(){
 }
 document.getElementById('songStacksCloseBtn').addEventListener('click', closeSongStacksPopover);
 document.getElementById('songStacksOverlay').addEventListener('click', e=>{
-  if(e.target.id==='songStacksOverlay'){ closeSongStacksPopover(); return; }
   const row = e.target.closest('[data-pop-cluster]');
   if(row){
     closeSongStacksPopover();

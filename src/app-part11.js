@@ -80,9 +80,6 @@ document.getElementById('notifBtn').addEventListener('click', ()=>{
 document.getElementById('notifCloseBtn').addEventListener('click', ()=>{
   document.getElementById('notifOverlay').classList.remove('open');
 });
-document.getElementById('notifOverlay').addEventListener('click', e=>{
-  if(e.target.id === 'notifOverlay') document.getElementById('notifOverlay').classList.remove('open');
-});
 document.getElementById('notifMarkReadBtn').addEventListener('click', ()=>{ trackEvent('mark_all_read'); markAllNotifsRead(); });
 
 /* ---- REALTIME NOTIFICATIONS (Supabase Realtime) ---- */
@@ -433,10 +430,6 @@ document.getElementById('feedBtn').addEventListener('click', ()=>{
 document.getElementById('feedCloseBtn').addEventListener('click', ()=>{
   document.getElementById('feedOverlay').classList.remove('open');
 });
-document.getElementById('feedOverlay').addEventListener('click', e=>{
-  if(e.target.id === 'feedOverlay') document.getElementById('feedOverlay').classList.remove('open');
-});
-
 /* ---- ANALYTICS CONSENT ---- */
 const ANALYTICS_CONSENT_KEY = 'bayoutonefm-analytics-consent';
 function getAnalyticsConsent(){ return localStorage.getItem(ANALYTICS_CONSENT_KEY); }

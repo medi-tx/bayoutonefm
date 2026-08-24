@@ -171,7 +171,6 @@
     if(closeBtn) closeBtn.addEventListener('click', closeSotdScheduler);
     const overlay = document.getElementById('sotdScheduleOverlay');
     if(overlay){
-      overlay.addEventListener('click', e=>{ if(e.target.id === 'sotdScheduleOverlay') closeSotdScheduler(); });
       overlay.addEventListener('click', e=>{
         const searchBtn = e.target.closest('[data-sched-search]');
         if(searchBtn){ schedSearch(searchBtn.dataset.schedSearch); return; }
