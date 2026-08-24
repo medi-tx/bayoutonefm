@@ -550,6 +550,27 @@ function cardStarsHtml(s){
 function vibeBarHtml(label, v, cls){
   return `<div class="vibe-bar-row"><span class="vibe-bar-label">${label}</span><span class="vibe-bar-track"><span class="vibe-bar-fill ${cls}" style="width:${clampNum(v||0,0,100)}%;"></span></span></div>`;
 }
+function cardRatingsStripHtml(s){
+  const st = s.stars || {};
+  const hasStars = !!(st.lyrics || st.vocals || st.aesthetic);
+  const hasVibes = s.vibeEnergy !== null && s.vibeEnergy !== undefined;
+  if(!hasStars && !hasVibes) return '';
+  let out = '<div class="card-ratings">';
+  if(hasStars){
+    out += `<div class="cr-stars">`
+      + `<span title="Lyrics ${(st.lyrics||0)}/5">🎤${starsHtml(st.lyrics)}</span>`
+      + `<span title="Vocals ${(st.vocals||0)}/5">🎶${starsHtml(st.vocals)}</span>`
+      + `<span title="Aesthetic ${(st.aesthetic||0)}/5">🎨${starsHtml(st.aesthetic)}</span>`
+      + `</div>`;
+  }
+  if(hasVibes){
+    out += `<div class="cr-vibes">`
+      + `<span class="vb energy" title="⚡ Energy ${s.vibeEnergy}"><i style="width:${clampNum(s.vibeEnergy,0,100)}%;"></i></span>`
+      + `<span class="vb mood" title="🌗 Mood ${s.vibeMood != null ? s.vibeMood : 0}"><i style="width:${clampNum(s.vibeMood||0,0,100)}%;"></i></span>`
+      + `</div>`;
+  }
+  return out + '</div>';
+}
 function tierBandLabel(t){
   const b = bandForTier(t);
   return b ? `${b[0]}–${b[1]}` : '';
@@ -742,8 +763,7 @@ function songCardHtml(s, clusterCounts){
           ${(s.genres&&s.genres.length) ? `<span class="meta-genres">· ${s.genres.map(g=>escapeHtml(g)).join(', ')}</span>` : (showEx ? `<span class="ex">· e.g. Rock, Funk/Soul</span>` : '')}
         </div>
         <div class="tier-row">${renderTierBadge(s.tier)}${scoreChipHtml(s)}</div>
-        ${cardStarsHtml(s)}
-        ${cardVibesHtml(s)}
+        ${cardRatingsStripHtml(s)}
         <div class="preview-row">
           <button type="button" class="preview-btn" data-preview="${escapeAttr(s.id)}" title="Play a 30-second preview" aria-label="Play 30-second preview">▶</button>
           <span class="preview-hint">30-sec preview</span>
