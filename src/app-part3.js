@@ -552,7 +552,7 @@ function vibeBarHtml(label, v, cls){
 }
 function cardRatingsStripHtml(s){
   const st = s.stars || {};
-  const hasStars = !!(st.lyrics || st.vocals || st.aesthetic);
+  const hasStars = !!(st.lyrics || st.vocals || st.replay || st.production);
   const hasVibes = s.vibeEnergy !== null && s.vibeEnergy !== undefined;
   if(!hasStars && !hasVibes) return '';
   let out = '<div class="card-ratings">';
@@ -564,13 +564,17 @@ function cardRatingsStripHtml(s){
       + `<span class="cr-ve" title="stormy">🌧️</span>`
       + `<span class="vb mood" title="🌗 Mood ${s.vibeMood != null ? s.vibeMood : 0}"><i style="width:${clampNum(s.vibeMood||0,0,100)}%;"></i></span>`
       + `<span class="cr-ve" title="sunny">☀️</span>`
+      + `<span class="cr-ve" title="new">✨</span>`
+      + `<span class="vb nostalgia" title="🕰️ Nostalgia ${s.vibeNostalgia != null ? s.vibeNostalgia : 0}"><i style="width:${clampNum(s.vibeNostalgia||0,0,100)}%;"></i></span>`
+      + `<span class="cr-ve" title="familiar">📻</span>`
       + `</div>`;
   }
   if(hasStars){
     out += `<div class="cr-stars">`
       + `<span title="Lyrics ${(st.lyrics||0)}/5">🎤${starsHtml(st.lyrics)}</span>`
       + `<span title="Vocals ${(st.vocals||0)}/5">🎶${starsHtml(st.vocals)}</span>`
-      + `<span title="Aesthetic ${(st.aesthetic||0)}/5">🎨${starsHtml(st.aesthetic)}</span>`
+      + `<span title="Replay-ability ${(st.replay||0)}/5">🔁${starsHtml(st.replay)}</span>`
+      + `<span title="Production ${(st.production||0)}/5">🎛️${starsHtml(st.production)}</span>`
       + `</div>`;
   }
   return out + '</div>';
@@ -597,7 +601,6 @@ function cbRemindsNames(s){
 }
 function cardBackHtml(s){
   const st = s.stars || {};
-  const rows = [['🎤','Lyrics',st.lyrics],['🎶','Vocals',st.vocals],['🎨','Aesthetic',st.aesthetic]];
   const score = (s.score === null || s.score === undefined || s.score === '') ? null : s.score;
   return `
     <div class="card-back">
@@ -621,11 +624,13 @@ function cardBackHtml(s){
       <div class="cb-fields">
         ${cbField('🎤 Lyrics', starsHtml(st.lyrics) + ` <span class="cb-star-num">${st.lyrics||0}/5</span>`)}
         ${cbField('🎶 Vocals', starsHtml(st.vocals) + ` <span class="cb-star-num">${st.vocals||0}/5</span>`)}
-        ${cbField('🎨 Aesthetic', starsHtml(st.aesthetic) + ` <span class="cb-star-num">${st.aesthetic||0}/5</span>`)}
+        ${cbField('🔁 Replay-ability', starsHtml(st.replay) + ` <span class="cb-star-num">${st.replay||0}/5</span>`)}
+        ${cbField('🎛️ Production', starsHtml(st.production) + ` <span class="cb-star-num">${st.production||0}/5</span>`)}
       </div>
       <div class="vibe-bars">
         ${vibeBarHtml('⚡ Energy · chill ↔ electric '+(s.vibeEnergy != null ? s.vibeEnergy : 0), s.vibeEnergy, 'energy')}
         ${vibeBarHtml('🌗 Mood · stormy ↔ sunny '+(s.vibeMood != null ? s.vibeMood : 0), s.vibeMood, 'mood')}
+        ${vibeBarHtml('🕰️ Nostalgia · new ↔ familiar '+(s.vibeNostalgia != null ? s.vibeNostalgia : 0), s.vibeNostalgia, 'nostalgia')}
       </div>
       <div class="cb-fields">
         ${cbField('Thoughts', s.why ? escapeHtml(s.why) : '')}
@@ -2397,10 +2402,11 @@ function openModal(song){
   document.getElementById('f-credit').value = song?.credit || '';
   document.getElementById('f-track').value = song?.trackNumber || '';
   document.getElementById('f-score').value = (song?.score === null || song?.score === undefined) ? '' : song.score;
-  currentStars = { lyrics:(song?.stars&&song.stars.lyrics)||0, vocals:(song?.stars&&song.stars.vocals)||0, aesthetic:(song?.stars&&song.stars.aesthetic)||0 };
+  currentStars = { lyrics:(song?.stars&&song.stars.lyrics)||0, vocals:(song?.stars&&song.stars.vocals)||0, replay:(song?.stars&&song.stars.replay)||0, production:(song?.stars&&song.stars.production)||0 };
   renderStarPickers();
   document.getElementById('f-vibe-energy').value = (song?.vibeEnergy === null || song?.vibeEnergy === undefined) ? 50 : song.vibeEnergy;
   document.getElementById('f-vibe-mood').value = (song?.vibeMood === null || song?.vibeMood === undefined) ? 50 : song.vibeMood;
+  document.getElementById('f-vibe-nostalgia').value = (song?.vibeNostalgia === null || song?.vibeNostalgia === undefined) ? 50 : song.vibeNostalgia;
   currentCoverArt = song?.coverArt || null;
   currentExplicit = song?.explicit || false;
   currentFav = song?.favorited || false;
@@ -2448,9 +2454,9 @@ function renderTierPicker(){
     el.appendChild(btn);
   });
 }
-let currentStars = { lyrics:0, vocals:0, aesthetic:0 };
+let currentStars = { lyrics:0, vocals:0, replay:0, production:0 };
 function renderStarPickers(){
-  [['lyrics','f-stars-lyrics'],['vocals','f-stars-vocals'],['aesthetic','f-stars-aesthetic']].forEach(([key,id])=>{
+  [['lyrics','f-stars-lyrics'],['vocals','f-stars-vocals'],['replay','f-stars-replay'],['production','f-stars-production']].forEach(([key,id])=>{
     const el = document.getElementById(id);
     if(!el) return;
     el.innerHTML = '';
@@ -2535,9 +2541,10 @@ function handleSave(){
     tier: currentTier,
     trackNumber: document.getElementById('f-track').value.trim() || null,
     score: (()=>{ const v = parseInt(document.getElementById('f-score').value, 10); return isNaN(v) ? null : Math.max(0, Math.min(100, v)); })(),
-    stars: { lyrics: currentStars.lyrics || 0, vocals: currentStars.vocals || 0, aesthetic: currentStars.aesthetic || 0 },
+    stars: { lyrics: currentStars.lyrics || 0, vocals: currentStars.vocals || 0, replay: currentStars.replay || 0, production: currentStars.production || 0 },
     vibeEnergy: clampNum(parseInt(document.getElementById('f-vibe-energy').value, 10) || 0, 0, 100),
     vibeMood: clampNum(parseInt(document.getElementById('f-vibe-mood').value, 10) || 0, 0, 100),
+    vibeNostalgia: clampNum(parseInt(document.getElementById('f-vibe-nostalgia').value, 10) || 0, 0, 100),
     explicit: currentExplicit,
     favorited: currentFav,
     source: currentSongSource

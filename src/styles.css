@@ -1503,6 +1503,7 @@
   .vb i{ position:absolute; left:0; top:0; bottom:0; display:block; border-radius:4px; }
   .vb.energy i{ background:linear-gradient(90deg,#7ec8e3,#ff4d6d); }
   .vb.mood i{ background:linear-gradient(90deg,#5b4b8a,#ffe08a); }
+  .vb.nostalgia i{ background:linear-gradient(90deg,#5eead4,#b45309); }
   /* SCORE CHIP */
   .score-chip{
     margin-left:7px; display:inline-block; vertical-align:2px;
@@ -1539,6 +1540,7 @@
   }
   .vibe-range.energy{ background:linear-gradient(90deg,#7ec8e3,#ffd166,#ff4d6d); }
   .vibe-range.mood{ background:linear-gradient(90deg,#5b4b8a,#b39ddb,#ffe08a); }
+  .vibe-range.nostalgia{ background:linear-gradient(90deg,#5eead4,#fbbf24,#b45309); }
   .vibe-range::-webkit-slider-thumb{
     -webkit-appearance:none; appearance:none;
     width:20px; height:20px; border-radius:50%;
