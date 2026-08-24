@@ -524,6 +524,36 @@ function renderTierBadge(tier){
   if(!tier) return `<span class="tier-badge tier-none">UNRATED</span>`;
   return `<span class="tier-badge tier-${tier}">${tier}</span>`;
 }
+const TIER_BANDS = { '★':[85,100], 'S':[70,84], 'A':[55,69], 'B':[40,54], 'C':[0,39] };
+function bandForTier(t){ return TIER_BANDS[t] || null; }
+function tierForScore(n){
+  const keys = ['★','S','A','B','C'];
+  for(const t of keys){ const b = TIER_BANDS[t]; if(n >= b[0] && n <= b[1]) return t; }
+  return null;
+}
+function scoreChipHtml(s){
+  if(s.score === null || s.score === undefined || s.score === '') return '';
+  return `<span class="score-chip" title="Exact score">${escapeHtml(String(s.score))}</span>`;
+}
+function starsHtml(n){
+  n = clampNum(n||0, 0, 5);
+  let out = '';
+  for(let i=1;i<=5;i++) out += `<span class="${i <= n ? 'star-ico on' : 'star-ico'}">★</span>`;
+  return out;
+}
+function cardStarsHtml(s){
+  const st = s.stars || {};
+  const rows = [['🎤','Lyrics',st.lyrics],['🎶','Vocals',st.vocals],['🎨','Aesthetic',st.aesthetic]].filter(r=>r[2]);
+  if(!rows.length) return '';
+  return `<div class="card-stars">${rows.map(([ico,label,n])=>`<span class="card-star-cat" title="${label}: ${n}/5 stars"><span class="cs-ico">${ico}</span><span class="star-ico-wrap">${starsHtml(n)}</span></span>`).join('')}</div>`;
+}
+function vibeBarHtml(label, v, cls){
+  return `<div class="vibe-bar-row"><span class="vibe-bar-label">${label}</span><span class="vibe-bar-track"><span class="vibe-bar-fill ${cls}" style="width:${clampNum(v||0,0,100)}%;"></span></span></div>`;
+}
+function cardVibesHtml(s){
+  if(s.vibeEnergy === null || s.vibeEnergy === undefined) return '';
+  return `<div class="vibe-bars">${vibeBarHtml('⚡ Energy', s.vibeEnergy, 'energy')}${vibeBarHtml('🌗 Mood', s.vibeMood, 'mood')}</div>`;
+}
 function tierColor(tier){
   return {'★':'var(--star)',S:'var(--teal)',A:'var(--rose)',B:'var(--lilac)',C:'var(--sage)'}[tier]||'';
 }
@@ -676,14 +706,16 @@ function songCardHtml(s, clusterCounts){
           <div class="title-stack">
             ${s.archived ? '<span class="archived-badge">ARCHIVED</span>' : ''}
             <p class="track-title" style="${s.tier ? 'color:'+tierColor(s.tier) : ''}">${escapeHtml(s.title||'Untitled')}</p>
-            <p class="track-artist">${escapeHtml(formatArtists(s.artists))}${s.album ? ' · '+escapeHtml(s.album) : ''}</p>
+            <p class="track-artist">${escapeHtml(formatArtists(s.artists))}${s.album ? ' · '+escapeHtml(s.album) : ''}${s.trackNumber ? ' · #'+escapeHtml(String(s.trackNumber)) : ''}</p>
           </div>
         </div>
         <div class="meta-row">
           ${s.year ? `<span>${escapeHtml(s.year)}</span>` : (showEx ? `<span class="ex">e.g. 2016</span>` : '')}
           ${(s.genres&&s.genres.length) ? `<span class="meta-genres">· ${s.genres.map(g=>escapeHtml(g)).join(', ')}</span>` : (showEx ? `<span class="ex">· e.g. Rock, Funk/Soul</span>` : '')}
         </div>
-        <div class="tier-row">${renderTierBadge(s.tier)}</div>
+        <div class="tier-row">${renderTierBadge(s.tier)}${scoreChipHtml(s)}</div>
+        ${cardStarsHtml(s)}
+        ${cardVibesHtml(s)}
         <div class="preview-row">
           <button type="button" class="preview-btn" data-preview="${escapeAttr(s.id)}" title="Play a 30-second preview" aria-label="Play 30-second preview">▶</button>
           <span class="preview-hint">30-sec preview</span>
@@ -1705,6 +1737,7 @@ async function openShareCard(opts){
   document.getElementById('shareSub').textContent = sub;
   document.getElementById('shareNote').textContent = 'Generating…';
   document.getElementById('shareOverlay').classList.add('open');
+  document.getElementById('shareSendRow').style.display = (opts.mode === 'song') ? '' : 'none';
   try{
     await drawShareCard(opts);
     document.getElementById('shareNote').textContent = 'Tip: share it in a story, group chat, or wherever you swap music.';
@@ -1735,6 +1768,77 @@ document.getElementById('friendShareTierBoardBtn').addEventListener('click', ()=
 });
 document.getElementById('shareCloseBtn').addEventListener('click', ()=>{
   document.getElementById('shareOverlay').classList.remove('open');
+});
+let _sendFriendSong = null;
+async function openSendFriendPicker(){
+  if(!shareState || shareState.mode !== 'song' || !shareState.song){ alert('Only song cards can be sent in chat.'); return; }
+  _sendFriendSong = shareState.song;
+  const ids = [...myFriendIds];
+  const listEl = document.getElementById('sendFriendList');
+  if(ids.length === 0){
+    listEl.innerHTML = '<p class="profile-empty-note">No friends yet — add friends in 🔎 Discover first.</p>';
+  } else {
+    listEl.innerHTML = '<p class="profile-empty-note">Loading…</p>';
+    const { data, error } = await sb.from('profiles').select('user_id, username, photo').in('user_id', ids);
+    const rows = (error ? [] : (data || [])).filter(p=>p.username);
+    if(!rows.length){
+      listEl.innerHTML = '<p class="profile-empty-note">Could not load your friends.</p>';
+    } else {
+      listEl.innerHTML = rows.map(p=>`
+        <button type="button" class="discover-row" data-send-friend="${escapeAttr(p.user_id)}">
+          ${p.photo ? `<img loading="lazy" decoding="async" src="${escapeAttr(p.photo)}" alt="Profile photo">` : `<span class="drow-fallback is-pfp"></span>`}
+          <span style="flex:1;"><span class="drow-name">@${escapeHtml(p.username)}</span></span>
+          <span class="modal-action-btn accent">Send</span>
+        </button>`).join('');
+    }
+  }
+  document.getElementById('sendFriendOverlay').classList.add('open');
+}
+document.getElementById('shareSendFriendBtn').addEventListener('click', ()=>{
+  trackEvent('share_send_friend_open');
+  openSendFriendPicker();
+});
+document.getElementById('sendFriendCloseBtn').addEventListener('click', ()=>{
+  document.getElementById('sendFriendOverlay').classList.remove('open');
+});
+document.getElementById('sendFriendOverlay').addEventListener('click', e=>{
+  if(e.target.id === 'sendFriendOverlay') e.currentTarget.classList.remove('open');
+});
+document.getElementById('sendFriendList').addEventListener('click', async e=>{
+  const row = e.target.closest('[data-send-friend]');
+  if(!row) return;
+  const friendId = row.dataset.sendFriend;
+  if(!_sendFriendSong || !currentUserId) return;
+  row.style.opacity = '0.5';
+  const song = _sendFriendSong;
+  const payload = {
+    title: song.title || 'Unknown song',
+    artist: formatArtists(song.artists || []),
+    album: song.album || '',
+    year: song.year ? parseInt(song.year, 10) : null,
+    cover: song.coverArt || null,
+    url: geniusLyricsUrl(song.title, song.artists) || '',
+    explicit: !!song.explicit
+  };
+  const { error } = await sb.from('messages').insert({
+    sender_id: currentUserId,
+    recipient_id: friendId,
+    content: '',
+    song: payload
+  });
+  if(error){
+    console.error('Error sending song to friend:', error);
+    alert('Could not send: ' + error.message);
+    row.style.opacity = '';
+    return;
+  }
+  trackEvent('share_send_friend_done');
+  const me = (myProfile && myProfile.username) ? '@' + myProfile.username : 'Someone';
+  sendNotif(friendId, 'message', me + ' sent you a song: ' + payload.title);
+  _sendFriendSong = null;
+  document.getElementById('sendFriendOverlay').classList.remove('open');
+  document.getElementById('shareOverlay').classList.remove('open');
+  if(typeof window.btfOpenChatWith === 'function') window.btfOpenChatWith(friendId);
 });
 document.getElementById('shareOverlay').addEventListener('click', e=>{
   if(e.target === e.currentTarget) e.currentTarget.classList.remove('open');
@@ -2146,6 +2250,12 @@ function render(){
 
   populateFilters();
   renderStickerSections();
+  if(!window.__stkMigScheduled){
+    window.__stkMigScheduled = true;
+    setTimeout(()=>{
+      if(typeof migratePageStickersToCards === 'function') migratePageStickersToCards();
+    }, 600);
+  }
 }
 
 function renderWishlistGrid(){
@@ -2173,7 +2283,7 @@ function renderWishlistGrid(){
           ${coverThumbHtml(s)}
           <div class="title-stack">
             <p class="track-title" style="${s.tier ? 'color:'+tierColor(s.tier) : ''}">${escapeHtml(s.title||'Untitled')}</p>
-            <p class="track-artist">${escapeHtml(formatArtists(s.artists))}${s.album ? ' · '+escapeHtml(s.album) : ''}</p>
+            <p class="track-artist">${escapeHtml(formatArtists(s.artists))}${s.album ? ' · '+escapeHtml(s.album) : ''}${s.trackNumber ? ' · #'+escapeHtml(String(s.trackNumber)) : ''}</p>
           </div>
         </div>
         <div class="meta-row">${s.year ? `<span>${escapeHtml(s.year)}</span>`:''}</div>
@@ -2200,6 +2310,12 @@ function openModal(song){
   document.getElementById('f-tags').value = (song?.tags||[]).join(', ');
   document.getElementById('f-why').value = song?.why || '';
   document.getElementById('f-credit').value = song?.credit || '';
+  document.getElementById('f-track').value = song?.trackNumber || '';
+  document.getElementById('f-score').value = (song?.score === null || song?.score === undefined) ? '' : song.score;
+  currentStars = { lyrics:(song?.stars&&song.stars.lyrics)||0, vocals:(song?.stars&&song.stars.vocals)||0, aesthetic:(song?.stars&&song.stars.aesthetic)||0 };
+  renderStarPickers();
+  document.getElementById('f-vibe-energy').value = (song?.vibeEnergy === null || song?.vibeEnergy === undefined) ? 50 : song.vibeEnergy;
+  document.getElementById('f-vibe-mood').value = (song?.vibeMood === null || song?.vibeMood === undefined) ? 50 : song.vibeMood;
   currentCoverArt = song?.coverArt || null;
   currentExplicit = song?.explicit || false;
   currentFav = song?.favorited || false;
@@ -2235,11 +2351,47 @@ function renderTierPicker(){
     btn.textContent = t;
     btn.addEventListener('click', ()=>{
       currentTier = (currentTier === t) ? null : t;
+      if(currentTier){
+        const band = bandForTier(currentTier);
+        const cur = parseInt(document.getElementById('f-score').value, 10);
+        if(isNaN(cur) || cur < band[0] || cur > band[1]){
+          document.getElementById('f-score').value = Math.round((band[0] + band[1]) / 2);
+        }
+      }
       renderTierPicker();
     });
     el.appendChild(btn);
   });
 }
+let currentStars = { lyrics:0, vocals:0, aesthetic:0 };
+function renderStarPickers(){
+  [['lyrics','f-stars-lyrics'],['vocals','f-stars-vocals'],['aesthetic','f-stars-aesthetic']].forEach(([key,id])=>{
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.innerHTML = '';
+    for(let i=1;i<=5;i++){
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = i <= currentStars[key] ? 'on' : '';
+      b.textContent = '★';
+      b.setAttribute('aria-label', key + ' ' + i + ' stars');
+      b.addEventListener('click', ()=>{
+        currentStars[key] = (currentStars[key] === i) ? 0 : i;
+        renderStarPickers();
+      });
+      el.appendChild(b);
+    }
+  });
+}
+document.getElementById('f-score').addEventListener('input', ()=>{
+  const v = parseInt(document.getElementById('f-score').value, 10);
+  if(isNaN(v)) return;
+  const t = tierForScore(Math.max(0, Math.min(100, v)));
+  if(t && t !== currentTier){
+    currentTier = t;
+    renderTierPicker();
+  }
+});
 
 /* ---- DUPLICATE CHECK ---- */
 function normalizeTitle(s){ return (s||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim(); }
@@ -2296,6 +2448,11 @@ function handleSave(){
     coverArt: currentCoverArt,
     remindsOf: getSelectedReminds('f'),
     tier: currentTier,
+    trackNumber: document.getElementById('f-track').value.trim() || null,
+    score: (()=>{ const v = parseInt(document.getElementById('f-score').value, 10); return isNaN(v) ? null : Math.max(0, Math.min(100, v)); })(),
+    stars: { lyrics: currentStars.lyrics || 0, vocals: currentStars.vocals || 0, aesthetic: currentStars.aesthetic || 0 },
+    vibeEnergy: clampNum(parseInt(document.getElementById('f-vibe-energy').value, 10) || 0, 0, 100),
+    vibeMood: clampNum(parseInt(document.getElementById('f-vibe-mood').value, 10) || 0, 0, 100),
     explicit: currentExplicit,
     favorited: currentFav,
     source: currentSongSource
@@ -2432,6 +2589,7 @@ function addTitleBoxRow(focus, prefill){
   input.className = 'title-box-input';
   input.placeholder = isAlbum ? `Track ${container.children.length+1} title` : `Song ${container.children.length+1} title`;
   if(prefill && prefill.title) input.value = prefill.title;
+  if(prefill && prefill.no) row._trackNo = prefill.no;
 
   const removeBtn = document.createElement('button');
   removeBtn.type = 'button';
@@ -2542,6 +2700,7 @@ function handleMultiSave(){
         id: uid(), pinned:false, createdAt: now, clusterId, clusterName: albumName, title,
         artists: artistVal ? artistVal.split(',').map(a=>a.trim()).filter(Boolean) : sharedArtists,
         tags: tagsVal.split(',').map(t=>t.trim()).filter(Boolean),
+        trackNumber: row._trackNo || null,
         ...shared,
         tier: trackTier || shared.tier
       };

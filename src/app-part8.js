@@ -150,6 +150,10 @@
     renderMsgFriendList();
     await loadMsgThread(friendId);
   }
+  window.btfOpenChatWith = async function(friendId){
+    await openMessagesModal();
+    if(msgFriendProfiles.some(p=>p.user_id === friendId)) openMsgConversation(friendId);
+  };
   function renderMsgBubble(m){
     const mine = m.sender_id === currentUserId;
     const cls = mine ? 'msg-bubble mine' : 'msg-bubble';

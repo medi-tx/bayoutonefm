@@ -594,7 +594,7 @@ function renderFriendGrid(list){
         ${s.coverArt ? `<img loading="lazy" decoding="async" class="cover-thumb" src="${escapeAttr(s.coverArt)}" alt="Album cover">` : ''}
         <div class="title-stack">
           <p class="track-title" style="${s.tier ? 'color:'+tierColor(s.tier) : ''}">${escapeHtml(s.title||'Untitled')}</p>
-          <p class="track-artist">${escapeHtml(formatArtists(s.artists))}${s.album ? ' · '+escapeHtml(s.album) : ''}</p>
+          <p class="track-artist">${escapeHtml(formatArtists(s.artists))}${s.album ? ' · '+escapeHtml(s.album) : ''}${s.trackNumber ? ' · #'+escapeHtml(String(s.trackNumber)) : ''}</p>
         </div>
       </div>
       <div class="meta-row">
@@ -713,7 +713,7 @@ function renderCompareView(){
         ${s.coverArt ? `<img loading="lazy" decoding="async" class="cover-thumb" src="${escapeAttr(s.coverArt)}" alt="Album cover">` : ''}
         <div class="title-stack">
           <p class="track-title" style="${s.tier ? 'color:'+tierColor(s.tier) : ''}">${escapeHtml(s.title||'Untitled')}</p>
-          <p class="track-artist">${escapeHtml(formatArtists(s.artists))}${s.album ? ' · '+escapeHtml(s.album) : ''}</p>
+          <p class="track-artist">${escapeHtml(formatArtists(s.artists))}${s.album ? ' · '+escapeHtml(s.album) : ''}${s.trackNumber ? ' · #'+escapeHtml(String(s.trackNumber)) : ''}</p>
         </div>
       </div>
       <div class="meta-row">
@@ -1307,8 +1307,8 @@ function attachStickerDrag(el){
     if(target && e){
       const tr = target.getBoundingClientRect();
       stickers[idx2].song = target.dataset.id || target.dataset.songId;
-      stickers[idx2].x = Math.round(clampNum((e.clientX - tr.left) / tr.width * 100, 5, 95));
-      stickers[idx2].y = Math.round(clampNum((e.clientY - tr.top) / tr.height * 100, 5, 95));
+      stickers[idx2].x = Math.round(clampNum((e.clientX - tr.left) / tr.width * 100, -20, 120));
+      stickers[idx2].y = Math.round(clampNum((e.clientY - tr.top) / tr.height * 100, -20, 120));
     } else {
       const lr = document.getElementById('stickerLayer').getBoundingClientRect();
       stickers[idx2].song = null;
@@ -1320,6 +1320,34 @@ function attachStickerDrag(el){
   };
   el.addEventListener('pointerup', end);
   el.addEventListener('pointercancel', end);
+}
+
+function migratePageStickersToCards(){
+  if(!stickers.some(s=>s && s.url && !s.song)) return;
+  const layer = document.getElementById('stickerLayer');
+  const grid = document.getElementById('grid');
+  if(!layer || !grid) return;
+  const lr = layer.getBoundingClientRect();
+  if(lr.width < 10) return;
+  const cards = [...grid.querySelectorAll('.card[data-id]')];
+  if(!cards.length) return;
+  let changed = false;
+  stickers.forEach(s=>{
+    if(!s || !s.url || s.song) return;
+    const px = lr.left + (s.x/100)*lr.width;
+    const py = lr.top + (s.y/100)*lr.height;
+    for(const card of cards){
+      const r = card.getBoundingClientRect();
+      if(px >= r.left - 20 && px <= r.right + 20 && py >= r.top - 20 && py <= r.bottom + 20){
+        s.song = card.dataset.id;
+        s.x = Math.round(clampNum((px - r.left)/r.width*100, -15, 115));
+        s.y = Math.round(clampNum((py - r.top)/r.height*100, -15, 115));
+        changed = true;
+        break;
+      }
+    }
+  });
+  if(changed){ saveStickers(); renderStickerSections(); }
 }
 
 /* ---- sticker upload + crop ---- */

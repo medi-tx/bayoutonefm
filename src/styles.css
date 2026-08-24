@@ -1433,6 +1433,60 @@
   }
   .card .sticker-drag{ z-index:9; }
   .card .sticker-img{ width:38px; height:38px; }
+  .card:has(> .sticker-drag){ overflow:visible; }
+  /* CATEGORY STARS */
+  .card-stars{ display:flex; gap:12px; flex-wrap:wrap; font-size:11.5px; align-items:center; }
+  .card-star-cat{ display:inline-flex; align-items:center; gap:4px; }
+  .cs-ico{ opacity:.75; }
+  .star-ico{ color:rgba(var(--on-paper-rgb),0.28); letter-spacing:.5px; font-size:11px; }
+  .star-ico.on{ color:#f5c84c; }
+  /* SCORE CHIP */
+  .score-chip{
+    margin-left:7px; display:inline-block; vertical-align:2px;
+    font-size:12px; font-weight:800; line-height:1;
+    padding:3px 8px; border-radius:12px;
+    border:1.5px solid rgba(var(--on-paper-rgb),0.55);
+  }
+  /* VIBE BARS ON CARDS */
+  .vibe-bars{ display:flex; flex-direction:column; gap:6px; }
+  .vibe-bar-row{ display:flex; align-items:center; gap:8px; font-size:11px; }
+  .vibe-bar-label{ width:66px; white-space:nowrap; opacity:.8; }
+  .vibe-bar-track{ flex:1; height:7px; border-radius:4px; background:rgba(var(--on-paper-rgb),0.14); overflow:hidden; display:block; }
+  .vibe-bar-fill{ display:block; height:100%; border-radius:4px; }
+  .vibe-bar-fill.energy{ background:linear-gradient(90deg,#7ec8e3,#ffd166,#ff4d6d); }
+  .vibe-bar-fill.mood{ background:linear-gradient(90deg,#5b4b8a,#b39ddb,#ffe08a); }
+  /* STAR PICKER IN MODAL */
+  .star-row{ display:flex; align-items:center; gap:10px; margin-bottom:7px; }
+  .star-cat{ width:96px; font-size:13px; opacity:.85; }
+  .star-pick{ display:inline-flex; gap:2px; }
+  .star-pick button{
+    background:none; border:none; cursor:pointer;
+    font-size:22px; line-height:1; padding:0 1px;
+    color:rgba(var(--on-paper-rgb),0.25);
+  }
+  .star-pick button.on{ color:#f5c84c; }
+  /* VIBE SLIDERS IN MODAL */
+  .vibe-row{ margin-bottom:12px; }
+  .vibe-head{ display:flex; justify-content:space-between; font-size:12.5px; margin-bottom:4px; }
+  .vibe-head .vibe-ends{ opacity:.55; font-size:11px; }
+  .vibe-range{
+    -webkit-appearance:none; appearance:none;
+    width:100%; height:10px; border-radius:6px; outline:none;
+    background:rgba(var(--on-paper-rgb),0.15);
+  }
+  .vibe-range.energy{ background:linear-gradient(90deg,#7ec8e3,#ffd166,#ff4d6d); }
+  .vibe-range.mood{ background:linear-gradient(90deg,#5b4b8a,#b39ddb,#ffe08a); }
+  .vibe-range::-webkit-slider-thumb{
+    -webkit-appearance:none; appearance:none;
+    width:20px; height:20px; border-radius:50%;
+    background:#fff; border:2px solid rgba(0,0,0,0.35);
+    box-shadow:0 2px 6px rgba(0,0,0,0.35); cursor:pointer;
+  }
+  .vibe-range::-moz-range-thumb{
+    width:18px; height:18px; border-radius:50%;
+    background:#fff; border:2px solid rgba(0,0,0,0.35);
+    box-shadow:0 2px 6px rgba(0,0,0,0.35); cursor:pointer;
+  }
   .sticker-drag .sticker-emoji{ display:block; }
   .sticker-remove{
     position:absolute;

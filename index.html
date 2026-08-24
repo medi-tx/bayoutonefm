@@ -1484,6 +1484,60 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
   }
   .card .sticker-drag{ z-index:9; }
   .card .sticker-img{ width:38px; height:38px; }
+  .card:has(> .sticker-drag){ overflow:visible; }
+  /* CATEGORY STARS */
+  .card-stars{ display:flex; gap:12px; flex-wrap:wrap; font-size:11.5px; align-items:center; }
+  .card-star-cat{ display:inline-flex; align-items:center; gap:4px; }
+  .cs-ico{ opacity:.75; }
+  .star-ico{ color:rgba(var(--on-paper-rgb),0.28); letter-spacing:.5px; font-size:11px; }
+  .star-ico.on{ color:#f5c84c; }
+  /* SCORE CHIP */
+  .score-chip{
+    margin-left:7px; display:inline-block; vertical-align:2px;
+    font-size:12px; font-weight:800; line-height:1;
+    padding:3px 8px; border-radius:12px;
+    border:1.5px solid rgba(var(--on-paper-rgb),0.55);
+  }
+  /* VIBE BARS ON CARDS */
+  .vibe-bars{ display:flex; flex-direction:column; gap:6px; }
+  .vibe-bar-row{ display:flex; align-items:center; gap:8px; font-size:11px; }
+  .vibe-bar-label{ width:66px; white-space:nowrap; opacity:.8; }
+  .vibe-bar-track{ flex:1; height:7px; border-radius:4px; background:rgba(var(--on-paper-rgb),0.14); overflow:hidden; display:block; }
+  .vibe-bar-fill{ display:block; height:100%; border-radius:4px; }
+  .vibe-bar-fill.energy{ background:linear-gradient(90deg,#7ec8e3,#ffd166,#ff4d6d); }
+  .vibe-bar-fill.mood{ background:linear-gradient(90deg,#5b4b8a,#b39ddb,#ffe08a); }
+  /* STAR PICKER IN MODAL */
+  .star-row{ display:flex; align-items:center; gap:10px; margin-bottom:7px; }
+  .star-cat{ width:96px; font-size:13px; opacity:.85; }
+  .star-pick{ display:inline-flex; gap:2px; }
+  .star-pick button{
+    background:none; border:none; cursor:pointer;
+    font-size:22px; line-height:1; padding:0 1px;
+    color:rgba(var(--on-paper-rgb),0.25);
+  }
+  .star-pick button.on{ color:#f5c84c; }
+  /* VIBE SLIDERS IN MODAL */
+  .vibe-row{ margin-bottom:12px; }
+  .vibe-head{ display:flex; justify-content:space-between; font-size:12.5px; margin-bottom:4px; }
+  .vibe-head .vibe-ends{ opacity:.55; font-size:11px; }
+  .vibe-range{
+    -webkit-appearance:none; appearance:none;
+    width:100%; height:10px; border-radius:6px; outline:none;
+    background:rgba(var(--on-paper-rgb),0.15);
+  }
+  .vibe-range.energy{ background:linear-gradient(90deg,#7ec8e3,#ffd166,#ff4d6d); }
+  .vibe-range.mood{ background:linear-gradient(90deg,#5b4b8a,#b39ddb,#ffe08a); }
+  .vibe-range::-webkit-slider-thumb{
+    -webkit-appearance:none; appearance:none;
+    width:20px; height:20px; border-radius:50%;
+    background:#fff; border:2px solid rgba(0,0,0,0.35);
+    box-shadow:0 2px 6px rgba(0,0,0,0.35); cursor:pointer;
+  }
+  .vibe-range::-moz-range-thumb{
+    width:18px; height:18px; border-radius:50%;
+    background:#fff; border:2px solid rgba(0,0,0,0.35);
+    box-shadow:0 2px 6px rgba(0,0,0,0.35); cursor:pointer;
+  }
   .sticker-drag .sticker-emoji{ display:block; }
   .sticker-remove{
     position:absolute;
@@ -2916,6 +2970,14 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
   <div class="sticker-layer" id="friendStickerLayer" aria-hidden="true"></div>
 </div>
 
+<div class="overlay" id="sendFriendOverlay">
+  <div class="modal" style="max-width:420px;">
+    <h3>📤 Send to friend</h3>
+    <p class="share-sub" id="sendFriendSub">Choose who should get this song.</p>
+    <div id="sendFriendList" class="discover-list" style="max-height:320px; overflow-y:auto;"></div>
+    <div class="modal-actions"><button class="btn-cancel" id="sendFriendCloseBtn">Cancel</button></div>
+  </div>
+</div>
 <div class="overlay" id="compareOverlay">
   <div class="modal" style="max-width:680px;">
     <h3>⚖️ Taste Comparison</h3>
@@ -2965,6 +3027,10 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
       <div class="field"><label>Year</label><input id="f-year" type="text" inputmode="numeric"></div>
       <div class="field"><label>Genres (comma-separated)</label><input id="f-genre" type="text" placeholder="e.g. Rock, Funk/Soul"></div>
     </div>
+    <div class="two-col">
+      <div class="field"><label>Track #</label><input id="f-track" type="text" inputmode="numeric" placeholder="e.g. 7"></div>
+      <div class="field"><label>Score (set by tier)</label><input id="f-score" type="number" min="0" max="100" placeholder="85-100 ★ · 70-84 S…"></div>
+    </div>
     <div class="field"><label>Mood / tags (comma-separated)</label><input id="f-tags" type="text" placeholder="nostalgic, road trip, late night"></div>
     <div class="field explicit-tag-field">
       <label>Explicit Tag</label>
@@ -2975,6 +3041,23 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
     <div class="field">
       <label>Tier</label>
       <div class="tier-picker" id="tierPicker"></div>
+    </div>
+    <div class="field">
+      <label>Category ratings</label>
+      <div class="star-row"><span class="star-cat">🎤 Lyrics</span><div class="star-pick" id="f-stars-lyrics"></div></div>
+      <div class="star-row"><span class="star-cat">🎶 Vocals</span><div class="star-pick" id="f-stars-vocals"></div></div>
+      <div class="star-row"><span class="star-cat">🎨 Aesthetic</span><div class="star-pick" id="f-stars-aesthetic"></div></div>
+    </div>
+    <div class="field">
+      <label>Song vibes</label>
+      <div class="vibe-row">
+        <div class="vibe-head"><span>⚡ Energy</span><span class="vibe-ends">chill ↔ electric</span></div>
+        <input type="range" min="0" max="100" id="f-vibe-energy" class="vibe-range energy">
+      </div>
+      <div class="vibe-row">
+        <div class="vibe-head"><span>🌗 Mood</span><span class="vibe-ends">stormy ↔ sunny</span></div>
+        <input type="range" min="0" max="100" id="f-vibe-mood" class="vibe-range mood">
+      </div>
     </div>
     <div class="field"><label>Thoughts</label><textarea id="f-why"></textarea></div>
     <div class="field">
@@ -3092,8 +3175,11 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
     <p class="share-sub" id="shareSub">A shareable snapshot of top-tier songs — ready to post anywhere.</p>
     <div class="share-preview-wrap"><canvas id="shareCanvas" width="1080" height="1350"></canvas></div>
     <div class="share-actions">
-      <button class="btn-save" id="shareDownloadBtn">⬇ Download PNG</button>
-      <button class="btn-save" id="shareCopyBtn">📋 Copy image</button>
+      <button class="btn-save" id="shareDownloadBtn">? Download PNG</button>
+      <button class="btn-save" id="shareCopyBtn">?? Copy image</button>
+    </div>
+    <div class="modal-actions" id="shareSendRow" style="display:none;">
+      <button class="btn-save" id="shareSendFriendBtn" style="width:100%;">📤 Send to Friend</button>
     </div>
     <p class="share-note" id="shareNote">Tip: share it in a story, group chat, or wherever you swap music.</p>
     <div class="modal-actions">
@@ -4224,6 +4310,36 @@ function renderTierBadge(tier){
   if(!tier) return `<span class="tier-badge tier-none">UNRATED</span>`;
   return `<span class="tier-badge tier-${tier}">${tier}</span>`;
 }
+const TIER_BANDS = { '★':[85,100], 'S':[70,84], 'A':[55,69], 'B':[40,54], 'C':[0,39] };
+function bandForTier(t){ return TIER_BANDS[t] || null; }
+function tierForScore(n){
+  const keys = ['★','S','A','B','C'];
+  for(const t of keys){ const b = TIER_BANDS[t]; if(n >= b[0] && n <= b[1]) return t; }
+  return null;
+}
+function scoreChipHtml(s){
+  if(s.score === null || s.score === undefined || s.score === '') return '';
+  return `<span class="score-chip" title="Exact score">${escapeHtml(String(s.score))}</span>`;
+}
+function starsHtml(n){
+  n = clampNum(n||0, 0, 5);
+  let out = '';
+  for(let i=1;i<=5;i++) out += `<span class="${i <= n ? 'star-ico on' : 'star-ico'}">★</span>`;
+  return out;
+}
+function cardStarsHtml(s){
+  const st = s.stars || {};
+  const rows = [['🎤','Lyrics',st.lyrics],['🎶','Vocals',st.vocals],['🎨','Aesthetic',st.aesthetic]].filter(r=>r[2]);
+  if(!rows.length) return '';
+  return `<div class="card-stars">${rows.map(([ico,label,n])=>`<span class="card-star-cat" title="${label}: ${n}/5 stars"><span class="cs-ico">${ico}</span><span class="star-ico-wrap">${starsHtml(n)}</span></span>`).join('')}</div>`;
+}
+function vibeBarHtml(label, v, cls){
+  return `<div class="vibe-bar-row"><span class="vibe-bar-label">${label}</span><span class="vibe-bar-track"><span class="vibe-bar-fill ${cls}" style="width:${clampNum(v||0,0,100)}%;"></span></span></div>`;
+}
+function cardVibesHtml(s){
+  if(s.vibeEnergy === null || s.vibeEnergy === undefined) return '';
+  return `<div class="vibe-bars">${vibeBarHtml('⚡ Energy', s.vibeEnergy, 'energy')}${vibeBarHtml('🌗 Mood', s.vibeMood, 'mood')}</div>`;
+}
 function tierColor(tier){
   return {'★':'var(--star)',S:'var(--teal)',A:'var(--rose)',B:'var(--lilac)',C:'var(--sage)'}[tier]||'';
 }
@@ -4376,14 +4492,16 @@ function songCardHtml(s, clusterCounts){
           <div class="title-stack">
             ${s.archived ? '<span class="archived-badge">ARCHIVED</span>' : ''}
             <p class="track-title" style="${s.tier ? 'color:'+tierColor(s.tier) : ''}">${escapeHtml(s.title||'Untitled')}</p>
-            <p class="track-artist">${escapeHtml(formatArtists(s.artists))}${s.album ? ' · '+escapeHtml(s.album) : ''}</p>
+            <p class="track-artist">${escapeHtml(formatArtists(s.artists))}${s.album ? ' · '+escapeHtml(s.album) : ''}${s.trackNumber ? ' · #'+escapeHtml(String(s.trackNumber)) : ''}</p>
           </div>
         </div>
         <div class="meta-row">
           ${s.year ? `<span>${escapeHtml(s.year)}</span>` : (showEx ? `<span class="ex">e.g. 2016</span>` : '')}
           ${(s.genres&&s.genres.length) ? `<span class="meta-genres">· ${s.genres.map(g=>escapeHtml(g)).join(', ')}</span>` : (showEx ? `<span class="ex">· e.g. Rock, Funk/Soul</span>` : '')}
         </div>
-        <div class="tier-row">${renderTierBadge(s.tier)}</div>
+        <div class="tier-row">${renderTierBadge(s.tier)}${scoreChipHtml(s)}</div>
+        ${cardStarsHtml(s)}
+        ${cardVibesHtml(s)}
         <div class="preview-row">
           <button type="button" class="preview-btn" data-preview="${escapeAttr(s.id)}" title="Play a 30-second preview" aria-label="Play 30-second preview">▶</button>
           <span class="preview-hint">30-sec preview</span>
@@ -5405,6 +5523,7 @@ async function openShareCard(opts){
   document.getElementById('shareSub').textContent = sub;
   document.getElementById('shareNote').textContent = 'Generating…';
   document.getElementById('shareOverlay').classList.add('open');
+  document.getElementById('shareSendRow').style.display = (opts.mode === 'song') ? '' : 'none';
   try{
     await drawShareCard(opts);
     document.getElementById('shareNote').textContent = 'Tip: share it in a story, group chat, or wherever you swap music.';
@@ -5435,6 +5554,77 @@ document.getElementById('friendShareTierBoardBtn').addEventListener('click', ()=
 });
 document.getElementById('shareCloseBtn').addEventListener('click', ()=>{
   document.getElementById('shareOverlay').classList.remove('open');
+});
+let _sendFriendSong = null;
+async function openSendFriendPicker(){
+  if(!shareState || shareState.mode !== 'song' || !shareState.song){ alert('Only song cards can be sent in chat.'); return; }
+  _sendFriendSong = shareState.song;
+  const ids = [...myFriendIds];
+  const listEl = document.getElementById('sendFriendList');
+  if(ids.length === 0){
+    listEl.innerHTML = '<p class="profile-empty-note">No friends yet — add friends in 🔎 Discover first.</p>';
+  } else {
+    listEl.innerHTML = '<p class="profile-empty-note">Loading…</p>';
+    const { data, error } = await sb.from('profiles').select('user_id, username, photo').in('user_id', ids);
+    const rows = (error ? [] : (data || [])).filter(p=>p.username);
+    if(!rows.length){
+      listEl.innerHTML = '<p class="profile-empty-note">Could not load your friends.</p>';
+    } else {
+      listEl.innerHTML = rows.map(p=>`
+        <button type="button" class="discover-row" data-send-friend="${escapeAttr(p.user_id)}">
+          ${p.photo ? `<img loading="lazy" decoding="async" src="${escapeAttr(p.photo)}" alt="Profile photo">` : `<span class="drow-fallback is-pfp"></span>`}
+          <span style="flex:1;"><span class="drow-name">@${escapeHtml(p.username)}</span></span>
+          <span class="modal-action-btn accent">Send</span>
+        </button>`).join('');
+    }
+  }
+  document.getElementById('sendFriendOverlay').classList.add('open');
+}
+document.getElementById('shareSendFriendBtn').addEventListener('click', ()=>{
+  trackEvent('share_send_friend_open');
+  openSendFriendPicker();
+});
+document.getElementById('sendFriendCloseBtn').addEventListener('click', ()=>{
+  document.getElementById('sendFriendOverlay').classList.remove('open');
+});
+document.getElementById('sendFriendOverlay').addEventListener('click', e=>{
+  if(e.target.id === 'sendFriendOverlay') e.currentTarget.classList.remove('open');
+});
+document.getElementById('sendFriendList').addEventListener('click', async e=>{
+  const row = e.target.closest('[data-send-friend]');
+  if(!row) return;
+  const friendId = row.dataset.sendFriend;
+  if(!_sendFriendSong || !currentUserId) return;
+  row.style.opacity = '0.5';
+  const song = _sendFriendSong;
+  const payload = {
+    title: song.title || 'Unknown song',
+    artist: formatArtists(song.artists || []),
+    album: song.album || '',
+    year: song.year ? parseInt(song.year, 10) : null,
+    cover: song.coverArt || null,
+    url: geniusLyricsUrl(song.title, song.artists) || '',
+    explicit: !!song.explicit
+  };
+  const { error } = await sb.from('messages').insert({
+    sender_id: currentUserId,
+    recipient_id: friendId,
+    content: '',
+    song: payload
+  });
+  if(error){
+    console.error('Error sending song to friend:', error);
+    alert('Could not send: ' + error.message);
+    row.style.opacity = '';
+    return;
+  }
+  trackEvent('share_send_friend_done');
+  const me = (myProfile && myProfile.username) ? '@' + myProfile.username : 'Someone';
+  sendNotif(friendId, 'message', me + ' sent you a song: ' + payload.title);
+  _sendFriendSong = null;
+  document.getElementById('sendFriendOverlay').classList.remove('open');
+  document.getElementById('shareOverlay').classList.remove('open');
+  if(typeof window.btfOpenChatWith === 'function') window.btfOpenChatWith(friendId);
 });
 document.getElementById('shareOverlay').addEventListener('click', e=>{
   if(e.target === e.currentTarget) e.currentTarget.classList.remove('open');
@@ -5846,6 +6036,12 @@ function render(){
 
   populateFilters();
   renderStickerSections();
+  if(!window.__stkMigScheduled){
+    window.__stkMigScheduled = true;
+    setTimeout(()=>{
+      if(typeof migratePageStickersToCards === 'function') migratePageStickersToCards();
+    }, 600);
+  }
 }
 
 function renderWishlistGrid(){
@@ -5873,7 +6069,7 @@ function renderWishlistGrid(){
           ${coverThumbHtml(s)}
           <div class="title-stack">
             <p class="track-title" style="${s.tier ? 'color:'+tierColor(s.tier) : ''}">${escapeHtml(s.title||'Untitled')}</p>
-            <p class="track-artist">${escapeHtml(formatArtists(s.artists))}${s.album ? ' · '+escapeHtml(s.album) : ''}</p>
+            <p class="track-artist">${escapeHtml(formatArtists(s.artists))}${s.album ? ' · '+escapeHtml(s.album) : ''}${s.trackNumber ? ' · #'+escapeHtml(String(s.trackNumber)) : ''}</p>
           </div>
         </div>
         <div class="meta-row">${s.year ? `<span>${escapeHtml(s.year)}</span>`:''}</div>
@@ -5900,6 +6096,12 @@ function openModal(song){
   document.getElementById('f-tags').value = (song?.tags||[]).join(', ');
   document.getElementById('f-why').value = song?.why || '';
   document.getElementById('f-credit').value = song?.credit || '';
+  document.getElementById('f-track').value = song?.trackNumber || '';
+  document.getElementById('f-score').value = (song?.score === null || song?.score === undefined) ? '' : song.score;
+  currentStars = { lyrics:(song?.stars&&song.stars.lyrics)||0, vocals:(song?.stars&&song.stars.vocals)||0, aesthetic:(song?.stars&&song.stars.aesthetic)||0 };
+  renderStarPickers();
+  document.getElementById('f-vibe-energy').value = (song?.vibeEnergy === null || song?.vibeEnergy === undefined) ? 50 : song.vibeEnergy;
+  document.getElementById('f-vibe-mood').value = (song?.vibeMood === null || song?.vibeMood === undefined) ? 50 : song.vibeMood;
   currentCoverArt = song?.coverArt || null;
   currentExplicit = song?.explicit || false;
   currentFav = song?.favorited || false;
@@ -5935,11 +6137,47 @@ function renderTierPicker(){
     btn.textContent = t;
     btn.addEventListener('click', ()=>{
       currentTier = (currentTier === t) ? null : t;
+      if(currentTier){
+        const band = bandForTier(currentTier);
+        const cur = parseInt(document.getElementById('f-score').value, 10);
+        if(isNaN(cur) || cur < band[0] || cur > band[1]){
+          document.getElementById('f-score').value = Math.round((band[0] + band[1]) / 2);
+        }
+      }
       renderTierPicker();
     });
     el.appendChild(btn);
   });
 }
+let currentStars = { lyrics:0, vocals:0, aesthetic:0 };
+function renderStarPickers(){
+  [['lyrics','f-stars-lyrics'],['vocals','f-stars-vocals'],['aesthetic','f-stars-aesthetic']].forEach(([key,id])=>{
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.innerHTML = '';
+    for(let i=1;i<=5;i++){
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = i <= currentStars[key] ? 'on' : '';
+      b.textContent = '★';
+      b.setAttribute('aria-label', key + ' ' + i + ' stars');
+      b.addEventListener('click', ()=>{
+        currentStars[key] = (currentStars[key] === i) ? 0 : i;
+        renderStarPickers();
+      });
+      el.appendChild(b);
+    }
+  });
+}
+document.getElementById('f-score').addEventListener('input', ()=>{
+  const v = parseInt(document.getElementById('f-score').value, 10);
+  if(isNaN(v)) return;
+  const t = tierForScore(Math.max(0, Math.min(100, v)));
+  if(t && t !== currentTier){
+    currentTier = t;
+    renderTierPicker();
+  }
+});
 
 /* ---- DUPLICATE CHECK ---- */
 function normalizeTitle(s){ return (s||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim(); }
@@ -5996,6 +6234,11 @@ function handleSave(){
     coverArt: currentCoverArt,
     remindsOf: getSelectedReminds('f'),
     tier: currentTier,
+    trackNumber: document.getElementById('f-track').value.trim() || null,
+    score: (()=>{ const v = parseInt(document.getElementById('f-score').value, 10); return isNaN(v) ? null : Math.max(0, Math.min(100, v)); })(),
+    stars: { lyrics: currentStars.lyrics || 0, vocals: currentStars.vocals || 0, aesthetic: currentStars.aesthetic || 0 },
+    vibeEnergy: clampNum(parseInt(document.getElementById('f-vibe-energy').value, 10) || 0, 0, 100),
+    vibeMood: clampNum(parseInt(document.getElementById('f-vibe-mood').value, 10) || 0, 0, 100),
     explicit: currentExplicit,
     favorited: currentFav,
     source: currentSongSource
@@ -6132,6 +6375,7 @@ function addTitleBoxRow(focus, prefill){
   input.className = 'title-box-input';
   input.placeholder = isAlbum ? `Track ${container.children.length+1} title` : `Song ${container.children.length+1} title`;
   if(prefill && prefill.title) input.value = prefill.title;
+  if(prefill && prefill.no) row._trackNo = prefill.no;
 
   const removeBtn = document.createElement('button');
   removeBtn.type = 'button';
@@ -6242,6 +6486,7 @@ function handleMultiSave(){
         id: uid(), pinned:false, createdAt: now, clusterId, clusterName: albumName, title,
         artists: artistVal ? artistVal.split(',').map(a=>a.trim()).filter(Boolean) : sharedArtists,
         tags: tagsVal.split(',').map(t=>t.trim()).filter(Boolean),
+        trackNumber: row._trackNo || null,
         ...shared,
         tier: trackTier || shared.tier
       };
@@ -8209,7 +8454,7 @@ function renderFriendGrid(list){
         ${s.coverArt ? `<img loading="lazy" decoding="async" class="cover-thumb" src="${escapeAttr(s.coverArt)}" alt="Album cover">` : ''}
         <div class="title-stack">
           <p class="track-title" style="${s.tier ? 'color:'+tierColor(s.tier) : ''}">${escapeHtml(s.title||'Untitled')}</p>
-          <p class="track-artist">${escapeHtml(formatArtists(s.artists))}${s.album ? ' · '+escapeHtml(s.album) : ''}</p>
+          <p class="track-artist">${escapeHtml(formatArtists(s.artists))}${s.album ? ' · '+escapeHtml(s.album) : ''}${s.trackNumber ? ' · #'+escapeHtml(String(s.trackNumber)) : ''}</p>
         </div>
       </div>
       <div class="meta-row">
@@ -8328,7 +8573,7 @@ function renderCompareView(){
         ${s.coverArt ? `<img loading="lazy" decoding="async" class="cover-thumb" src="${escapeAttr(s.coverArt)}" alt="Album cover">` : ''}
         <div class="title-stack">
           <p class="track-title" style="${s.tier ? 'color:'+tierColor(s.tier) : ''}">${escapeHtml(s.title||'Untitled')}</p>
-          <p class="track-artist">${escapeHtml(formatArtists(s.artists))}${s.album ? ' · '+escapeHtml(s.album) : ''}</p>
+          <p class="track-artist">${escapeHtml(formatArtists(s.artists))}${s.album ? ' · '+escapeHtml(s.album) : ''}${s.trackNumber ? ' · #'+escapeHtml(String(s.trackNumber)) : ''}</p>
         </div>
       </div>
       <div class="meta-row">
@@ -8922,8 +9167,8 @@ function attachStickerDrag(el){
     if(target && e){
       const tr = target.getBoundingClientRect();
       stickers[idx2].song = target.dataset.id || target.dataset.songId;
-      stickers[idx2].x = Math.round(clampNum((e.clientX - tr.left) / tr.width * 100, 5, 95));
-      stickers[idx2].y = Math.round(clampNum((e.clientY - tr.top) / tr.height * 100, 5, 95));
+      stickers[idx2].x = Math.round(clampNum((e.clientX - tr.left) / tr.width * 100, -20, 120));
+      stickers[idx2].y = Math.round(clampNum((e.clientY - tr.top) / tr.height * 100, -20, 120));
     } else {
       const lr = document.getElementById('stickerLayer').getBoundingClientRect();
       stickers[idx2].song = null;
@@ -8935,6 +9180,34 @@ function attachStickerDrag(el){
   };
   el.addEventListener('pointerup', end);
   el.addEventListener('pointercancel', end);
+}
+
+function migratePageStickersToCards(){
+  if(!stickers.some(s=>s && s.url && !s.song)) return;
+  const layer = document.getElementById('stickerLayer');
+  const grid = document.getElementById('grid');
+  if(!layer || !grid) return;
+  const lr = layer.getBoundingClientRect();
+  if(lr.width < 10) return;
+  const cards = [...grid.querySelectorAll('.card[data-id]')];
+  if(!cards.length) return;
+  let changed = false;
+  stickers.forEach(s=>{
+    if(!s || !s.url || s.song) return;
+    const px = lr.left + (s.x/100)*lr.width;
+    const py = lr.top + (s.y/100)*lr.height;
+    for(const card of cards){
+      const r = card.getBoundingClientRect();
+      if(px >= r.left - 20 && px <= r.right + 20 && py >= r.top - 20 && py <= r.bottom + 20){
+        s.song = card.dataset.id;
+        s.x = Math.round(clampNum((px - r.left)/r.width*100, -15, 115));
+        s.y = Math.round(clampNum((py - r.top)/r.height*100, -15, 115));
+        changed = true;
+        break;
+      }
+    }
+  });
+  if(changed){ saveStickers(); renderStickerSections(); }
 }
 
 /* ---- sticker upload + crop ---- */
@@ -10341,7 +10614,7 @@ async function selectItunesAlbum(collectionId){
       const items = await lookupItunesAlbum(collectionId);
       albumInfo = items.find(x=>x.wrapperType==='collection') || items[0] || {};
       const trackItems = items.filter(x=>x.wrapperType==='track').sort((a,b)=>(a.trackNumber||0)-(b.trackNumber||0));
-      tracks = trackItems.map(t=>({ title: t.trackName, artist: t.artistName || albumInfo.artistName || '' }));
+      tracks = trackItems.map(t=>({ title: t.trackName, artist: t.artistName || albumInfo.artistName || '', no: t.trackNumber || null }));
     }
     const cover = albumInfo.artworkUrl100 ? upscaleArtwork(albumInfo.artworkUrl100) : null;
     document.getElementById('mf-album').value = albumInfo.collectionName || '';
@@ -10463,6 +10736,7 @@ function selectItunesSong(trackId){
   document.getElementById('f-artist').value = t.artistName || '';
   document.getElementById('f-album').value = t.collectionName || '';
   document.getElementById('f-year').value = t.releaseDate ? t.releaseDate.slice(0,4) : '';
+  document.getElementById('f-track').value = t.trackNumber || '';
   document.getElementById('f-genre').value = t.primaryGenreName || '';
   const cover = t.artworkUrl100 ? upscaleArtwork(t.artworkUrl100) : null;
   currentCoverArt = cover;
@@ -11108,6 +11382,10 @@ document.getElementById('passwordSaveBtn').addEventListener('click', async ()=>{
     renderMsgFriendList();
     await loadMsgThread(friendId);
   }
+  window.btfOpenChatWith = async function(friendId){
+    await openMessagesModal();
+    if(msgFriendProfiles.some(p=>p.user_id === friendId)) openMsgConversation(friendId);
+  };
   function renderMsgBubble(m){
     const mine = m.sender_id === currentUserId;
     const cls = mine ? 'msg-bubble mine' : 'msg-bubble';
