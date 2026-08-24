@@ -47,13 +47,14 @@
     justify-content:center;
     margin-bottom:22px;
   }
-  .auth-logo-row .brand-logo{ height:38px; }
+  .auth-logo-row .brand-logo{ height:80px; width:auto; }
   .header-brand{
     display:flex;
     align-items:center;
     gap:16px;
   }
-  .header-brand .brand-logo{ height:30px; flex-shrink:0; }
+  .header-brand .brand-logo{ height:80px; width:auto; flex-shrink:0; }
+  #friendWrap .brand-logo{ height:20px !important; flex-shrink:0; }
 
   /* AUTH SCREEN */
   .auth-screen{
@@ -2580,7 +2581,7 @@
     border-radius:14px; background:rgba(var(--on-paper-rgb),0.55);
     color:var(--text-dim);
   }
-  .email-confirm .brand-logo.email-confirm-logo{ height:34px; flex-shrink:0; border-radius:7px; }
+  .email-confirm .brand-logo.email-confirm-logo{ height:64px; flex-shrink:0; border-radius:7px; }
   .email-confirm-body{ flex:1; min-width:0; }
   .email-confirm-title{
     font-family:'Fraunces', serif; font-style:italic;
@@ -2595,3 +2596,5 @@
   .email-confirm.is-confirmed .email-confirm-check{ display:block; }
   .email-confirm.is-confirmed .email-confirm-resend{ display:none; }
   .email-confirm.is-confirmed .email-confirm-title{ color:var(--rose); }
+
+@media (max-width:620px){ .auth-logo-row .brand-logo{ height:56px; } .header-brand .brand-logo{ height:56px; } }
