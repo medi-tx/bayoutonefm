@@ -1523,6 +1523,8 @@
     color:rgba(var(--on-paper-rgb),0.85);
     white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
   }
+  .cover-score{ display:flex; align-items:center; gap:6px; margin-top:4px; flex-wrap:wrap; }
+  .cs-band{ font-size:10px; opacity:.55; letter-spacing:.3px; white-space:nowrap; }
   .vibe-bar-fill{ display:block; height:100%; border-radius:4px; }
   .vibe-bar-fill.energy{ background:linear-gradient(90deg,#7ec8e3,#ffd166,#ff4d6d); }
   .vibe-bar-fill.mood{ background:linear-gradient(90deg,#5b4b8a,#b39ddb,#ffe08a); }

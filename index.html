@@ -1574,6 +1574,8 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
     color:rgba(var(--on-paper-rgb),0.85);
     white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
   }
+  .cover-score{ display:flex; align-items:center; gap:6px; margin-top:4px; flex-wrap:wrap; }
+  .cs-band{ font-size:10px; opacity:.55; letter-spacing:.3px; white-space:nowrap; }
   .vibe-bar-fill{ display:block; height:100%; border-radius:4px; }
   .vibe-bar-fill.energy{ background:linear-gradient(90deg,#7ec8e3,#ffd166,#ff4d6d); }
   .vibe-bar-fill.mood{ background:linear-gradient(90deg,#5b4b8a,#b39ddb,#ffe08a); }
@@ -3119,7 +3121,6 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
       <div class="star-row"><span class="star-cat">🎤 Lyrics</span><div class="star-pick" id="f-stars-lyrics"></div></div>
       <div class="star-row"><span class="star-cat">🎶 Vocals</span><div class="star-pick" id="f-stars-vocals"></div></div>
       <div class="star-row"><span class="star-cat">🔁 Replay-ability</span><div class="star-pick" id="f-stars-replay"></div></div>
-      <div class="star-row"><span class="star-cat">🎛️ Production</span><div class="star-pick" id="f-stars-production"></div></div>
     </div>
     <div class="field">
       <label>Song vibes</label>
@@ -4650,13 +4651,13 @@ function songCardHtml(s, clusterCounts){
             ${s.archived ? '<span class="archived-badge">ARCHIVED</span>' : ''}
             <p class="track-title" style="${s.tier ? 'color:'+tierColor(s.tier) : ''}">${escapeHtml(s.title||'Untitled')}</p>
             <p class="track-artist">${escapeHtml(formatArtists(s.artists))}${s.album ? ' · '+escapeHtml(s.album) : ''}${s.trackNumber ? ' · #'+escapeHtml(String(s.trackNumber)) : ''}</p>
+            ${(s.score !== null && s.score !== undefined && s.score !== '' && s.tier) ? `<div class="cover-score">${renderTierBadge(s.tier)}<span class="score-chip">${escapeHtml(String(s.score))}</span><span class="cs-band">→ ${escapeHtml(tierBandLabel(s.tier))}</span></div>` : ''}
           </div>
         </div>
         <div class="meta-row">
           ${s.year ? `<span>${escapeHtml(s.year)}</span>` : (showEx ? `<span class="ex">e.g. 2016</span>` : '')}
           ${(s.genres&&s.genres.length) ? `<span class="meta-genres">· ${s.genres.map(g=>escapeHtml(g)).join(', ')}</span>` : (showEx ? `<span class="ex">· e.g. Rock, Funk/Soul</span>` : '')}
         </div>
-        <div class="tier-row">${renderTierBadge(s.tier)}${scoreChipHtml(s)}</div>
         ${cardRatingsStripHtml(s)}
         <div class="preview-row">
           <button type="button" class="preview-btn" data-preview="${escapeAttr(s.id)}" title="Play a 30-second preview" aria-label="Play 30-second preview">▶</button>
@@ -6257,7 +6258,7 @@ function openModal(song){
   document.getElementById('f-credit').value = song?.credit || '';
   document.getElementById('f-track').value = song?.trackNumber || '';
   document.getElementById('f-score').value = (song?.score === null || song?.score === undefined) ? '' : song.score;
-  currentStars = { lyrics:(song?.stars&&song.stars.lyrics)||0, vocals:(song?.stars&&song.stars.vocals)||0, replay:(song?.stars&&song.stars.replay)||0, production:(song?.stars&&song.stars.production)||0 };
+  currentStars = { lyrics:(song?.stars&&song.stars.lyrics)||0, vocals:(song?.stars&&song.stars.vocals)||0, replay:(song?.stars&&song.stars.replay)||0 };
   renderStarPickers();
   document.getElementById('f-vibe-energy').value = (song?.vibeEnergy === null || song?.vibeEnergy === undefined) ? 50 : song.vibeEnergy;
   document.getElementById('f-vibe-mood').value = (song?.vibeMood === null || song?.vibeMood === undefined) ? 50 : song.vibeMood;
@@ -6309,9 +6310,9 @@ function renderTierPicker(){
     el.appendChild(btn);
   });
 }
-let currentStars = { lyrics:0, vocals:0, replay:0, production:0 };
+let currentStars = { lyrics:0, vocals:0, replay:0 };
 function renderStarPickers(){
-  [['lyrics','f-stars-lyrics'],['vocals','f-stars-vocals'],['replay','f-stars-replay'],['production','f-stars-production']].forEach(([key,id])=>{
+  [['lyrics','f-stars-lyrics'],['vocals','f-stars-vocals'],['replay','f-stars-replay']].forEach(([key,id])=>{
     const el = document.getElementById(id);
     if(!el) return;
     el.innerHTML = '';
@@ -6397,7 +6398,7 @@ function handleSave(){
     tier: currentTier,
     trackNumber: document.getElementById('f-track').value.trim() || null,
     score: (()=>{ const v = parseInt(document.getElementById('f-score').value, 10); return isNaN(v) ? null : Math.max(0, Math.min(100, v)); })(),
-    stars: { lyrics: currentStars.lyrics || 0, vocals: currentStars.vocals || 0, replay: currentStars.replay || 0, production: currentStars.production || 0 },
+    stars: { lyrics: currentStars.lyrics || 0, vocals: currentStars.vocals || 0, replay: currentStars.replay || 0 },
     vibeEnergy: clampNum(parseInt(document.getElementById('f-vibe-energy').value, 10) || 0, 0, 100),
     vibeMood: clampNum(parseInt(document.getElementById('f-vibe-mood').value, 10) || 0, 0, 100),
     vibeNostalgia: clampNum(parseInt(document.getElementById('f-vibe-nostalgia').value, 10) || 0, 0, 100),
