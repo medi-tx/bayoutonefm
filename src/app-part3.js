@@ -541,18 +541,12 @@ function starsHtml(n){
   for(let i=1;i<=5;i++) out += `<span class="${i <= n ? 'star-ico on' : 'star-ico'}">★</span>`;
   return out;
 }
-function cardStarsHtml(s){
-  const st = s.stars || {};
-  const rows = [['🎤','Lyrics',st.lyrics],['🎶','Vocals',st.vocals],['🎨','Aesthetic',st.aesthetic]].filter(r=>r[2]);
-  if(!rows.length) return '';
-  return `<div class="card-stars">${rows.map(([ico,label,n])=>`<span class="card-star-cat" title="${label}: ${n}/5 stars"><span class="cs-ico">${ico}</span><span class="star-ico-wrap">${starsHtml(n)}</span></span>`).join('')}</div>`;
-}
 function vibeBarHtml(label, v, cls){
   return `<div class="vibe-bar-row"><span class="vibe-bar-label">${label}</span><span class="vibe-bar-track"><span class="vibe-bar-fill ${cls}" style="width:${clampNum(v||0,0,100)}%;"></span></span></div>`;
 }
 function cardRatingsStripHtml(s){
   const st = s.stars || {};
-  const hasStars = !!(st.lyrics || st.vocals || st.replay || st.production);
+  const hasStars = !!(st.lyrics || st.vocals || st.replay);
   const hasVibes = s.vibeEnergy !== null && s.vibeEnergy !== undefined;
   if(!hasStars && !hasVibes) return '';
   let out = '<div class="card-ratings">';
@@ -574,7 +568,6 @@ function cardRatingsStripHtml(s){
       + `<span title="Lyrics ${(st.lyrics||0)}/5">🎤${starsHtml(st.lyrics)}</span>`
       + `<span title="Vocals ${(st.vocals||0)}/5">🎶${starsHtml(st.vocals)}</span>`
       + `<span title="Replay-ability ${(st.replay||0)}/5">🔁${starsHtml(st.replay)}</span>`
-      + `<span title="Production ${(st.production||0)}/5">🎛️${starsHtml(st.production)}</span>`
       + `</div>`;
   }
   return out + '</div>';
@@ -639,10 +632,6 @@ function cardBackHtml(s){
         ${cbField('Added', s.createdAt ? escapeHtml(formatAddedDate(s.createdAt)) : '')}
       </div>
     </div>`;
-}
-function cardVibesHtml(s){
-  if(s.vibeEnergy === null || s.vibeEnergy === undefined) return '';
-  return `<div class="vibe-bars">${vibeBarHtml('⚡ Energy', s.vibeEnergy, 'energy')}${vibeBarHtml('🌗 Mood', s.vibeMood, 'mood')}</div>`;
 }
 function tierColor(tier){
   return {'★':'var(--star)',S:'var(--teal)',A:'var(--rose)',B:'var(--lilac)',C:'var(--sage)'}[tier]||'';

@@ -881,6 +881,7 @@
     gap:10px;
     margin-top:auto;
     padding-top:10px;
+    padding-right:36px;
     border-top:2px solid var(--ink);
   }
   .card-actions button{
@@ -1466,20 +1467,14 @@
   .score-chip.big{ font-size:15px; padding:4px 11px; margin-left:0; }
   .cb-band{ font-size:11px; opacity:.55; letter-spacing:.5px; }
   .cb-unrated{ font-size:12px; opacity:.6; font-style:italic; }
-  .cb-stars{ display:flex; flex-direction:column; gap:5px; }
-  .cb-star-row{ display:flex; align-items:center; gap:7px; font-size:12px; }
-  .cb-star-row .cs-ico{ width:18px; text-align:center; opacity:.75; }
-  .cb-star-row .cb-cat{ width:72px; opacity:.8; }
-  .cs-ico{ opacity:.75; }
   .star-ico{ color:rgba(var(--on-paper-rgb),0.28); letter-spacing:.5px; font-size:11px; }
   .star-ico.on{ color:#f5c84c; }
   .cb-star-num{ margin-left:auto; font-size:10.5px; opacity:.55; font-variant-numeric:tabular-nums; }
-  .cb-meta{ margin:0; font-size:12px; opacity:.7; }
   .vibe-slider-line{ display:flex; align-items:center; gap:8px; }
   .vibe-slider-line input{ flex:1; }
   .vibe-end-ico{ font-size:16px; line-height:1; flex:none; }
   .cb-flip-fab{
-    position:absolute; top:9px; right:24px; z-index:6;
+    position:absolute; bottom:11px; right:24px; z-index:6;
     width:26px; height:26px; border-radius:50%;
     border:1.5px solid rgba(var(--on-paper-rgb),0.35);
     background:rgba(var(--on-paper-rgb),0.06);
@@ -1487,7 +1482,6 @@
     font-size:13px; line-height:1; cursor:pointer;
   }
   .cb-flip-fab:hover{ background:color-mix(in srgb, var(--gold) 22%, transparent); border-color:var(--gold); }
-  .pin-btn ~ .cb-flip-fab{ right:60px; }
   /* COMPACT RATINGS STRIP ON CARD FRONT */
   .card-ratings{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
   .cr-stars{ display:flex; gap:9px; font-size:11px; }
