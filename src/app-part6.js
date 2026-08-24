@@ -50,6 +50,14 @@ function ensureTermsAccepted(user){
       resolve(true);
     };
     const onLogout = async ()=>{
+      if(syncDirty || syncInFlight){
+        const proceed = window.confirm('Your changes are still saving to the cloud. If you log out before saving finishes, your latest edits may be lost.\n\nLog out anyway?');
+        if(!proceed) return;
+        try{
+          syncInFlight = false;
+          await Promise.race([ doSync(0, syncRevision), new Promise(res=> setTimeout(res, 3000)) ]);
+        }catch(e){}
+      }
       overlay.classList.remove('open');
       acceptBtn.removeEventListener('click', onAccept);
       logoutBtn.removeEventListener('click', onLogout);

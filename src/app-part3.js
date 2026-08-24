@@ -1850,9 +1850,12 @@ async function fetchPreviewUrl(song){
   const now = Date.now();
   function pickHit(rows){
     let hit = rows.find(r=> r.previewUrl && String(r.trackName||'').trim().toLowerCase() === wantTitle && wantArtist && String(r.artistName||'').trim().toLowerCase() === wantArtist);
-    if(!hit) hit = rows.find(r=> r.previewUrl && wantTitle && String(r.trackName||'').trim().toLowerCase().includes(wantTitle) && wantArtist && String(r.artistName||'').trim().toLowerCase().includes(wantArtist));
-    if(!hit) hit = rows.find(r=> r.previewUrl && String(r.trackName||'').trim().toLowerCase() === wantTitle && wantArtist && wantArtist.split(' ').some(w => w.length > 2 && String(r.artistName||'').toLowerCase().includes(w)));
-    return hit ? hit.previewUrl : null;
+    if(hit) return { url: hit.previewUrl, tier: 0 };
+    hit = rows.find(r=> r.previewUrl && wantTitle && String(r.trackName||'').trim().toLowerCase().includes(wantTitle) && wantArtist && String(r.artistName||'').trim().toLowerCase().includes(wantArtist));
+    if(hit) return { url: hit.previewUrl, tier: 1 };
+    hit = rows.find(r=> r.previewUrl && String(r.trackName||'').trim().toLowerCase() === wantTitle && wantArtist && wantArtist.split(' ').some(w => w.length > 2 && String(r.artistName||'').toLowerCase().includes(w)));
+    if(hit) return { url: hit.previewUrl, tier: 2 };
+    return null;
   }
   const jobs = [];
   if(now > deezerCooldownUntil){
@@ -1871,13 +1874,23 @@ async function fetchPreviewUrl(song){
   }
   let url = null;
   if(jobs.length === 1){
-    url = await jobs[0];
+    const r = await jobs[0];
+    url = r ? r.url : null;
   } else if(jobs.length >= 2){
-    // Race both sources in parallel; take the first useful URL without waiting for the slower one.
+    // Race both sources; take an exact match immediately, otherwise wait for
+    // both and prefer the best match quality (exact > partial > loose).
     url = await new Promise((resolve)=>{
       let pending = jobs.length, settledDone = false;
+      let best = null;
       const finish = (v)=>{ if(!settledDone){ settledDone = true; resolve(v); } };
-      jobs.forEach(p=> p.then(v=>{ pending--; if(v){ finish(v); } else if(pending === 0){ finish(null); } }).catch(()=>{ pending--; if(pending === 0){ finish(null); } }));
+      jobs.forEach(p=> p.then(r=>{
+        pending--;
+        if(r && (!best || r.tier < best.tier)) best = r;
+        if(best && best.tier === 0){ finish(best.url); return; }
+        if(pending === 0){ finish(best ? best.url : null); }
+      }).catch(()=>{ pending--; if(pending === 0){ finish(best ? best.url : null); } }));
+      // Safety: never wait longer than 6s total.
+      setTimeout(()=> finish(best ? best.url : null), 6000);
     });
   }
   previewInflight.delete(id);
