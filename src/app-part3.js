@@ -796,7 +796,7 @@ function songCardHtml(s, clusterCounts){
   return `
       <div class="card ${s.archived?'archived':''}${showEx?' example-card':''}" data-id="${s.id}">
         ${showEx ? '<span class="example-badge">EXAMPLE</span>' : ''}
-        <button class="pin-btn ${s.favorited?'pinned':''}" data-action="pin" aria-pressed="${s.favorited?'true':'false'}" aria-label="${s.favorited?'Remove from favorites':'Add to favorites'}" title="${s.favorited?'Remove from favorites':'Add to favorites'}">${s.favorited?'♥':'♡'}</button>
+        <button class="pin-btn ${s.favorited?'pinned':''}" data-action="pin" data-help="Add to or remove from your personal favourites list." aria-pressed="${s.favorited?'true':'false'}" aria-label="${s.favorited?'Remove from favorites':'Add to favorites'}" title="${s.favorited?'Remove from favorites':'Add to favorites'}">${s.favorited?'♥':'♡'}</button>
         <div class="card-top">
           ${coverThumbHtml(s)}
           <div class="title-stack">
@@ -812,7 +812,7 @@ function songCardHtml(s, clusterCounts){
         </div>
         ${cardRatingsStripHtml(s)}
         <div class="preview-row">
-          <button type="button" class="preview-btn" data-preview="${escapeAttr(s.id)}" title="Play a 30-second preview" aria-label="Play 30-second preview">▶</button>
+          <button type="button" class="preview-btn" data-preview="${escapeAttr(s.id)}" data-help="Play a 30-second preview of this song." title="Play a 30-second preview" aria-label="Play 30-second preview">▶</button>
           <span class="preview-hint">30-sec preview</span>
         </div>
         ${songStackBadgesHtml(s, clusterCounts)}
@@ -829,14 +829,14 @@ function songCardHtml(s, clusterCounts){
           return `<span class="reminds-badge${lp?' linked':''}" data-person="${p.id}" title="${tip}">${photo?`<img loading="lazy" decoding="async" src="${photo}" loading="lazy" decoding="async" alt="Image">`:''}${escapeHtml(p.name)}<button type="button" class="reminds-badge-x" data-remove-reminder="${s.id}|${p.id}" title="Remove ${escapeAttr(p.name)} from this song">×</button></span>`;
         }).join('')}</div>` : (showEx ? `<div class="reminds-badges"><span class="reminds-badge ex">e.g. Mom</span><span class="reminds-badge ex">e.g. a college roommate</span></div>` : '')}
         <div class="card-actions">
-          ${!showEx && geniusLyricsUrl(s.title, s.artists) ? `<a href="${escapeAttr(geniusLyricsUrl(s.title, s.artists))}" target="_blank" rel="noopener" title="Open lyrics on Genius">LYRICS ↗</a>` : ''}
-          <button data-action="edit">EDIT</button>
-          <button data-action="archive">${s.archived ? 'UNARCHIVE' : 'ARCHIVE'}</button>
-          <button data-action="delete" class="del">DELETE</button>
-          ${!showEx ? `<button data-action="share" class="share-card-btn" title="Generate a shareable card for this song">↗ SHARE</button>` : ''}
+          ${!showEx && geniusLyricsUrl(s.title, s.artists) ? `<a href="${escapeAttr(geniusLyricsUrl(s.title, s.artists))}" target="_blank" rel="noopener" title="Open lyrics on Genius" data-help="Search for full lyrics on Genius.">LYRICS ↗</a>` : ''}
+          <button data-action="edit" data-help="Open the editor to change this song's details.">EDIT</button>
+          <button data-action="archive" data-help="Hide this card from your main grid without deleting it.">${s.archived ? 'UNARCHIVE' : 'ARCHIVE'}</button>
+          <button data-action="delete" class="del" data-help="Permanently remove this song from your cataloguex.">DELETE</button>
+          ${!showEx ? `<button data-action="share" class="share-card-btn" data-help="Generate a shareable image of this song card." title="Generate a shareable card for this song">↗ SHARE</button>` : ''}
         </div>
         ${!showEx ? cardBackHtml(s) : ''}
-        ${!showEx ? `<button type="button" class="cb-flip-fab" data-action="flip" title="Flip card" aria-label="Flip card">↻</button>` : ''}
+        ${!showEx ? `<button type="button" class="cb-flip-fab" data-action="flip" data-help="Flip the card to see extra details on the back." title="Flip card" aria-label="Flip card">↻</button>` : ''}
       </div>
     `;
 }
@@ -3036,6 +3036,52 @@ document.getElementById('addMusicAlbumBtn').addEventListener('click', ()=>{
 document.getElementById('addMusicCancelBtn').addEventListener('click', ()=>{
   document.getElementById('addMusicOverlay').classList.remove('open');
 });
+/* ---- LONG-PRESS HELP TIPS ---- */
+(function(){
+  let tipEl=null, timer=null, active=null, suppressClick=false;
+  function makeTip(){ tipEl=document.createElement('div'); tipEl.id='holdTip'; document.body.appendChild(tipEl); }
+  function posTip(el){
+    if(!tipEl) return;
+    const r=el.getBoundingClientRect();
+    let x=r.left+r.width/2, y=r.top-8;
+    tipEl.style.left='0px'; tipEl.style.top='0px';
+    const tw=tipEl.offsetWidth, th=tipEl.offsetHeight;
+    x=Math.max(8, Math.min(x-tw/2, window.innerWidth-tw-8));
+    if(y-th<8) y=r.bottom+8;
+    else y=y-th;
+    tipEl.style.left=x+'px'; tipEl.style.top=y+'px';
+  }
+  function show(el){
+    const msg=el.getAttribute('data-help');
+    if(!msg) return;
+    if(!tipEl) makeTip();
+    tipEl.textContent=msg;
+    tipEl.classList.add('show');
+    active=el;
+    posTip(el);
+    suppressClick=true;
+  }
+  function hide(){ if(tipEl){ tipEl.classList.remove('show'); } active=null; suppressClick=false; }
+  function cancel(){ if(timer){ clearTimeout(timer); timer=null; } }
+  document.addEventListener('pointerdown', function(e){
+    const el=e.target.closest('[data-help]');
+    if(!el){ cancel(); return; }
+    cancel();
+    active=el;
+    timer=setTimeout(function(){ show(el); timer=null; }, 3000);
+  }, {passive:true});
+  ['pointerup','pointerleave','pointercancel'].forEach(function(ev){
+    document.addEventListener(ev, function(e){
+      if(timer){ cancel(); }
+      if(active && tipEl && tipEl.classList.contains('show')){
+        setTimeout(hide, 1500);
+      } else { hide(); }
+    }, {passive:true});
+  });
+  document.addEventListener('click', function(e){
+    if(suppressClick){ e.stopImmediatePropagation(); e.preventDefault(); suppressClick=false; return false; }
+  }, true);
+})();
 /* ---- TOAST NOTIFICATIONS ---- */
 function showToast(msg, duration){
   duration = duration || 5000;
