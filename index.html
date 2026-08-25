@@ -3244,6 +3244,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
       <div class="field"><label>BPM</label><input id="f-bpm" type="number" min="0" max="999" placeholder="e.g. 120"></div>
       <div class="field"><label>Key</label><div style="display:flex;gap:8px;align-items:center;"><input id="f-key" type="text" placeholder="e.g. C major, A minor" style="flex:1;"><span id="f-key-camelot" class="camelot-chip" style="display:none;"></span></div></div>
     </div>
+    <div class="field"><label>Release date</label><input id="f-release-date" type="date"></div>
     <div class="two-col">
       <div class="field"><label>Spotify URL</label><input id="f-spotify" type="url" placeholder="https://open.spotify.com/track/…"></div>
       <div class="field"><label>Apple Music URL</label><input id="f-apple" type="url" placeholder="https://music.apple.com/…"></div>
@@ -3252,6 +3253,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
       <div class="field"><label>YouTube URL</label><input id="f-youtube" type="url" placeholder="https://youtube.com/watch?…"></div>
       <div class="field"><label>Tidal URL</label><input id="f-tidal" type="url" placeholder="https://tidal.com/browse/track/…"></div>
     </div>
+    <div class="field"><label>Artist website</label><input id="f-artist-website" type="url" placeholder="https://…"></div>
     </div>
     <div class="modal-actions">
       <button class="btn-cancel" id="cancelBtn">Cancel</button>
@@ -3425,6 +3427,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
       <div class="field"><label>BPM</label><input id="mf-bpm" type="number" min="0" max="999" placeholder="e.g. 120"></div>
       <div class="field"><label>Key</label><div style="display:flex;gap:8px;align-items:center;"><input id="mf-key" type="text" placeholder="e.g. C major, A minor" style="flex:1;"><span id="mf-key-camelot" class="camelot-chip" style="display:none;"></span></div></div>
     </div>
+    <div class="field"><label>Release date</label><input id="mf-release-date" type="date"></div>
     <div class="two-col">
       <div class="field"><label>Spotify URL</label><input id="mf-spotify" type="url" placeholder="https://open.spotify.com/track/…"></div>
       <div class="field"><label>Apple Music URL</label><input id="mf-apple" type="url" placeholder="https://music.apple.com/…"></div>
@@ -3433,6 +3436,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
       <div class="field"><label>YouTube URL</label><input id="mf-youtube" type="url" placeholder="https://youtube.com/watch?…"></div>
       <div class="field"><label>Tidal URL</label><input id="mf-tidal" type="url" placeholder="https://tidal.com/browse/track/…"></div>
     </div>
+    <div class="field"><label>Artist website</label><input id="mf-artist-website" type="url" placeholder="https://…"></div>
     </div>
     <div class="field">
       <label id="multiTitlesLabel">Titles</label>
@@ -4659,12 +4663,14 @@ function cardBackHtml(s){
       <div class="cb-fields">
         ${cbField('Track #', trackNoDisplay(s))}
         ${cbField('Record label', s.recordLabel ? escapeHtml(s.recordLabel) : '')}
+        ${cbField('Release date', s.releaseDate ? escapeHtml(s.releaseDate) : '')}
         ${cbField('Producers', s.producer ? escapeHtml(s.producer) : '')}
         ${cbField('Songwriters', s.songwriters ? escapeHtml(s.songwriters) : '')}
         ${cbField('BPM', s.bpm ? escapeHtml(String(s.bpm)) : '')}
         ${cbField('Key', s.musicKey ? escapeHtml(s.musicKey) + (musicKeyToCamelot(s.musicKey) ? ' <span class="camelot-chip">'+escapeHtml(musicKeyToCamelot(s.musicKey))+'</span>' : '') : '')}
         ${cbField('Duration', s.duration ? escapeHtml(s.duration) : '')}
         ${streamLinks.length ? '<div class="cb-field"><span class="cb-flabel">Listen</span><span class="cb-fval">' + streamLinks.join(' · ') + '</span></div>' : ''}
+        ${s.artistWebsite ? '<div class="cb-field"><span class="cb-flabel">Artist</span><span class="cb-fval"><a class="back-link" href="'+escapeHtml(s.artistWebsite)+'" target="_blank" rel="noopener">Website ↗</a></span></div>' : ''}
       </div>
       <div class="cb-fields">
         ${cbField('Opinions', s.why ? escapeHtml(s.why) : '')}
@@ -5494,6 +5500,8 @@ function openAddFromData(data){
   document.getElementById('f-quick').value = data.quickThought || '';
   document.getElementById('f-credit').value = data.credit || '';
   document.getElementById('f-label').value = data.recordLabel || '';
+  document.getElementById('f-release-date').value = data.releaseDate || '';
+  document.getElementById('f-artist-website').value = data.artistWebsite || '';
   currentCoverArt = data.coverArt || null;
   setImagePreview('f-cover', currentCoverArt);
   currentTier = data.tier || null;
@@ -6449,10 +6457,12 @@ function openModal(song){
   document.getElementById('f-bpm').value = song?.bpm ?? '';
   document.getElementById('f-key').value = song?.musicKey || '';
   updateCamelotPreview('f-key','f-key-camelot');
+  document.getElementById('f-release-date').value = song?.releaseDate || '';
   document.getElementById('f-spotify').value = song?.spotifyUrl || '';
   document.getElementById('f-apple').value = song?.appleMusicUrl || '';
   document.getElementById('f-youtube').value = song?.youtubeMusicUrl || '';
   document.getElementById('f-tidal').value = song?.tidalUrl || '';
+  document.getElementById('f-artist-website').value = song?.artistWebsite || '';
   document.getElementById('f-track').value = song?.trackNumber || '';
   document.getElementById('f-score').value = (song?.score === null || song?.score === undefined) ? '' : song.score;
   currentStars = { lyrics:(song?.stars&&song.stars.lyrics)||0, vocals:(song?.stars&&song.stars.vocals)||0, replay:(song?.stars&&song.stars.replay)||0 };
@@ -6625,6 +6635,8 @@ function handleSave(){
     appleMusicUrl: document.getElementById('f-apple').value.trim() || null,
     youtubeMusicUrl: document.getElementById('f-youtube').value.trim() || null,
     tidalUrl: document.getElementById('f-tidal').value.trim() || null,
+    releaseDate: document.getElementById('f-release-date').value.trim() || null,
+    artistWebsite: document.getElementById('f-artist-website').value.trim() || null,
     coverArt: currentCoverArt,
     remindsOf: getSelectedReminds('f'),
     tier: currentTier,
@@ -6754,10 +6766,12 @@ function openMultiModal(mode){
   document.getElementById('mf-bpm').value = '';
   document.getElementById('mf-key').value = '';
   updateCamelotPreview('mf-key','mf-key-camelot');
+  document.getElementById('mf-release-date').value = '';
   document.getElementById('mf-spotify').value = '';
   document.getElementById('mf-apple').value = '';
   document.getElementById('mf-youtube').value = '';
   document.getElementById('mf-tidal').value = '';
+  document.getElementById('mf-artist-website').value = '';
   document.getElementById('multiCoverLabel').textContent = isAlbum ? 'Artwork (shared)' : 'Artwork (optional, shared)';
   currentMultiCoverArt = null;
   setImagePreview('mf-cover', null);
@@ -6875,6 +6889,8 @@ function handleMultiSave(){
     appleMusicUrl: document.getElementById('mf-apple').value.trim() || null,
     youtubeMusicUrl: document.getElementById('mf-youtube').value.trim() || null,
     tidalUrl: document.getElementById('mf-tidal').value.trim() || null,
+    releaseDate: document.getElementById('mf-release-date').value.trim() || null,
+    artistWebsite: document.getElementById('mf-artist-website').value.trim() || null,
     coverArt: currentMultiCoverArt,
     remindsOf: getSelectedReminds('mf'),
     tier: currentMultiTier
@@ -6919,6 +6935,7 @@ function handleMultiSave(){
     songs = [...newSongs, ...songs];
     save();
     upsertGlobalSongBatch(newSongs, currentUserId);
+    syncToSongDbBatch(newSongs, currentUserId);
     closeMultiModal();
     render();
     if(document.getElementById('feedOverlay').classList.contains('open')) loadFeed();
@@ -7321,7 +7338,7 @@ async function handleSingleUrl(url){
       const resp = await fetch('https://api.spotify.com/v1/tracks/' + trackId, { headers:{ Authorization:'Bearer '+token } });
       if(!resp.ok) throw new Error('Track not found');
       const t = await resp.json();
-      const trackData = { title:t.name, artists:(t.artists||[]).map(a=>a.name), album:(t.album&&t.album.name)||'', year:(t.album&&t.album.release_date)||'', coverArt:(t.album&&t.album.images&&t.album.images[0]&&t.album.images[0].url)||null, explicit:!!t.explicit, spotifyUrl:t.external_urls&&t.external_urls.spotify||'' };
+      const trackData = { title:t.name, artists:(t.artists||[]).map(a=>a.name), album:(t.album&&t.album.name)||'', year:(t.album&&t.album.release_date)||'', releaseDate:(t.album&&t.album.release_date)||'', coverArt:(t.album&&t.album.images&&t.album.images[0]&&t.album.images[0].url)||null, explicit:!!t.explicit, spotifyUrl:t.external_urls&&t.external_urls.spotify||'' };
       document.getElementById('spotifyImportOverlay').classList.remove('open');
       openAddFromData(trackData);
       if(trackData.spotifyUrl) document.getElementById('f-spotify').value = trackData.spotifyUrl;
@@ -7345,6 +7362,7 @@ async function handleSingleUrl(url){
         title:t.title, artists:t.artists.length?t.artists:albumArtists, album:albumName,
         genres:[], why:'', credit:'', coverArt, tier:null, remindsOf:[], year:albumYear||null,
         trackNumber:t.trackNumber||(i+1), spotifyUrl:t.spotifyUrl||'',
+        releaseDate:albumYear||null,
       }));
       const dupes = findDuplicates(allImported);
       const dupeKeys = new Set(dupes.map(d=>songKey(d)));
@@ -7367,7 +7385,7 @@ async function handleSingleUrl(url){
         const d = await resp.json();
         if(d.results && d.results.length){
           const t = d.results[0];
-          const trackData = { title:t.trackName, artists:[t.artistName], album:t.collectionName||'', year:t.releaseDate||'', coverArt:t.artworkUrl100||null, explicit:!!t.trackExplicitness, appleMusicUrl:t.trackViewUrl||'' };
+          const trackData = { title:t.trackName, artists:[t.artistName], album:t.collectionName||'', year:t.releaseDate||'', releaseDate:t.releaseDate||'', coverArt:t.artworkUrl100||null, explicit:!!t.trackExplicitness, appleMusicUrl:t.trackViewUrl||'' };
           document.getElementById('spotifyImportOverlay').classList.remove('open');
           openAddFromData(trackData);
           if(trackData.appleMusicUrl) document.getElementById('f-apple').value = trackData.appleMusicUrl;
@@ -7397,6 +7415,7 @@ async function handleSingleUrl(url){
               title:t.title, artists:(t.artists&&t.artists.length)?t.artists:[albumArtist], album:albumName,
               genres:[], why:'', credit:'', coverArt:t.coverArt||coverArt, tier:null, remindsOf:[], year:albumYear||null,
               trackNumber:t.trackNumber||(i+1), appleMusicUrl:t.appleMusicUrl||'',
+              releaseDate:albumYear||null,
             }));
             const dupes = findDuplicates(allImported);
             const dupeKeys = new Set(dupes.map(d=>songKey(d)));
@@ -7443,7 +7462,7 @@ async function handleSingleUrl(url){
             const albumName = albumAttr.title || '';
             const year = albumAttr.releaseDate ? albumAttr.releaseDate.substring(0,4) : '';
             const coverArt = albumAttr.cover ? 'https://resources.tidal.com/images/'+albumAttr.cover.replace('/','-')+'/640x640.jpg' : null;
-            const trackData = { title:attrs.title||'', artists:artists.length?artists:[], album:albumName, year, coverArt, tidalUrl:url, explicit:!!attrs.explicit };
+            const trackData = { title:attrs.title||'', artists:artists.length?artists:[], album:albumName, year, releaseDate:albumAttr.releaseDate||'', coverArt, tidalUrl:url, explicit:!!attrs.explicit };
             document.getElementById('spotifyImportOverlay').classList.remove('open');
             openAddFromData(trackData);
             if(trackData.tidalUrl) document.getElementById('f-tidal').value = trackData.tidalUrl;
@@ -7500,6 +7519,7 @@ async function handleSingleUrl(url){
               title:t.title, artists:albumArtists.length?albumArtists:[], album:albumName,
               genres:[], why:'', credit:'', coverArt, tier:null, remindsOf:[], year:albumYear||null,
               trackNumber:t.trackNumber||(i+1), tidalUrl:url,
+              releaseDate:attrs.releaseDate||null,
             }));
             const dupes = findDuplicates(allImported);
             const dupeKeys = new Set(dupes.map(d=>songKey(d)));
@@ -10678,7 +10698,20 @@ async function upsertGlobalSong(song, userId){
       p_cover_art: song.coverArt || '',
       p_preview_url: song.previewUrl || '',
       p_explicit: song.explicit || false,
-      p_added_by: userId || null
+      p_added_by: userId || null,
+      p_producers: song.producer || '',
+      p_songwriters: song.songwriters || '',
+      p_bpm: song.bpm || null,
+      p_key: song.musicKey || '',
+      p_duration: song.duration || '',
+      p_record_label: song.recordLabel || '',
+      p_spotify_url: song.spotifyUrl || '',
+      p_apple_music_url: song.appleMusicUrl || '',
+      p_youtube_music_url: song.youtubeMusicUrl || '',
+      p_tidal_url: song.tidalUrl || '',
+      p_release_date: song.releaseDate || '',
+      p_artist_website: song.artistWebsite || '',
+      p_track_number: song.trackNumber ? String(song.trackNumber) : ''
     });
   }catch(e){ console.error('global_songs upsert failed:', e); }
 }
@@ -10706,7 +10739,20 @@ function syncToSongDb(song, userId){
       explicit: !!song.explicit,
       cover_art: song.coverArt || null,
       source: 'user',
-      added_by: userId || null
+      added_by: userId || null,
+      producers: song.producer || '',
+      songwriters: song.songwriters || '',
+      bpm: song.bpm || null,
+      key: song.musicKey || '',
+      duration: song.duration || '',
+      record_label: song.recordLabel || '',
+      spotify_url: song.spotifyUrl || '',
+      apple_music_url: song.appleMusicUrl || '',
+      youtube_music_url: song.youtubeMusicUrl || '',
+      tidal_url: song.tidalUrl || '',
+      release_date: song.releaseDate || '',
+      artist_website: song.artistWebsite || '',
+      track_number: song.trackNumber ? String(song.trackNumber) : ''
     }).then(({error})=>{
       if(error && error.code !== '23505') console.error('[syncToSongDb] insert error:', error.message);
     });
@@ -10769,6 +10815,19 @@ async function updateGlobalSong(song){
     if(song.coverArt) updates.cover_art = song.coverArt;
     if(song.previewUrl) updates.preview_url = song.previewUrl;
     if(typeof song.explicit === 'boolean') updates.explicit = song.explicit;
+    if(song.producer) updates.producers = song.producer;
+    if(song.songwriters) updates.songwriters = song.songwriters;
+    if(song.bpm !== null && song.bpm !== undefined) updates.bpm = song.bpm;
+    if(song.musicKey) updates.key = song.musicKey;
+    if(song.duration) updates.duration = song.duration;
+    if(song.recordLabel) updates.record_label = song.recordLabel;
+    if(song.spotifyUrl) updates.spotify_url = song.spotifyUrl;
+    if(song.appleMusicUrl) updates.apple_music_url = song.appleMusicUrl;
+    if(song.youtubeMusicUrl) updates.youtube_music_url = song.youtubeMusicUrl;
+    if(song.tidalUrl) updates.tidal_url = song.tidalUrl;
+    if(song.releaseDate) updates.release_date = song.releaseDate;
+    if(song.artistWebsite) updates.artist_website = song.artistWebsite;
+    if(song.trackNumber) updates.track_number = String(song.trackNumber);
     if(Object.keys(updates).length === 0) return;
     await sb.from('global_songs').update(updates).eq('title', title).ilike('artist', artist);
   }catch(e){ console.error('global_songs update failed:', e); }
@@ -10776,13 +10835,14 @@ async function updateGlobalSong(song){
 
 function slimSongForUpload(s){
   const c = Object.assign({}, s);
-  ['album','year','why','credit','lyricSnippet','heard','source','clusterName'].forEach(k=>{
+  ['album','year','why','credit','lyricSnippet','heard','source','clusterName','producer','songwriters','duration','recordLabel','musicKey','spotifyUrl','appleMusicUrl','youtubeMusicUrl','tidalUrl','releaseDate','artistWebsite'].forEach(k=>{
     if(c[k] === '' || c[k] === null || c[k] === undefined) delete c[k];
   });
   ['artists','genres','tags','remindsOf','edits'].forEach(k=>{
     if(Array.isArray(c[k]) && c[k].length === 0) delete c[k];
   });
   if(c.tier === '' || c.tier === null || c.tier === undefined) delete c.tier;
+  if(c.bpm === null || c.bpm === undefined) delete c.bpm;
   return c;
 }
 let syncDirty = false;
@@ -11344,6 +11404,7 @@ async function selectItunesAlbum(collectionId){
     const cover = albumInfo.artworkUrl100 ? upscaleArtwork(albumInfo.artworkUrl100) : null;
     document.getElementById('mf-album').value = albumInfo.collectionName || '';
     document.getElementById('mf-year').value = albumInfo.releaseDate ? albumInfo.releaseDate.slice(0,4) : '';
+    document.getElementById('mf-release-date').value = albumInfo.releaseDate || '';
     document.getElementById('mf-genre').value = albumInfo.primaryGenreName || '';
     document.getElementById('mf-artist').value = albumInfo.artistName || '';
     document.getElementById('mf-label').value = albumInfo.recordLabel || '';
@@ -11396,7 +11457,7 @@ async function renderSongSearchResults(query){
         const resp = await fetch('https://itunes.apple.com/lookup?id=' + appleTrackMatch[2] + '&entity=song');
         if(resp.ok){
           const d = await resp.json();
-          if(d.results&&d.results.length){ const t=d.results[0]; trackData = { title:t.trackName, artists:[t.artistName], album:t.collectionName||'', year:t.releaseDate||'', coverArt:t.artworkUrl100||null, explicit:!!t.trackExplicitness, previewUrl:t.previewUrl||'', appleMusicUrl:t.trackViewUrl||'' }; }
+          if(d.results&&d.results.length){ const t=d.results[0]; trackData = { title:t.trackName, artists:[t.artistName], album:t.collectionName||'', year:t.releaseDate||'', releaseDate:t.releaseDate||'', coverArt:t.artworkUrl100||null, explicit:!!t.trackExplicitness, previewUrl:t.previewUrl||'', appleMusicUrl:t.trackViewUrl||'' }; }
         }
       }
       if(trackData){
@@ -11516,6 +11577,7 @@ function selectItunesSong(trackId){
   document.getElementById('f-artist').value = t.artistName || '';
   document.getElementById('f-album').value = t.collectionName || '';
   document.getElementById('f-year').value = t.releaseDate ? t.releaseDate.slice(0,4) : '';
+  document.getElementById('f-release-date').value = t.releaseDate || '';
   document.getElementById('f-track').value = t.trackNumber || '';
   document.getElementById('f-genre').value = t.primaryGenreName || '';
   document.getElementById('f-label').value = t.recordLabel || '';

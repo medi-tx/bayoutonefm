@@ -285,7 +285,20 @@ async function upsertGlobalSong(song, userId){
       p_cover_art: song.coverArt || '',
       p_preview_url: song.previewUrl || '',
       p_explicit: song.explicit || false,
-      p_added_by: userId || null
+      p_added_by: userId || null,
+      p_producers: song.producer || '',
+      p_songwriters: song.songwriters || '',
+      p_bpm: song.bpm || null,
+      p_key: song.musicKey || '',
+      p_duration: song.duration || '',
+      p_record_label: song.recordLabel || '',
+      p_spotify_url: song.spotifyUrl || '',
+      p_apple_music_url: song.appleMusicUrl || '',
+      p_youtube_music_url: song.youtubeMusicUrl || '',
+      p_tidal_url: song.tidalUrl || '',
+      p_release_date: song.releaseDate || '',
+      p_artist_website: song.artistWebsite || '',
+      p_track_number: song.trackNumber ? String(song.trackNumber) : ''
     });
   }catch(e){ console.error('global_songs upsert failed:', e); }
 }
@@ -313,7 +326,20 @@ function syncToSongDb(song, userId){
       explicit: !!song.explicit,
       cover_art: song.coverArt || null,
       source: 'user',
-      added_by: userId || null
+      added_by: userId || null,
+      producers: song.producer || '',
+      songwriters: song.songwriters || '',
+      bpm: song.bpm || null,
+      key: song.musicKey || '',
+      duration: song.duration || '',
+      record_label: song.recordLabel || '',
+      spotify_url: song.spotifyUrl || '',
+      apple_music_url: song.appleMusicUrl || '',
+      youtube_music_url: song.youtubeMusicUrl || '',
+      tidal_url: song.tidalUrl || '',
+      release_date: song.releaseDate || '',
+      artist_website: song.artistWebsite || '',
+      track_number: song.trackNumber ? String(song.trackNumber) : ''
     }).then(({error})=>{
       if(error && error.code !== '23505') console.error('[syncToSongDb] insert error:', error.message);
     });
@@ -376,6 +402,19 @@ async function updateGlobalSong(song){
     if(song.coverArt) updates.cover_art = song.coverArt;
     if(song.previewUrl) updates.preview_url = song.previewUrl;
     if(typeof song.explicit === 'boolean') updates.explicit = song.explicit;
+    if(song.producer) updates.producers = song.producer;
+    if(song.songwriters) updates.songwriters = song.songwriters;
+    if(song.bpm !== null && song.bpm !== undefined) updates.bpm = song.bpm;
+    if(song.musicKey) updates.key = song.musicKey;
+    if(song.duration) updates.duration = song.duration;
+    if(song.recordLabel) updates.record_label = song.recordLabel;
+    if(song.spotifyUrl) updates.spotify_url = song.spotifyUrl;
+    if(song.appleMusicUrl) updates.apple_music_url = song.appleMusicUrl;
+    if(song.youtubeMusicUrl) updates.youtube_music_url = song.youtubeMusicUrl;
+    if(song.tidalUrl) updates.tidal_url = song.tidalUrl;
+    if(song.releaseDate) updates.release_date = song.releaseDate;
+    if(song.artistWebsite) updates.artist_website = song.artistWebsite;
+    if(song.trackNumber) updates.track_number = String(song.trackNumber);
     if(Object.keys(updates).length === 0) return;
     await sb.from('global_songs').update(updates).eq('title', title).ilike('artist', artist);
   }catch(e){ console.error('global_songs update failed:', e); }
@@ -383,13 +422,14 @@ async function updateGlobalSong(song){
 
 function slimSongForUpload(s){
   const c = Object.assign({}, s);
-  ['album','year','why','credit','lyricSnippet','heard','source','clusterName'].forEach(k=>{
+  ['album','year','why','credit','lyricSnippet','heard','source','clusterName','producer','songwriters','duration','recordLabel','musicKey','spotifyUrl','appleMusicUrl','youtubeMusicUrl','tidalUrl','releaseDate','artistWebsite'].forEach(k=>{
     if(c[k] === '' || c[k] === null || c[k] === undefined) delete c[k];
   });
   ['artists','genres','tags','remindsOf','edits'].forEach(k=>{
     if(Array.isArray(c[k]) && c[k].length === 0) delete c[k];
   });
   if(c.tier === '' || c.tier === null || c.tier === undefined) delete c.tier;
+  if(c.bpm === null || c.bpm === undefined) delete c.bpm;
   return c;
 }
 let syncDirty = false;
@@ -951,6 +991,7 @@ async function selectItunesAlbum(collectionId){
     const cover = albumInfo.artworkUrl100 ? upscaleArtwork(albumInfo.artworkUrl100) : null;
     document.getElementById('mf-album').value = albumInfo.collectionName || '';
     document.getElementById('mf-year').value = albumInfo.releaseDate ? albumInfo.releaseDate.slice(0,4) : '';
+    document.getElementById('mf-release-date').value = albumInfo.releaseDate || '';
     document.getElementById('mf-genre').value = albumInfo.primaryGenreName || '';
     document.getElementById('mf-artist').value = albumInfo.artistName || '';
     document.getElementById('mf-label').value = albumInfo.recordLabel || '';
@@ -1003,7 +1044,7 @@ async function renderSongSearchResults(query){
         const resp = await fetch('https://itunes.apple.com/lookup?id=' + appleTrackMatch[2] + '&entity=song');
         if(resp.ok){
           const d = await resp.json();
-          if(d.results&&d.results.length){ const t=d.results[0]; trackData = { title:t.trackName, artists:[t.artistName], album:t.collectionName||'', year:t.releaseDate||'', coverArt:t.artworkUrl100||null, explicit:!!t.trackExplicitness, previewUrl:t.previewUrl||'', appleMusicUrl:t.trackViewUrl||'' }; }
+          if(d.results&&d.results.length){ const t=d.results[0]; trackData = { title:t.trackName, artists:[t.artistName], album:t.collectionName||'', year:t.releaseDate||'', releaseDate:t.releaseDate||'', coverArt:t.artworkUrl100||null, explicit:!!t.trackExplicitness, previewUrl:t.previewUrl||'', appleMusicUrl:t.trackViewUrl||'' }; }
         }
       }
       if(trackData){
@@ -1123,6 +1164,7 @@ function selectItunesSong(trackId){
   document.getElementById('f-artist').value = t.artistName || '';
   document.getElementById('f-album').value = t.collectionName || '';
   document.getElementById('f-year').value = t.releaseDate ? t.releaseDate.slice(0,4) : '';
+  document.getElementById('f-release-date').value = t.releaseDate || '';
   document.getElementById('f-track').value = t.trackNumber || '';
   document.getElementById('f-genre').value = t.primaryGenreName || '';
   document.getElementById('f-label').value = t.recordLabel || '';

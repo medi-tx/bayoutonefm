@@ -658,12 +658,14 @@ function cardBackHtml(s){
       <div class="cb-fields">
         ${cbField('Track #', trackNoDisplay(s))}
         ${cbField('Record label', s.recordLabel ? escapeHtml(s.recordLabel) : '')}
+        ${cbField('Release date', s.releaseDate ? escapeHtml(s.releaseDate) : '')}
         ${cbField('Producers', s.producer ? escapeHtml(s.producer) : '')}
         ${cbField('Songwriters', s.songwriters ? escapeHtml(s.songwriters) : '')}
         ${cbField('BPM', s.bpm ? escapeHtml(String(s.bpm)) : '')}
         ${cbField('Key', s.musicKey ? escapeHtml(s.musicKey) + (musicKeyToCamelot(s.musicKey) ? ' <span class="camelot-chip">'+escapeHtml(musicKeyToCamelot(s.musicKey))+'</span>' : '') : '')}
         ${cbField('Duration', s.duration ? escapeHtml(s.duration) : '')}
         ${streamLinks.length ? '<div class="cb-field"><span class="cb-flabel">Listen</span><span class="cb-fval">' + streamLinks.join(' · ') + '</span></div>' : ''}
+        ${s.artistWebsite ? '<div class="cb-field"><span class="cb-flabel">Artist</span><span class="cb-fval"><a class="back-link" href="'+escapeHtml(s.artistWebsite)+'" target="_blank" rel="noopener">Website ↗</a></span></div>' : ''}
       </div>
       <div class="cb-fields">
         ${cbField('Opinions', s.why ? escapeHtml(s.why) : '')}
@@ -1493,6 +1495,8 @@ function openAddFromData(data){
   document.getElementById('f-quick').value = data.quickThought || '';
   document.getElementById('f-credit').value = data.credit || '';
   document.getElementById('f-label').value = data.recordLabel || '';
+  document.getElementById('f-release-date').value = data.releaseDate || '';
+  document.getElementById('f-artist-website').value = data.artistWebsite || '';
   currentCoverArt = data.coverArt || null;
   setImagePreview('f-cover', currentCoverArt);
   currentTier = data.tier || null;
@@ -2448,10 +2452,12 @@ function openModal(song){
   document.getElementById('f-bpm').value = song?.bpm ?? '';
   document.getElementById('f-key').value = song?.musicKey || '';
   updateCamelotPreview('f-key','f-key-camelot');
+  document.getElementById('f-release-date').value = song?.releaseDate || '';
   document.getElementById('f-spotify').value = song?.spotifyUrl || '';
   document.getElementById('f-apple').value = song?.appleMusicUrl || '';
   document.getElementById('f-youtube').value = song?.youtubeMusicUrl || '';
   document.getElementById('f-tidal').value = song?.tidalUrl || '';
+  document.getElementById('f-artist-website').value = song?.artistWebsite || '';
   document.getElementById('f-track').value = song?.trackNumber || '';
   document.getElementById('f-score').value = (song?.score === null || song?.score === undefined) ? '' : song.score;
   currentStars = { lyrics:(song?.stars&&song.stars.lyrics)||0, vocals:(song?.stars&&song.stars.vocals)||0, replay:(song?.stars&&song.stars.replay)||0 };
@@ -2624,6 +2630,8 @@ function handleSave(){
     appleMusicUrl: document.getElementById('f-apple').value.trim() || null,
     youtubeMusicUrl: document.getElementById('f-youtube').value.trim() || null,
     tidalUrl: document.getElementById('f-tidal').value.trim() || null,
+    releaseDate: document.getElementById('f-release-date').value.trim() || null,
+    artistWebsite: document.getElementById('f-artist-website').value.trim() || null,
     coverArt: currentCoverArt,
     remindsOf: getSelectedReminds('f'),
     tier: currentTier,
@@ -2753,10 +2761,12 @@ function openMultiModal(mode){
   document.getElementById('mf-bpm').value = '';
   document.getElementById('mf-key').value = '';
   updateCamelotPreview('mf-key','mf-key-camelot');
+  document.getElementById('mf-release-date').value = '';
   document.getElementById('mf-spotify').value = '';
   document.getElementById('mf-apple').value = '';
   document.getElementById('mf-youtube').value = '';
   document.getElementById('mf-tidal').value = '';
+  document.getElementById('mf-artist-website').value = '';
   document.getElementById('multiCoverLabel').textContent = isAlbum ? 'Artwork (shared)' : 'Artwork (optional, shared)';
   currentMultiCoverArt = null;
   setImagePreview('mf-cover', null);
@@ -2874,6 +2884,8 @@ function handleMultiSave(){
     appleMusicUrl: document.getElementById('mf-apple').value.trim() || null,
     youtubeMusicUrl: document.getElementById('mf-youtube').value.trim() || null,
     tidalUrl: document.getElementById('mf-tidal').value.trim() || null,
+    releaseDate: document.getElementById('mf-release-date').value.trim() || null,
+    artistWebsite: document.getElementById('mf-artist-website').value.trim() || null,
     coverArt: currentMultiCoverArt,
     remindsOf: getSelectedReminds('mf'),
     tier: currentMultiTier
@@ -2918,6 +2930,7 @@ function handleMultiSave(){
     songs = [...newSongs, ...songs];
     save();
     upsertGlobalSongBatch(newSongs, currentUserId);
+    syncToSongDbBatch(newSongs, currentUserId);
     closeMultiModal();
     render();
     if(document.getElementById('feedOverlay').classList.contains('open')) loadFeed();
@@ -3320,7 +3333,7 @@ async function handleSingleUrl(url){
       const resp = await fetch('https://api.spotify.com/v1/tracks/' + trackId, { headers:{ Authorization:'Bearer '+token } });
       if(!resp.ok) throw new Error('Track not found');
       const t = await resp.json();
-      const trackData = { title:t.name, artists:(t.artists||[]).map(a=>a.name), album:(t.album&&t.album.name)||'', year:(t.album&&t.album.release_date)||'', coverArt:(t.album&&t.album.images&&t.album.images[0]&&t.album.images[0].url)||null, explicit:!!t.explicit, spotifyUrl:t.external_urls&&t.external_urls.spotify||'' };
+      const trackData = { title:t.name, artists:(t.artists||[]).map(a=>a.name), album:(t.album&&t.album.name)||'', year:(t.album&&t.album.release_date)||'', releaseDate:(t.album&&t.album.release_date)||'', coverArt:(t.album&&t.album.images&&t.album.images[0]&&t.album.images[0].url)||null, explicit:!!t.explicit, spotifyUrl:t.external_urls&&t.external_urls.spotify||'' };
       document.getElementById('spotifyImportOverlay').classList.remove('open');
       openAddFromData(trackData);
       if(trackData.spotifyUrl) document.getElementById('f-spotify').value = trackData.spotifyUrl;
@@ -3344,6 +3357,7 @@ async function handleSingleUrl(url){
         title:t.title, artists:t.artists.length?t.artists:albumArtists, album:albumName,
         genres:[], why:'', credit:'', coverArt, tier:null, remindsOf:[], year:albumYear||null,
         trackNumber:t.trackNumber||(i+1), spotifyUrl:t.spotifyUrl||'',
+        releaseDate:albumYear||null,
       }));
       const dupes = findDuplicates(allImported);
       const dupeKeys = new Set(dupes.map(d=>songKey(d)));
@@ -3366,7 +3380,7 @@ async function handleSingleUrl(url){
         const d = await resp.json();
         if(d.results && d.results.length){
           const t = d.results[0];
-          const trackData = { title:t.trackName, artists:[t.artistName], album:t.collectionName||'', year:t.releaseDate||'', coverArt:t.artworkUrl100||null, explicit:!!t.trackExplicitness, appleMusicUrl:t.trackViewUrl||'' };
+          const trackData = { title:t.trackName, artists:[t.artistName], album:t.collectionName||'', year:t.releaseDate||'', releaseDate:t.releaseDate||'', coverArt:t.artworkUrl100||null, explicit:!!t.trackExplicitness, appleMusicUrl:t.trackViewUrl||'' };
           document.getElementById('spotifyImportOverlay').classList.remove('open');
           openAddFromData(trackData);
           if(trackData.appleMusicUrl) document.getElementById('f-apple').value = trackData.appleMusicUrl;
@@ -3396,6 +3410,7 @@ async function handleSingleUrl(url){
               title:t.title, artists:(t.artists&&t.artists.length)?t.artists:[albumArtist], album:albumName,
               genres:[], why:'', credit:'', coverArt:t.coverArt||coverArt, tier:null, remindsOf:[], year:albumYear||null,
               trackNumber:t.trackNumber||(i+1), appleMusicUrl:t.appleMusicUrl||'',
+              releaseDate:albumYear||null,
             }));
             const dupes = findDuplicates(allImported);
             const dupeKeys = new Set(dupes.map(d=>songKey(d)));
@@ -3442,7 +3457,7 @@ async function handleSingleUrl(url){
             const albumName = albumAttr.title || '';
             const year = albumAttr.releaseDate ? albumAttr.releaseDate.substring(0,4) : '';
             const coverArt = albumAttr.cover ? 'https://resources.tidal.com/images/'+albumAttr.cover.replace('/','-')+'/640x640.jpg' : null;
-            const trackData = { title:attrs.title||'', artists:artists.length?artists:[], album:albumName, year, coverArt, tidalUrl:url, explicit:!!attrs.explicit };
+            const trackData = { title:attrs.title||'', artists:artists.length?artists:[], album:albumName, year, releaseDate:albumAttr.releaseDate||'', coverArt, tidalUrl:url, explicit:!!attrs.explicit };
             document.getElementById('spotifyImportOverlay').classList.remove('open');
             openAddFromData(trackData);
             if(trackData.tidalUrl) document.getElementById('f-tidal').value = trackData.tidalUrl;
@@ -3499,6 +3514,7 @@ async function handleSingleUrl(url){
               title:t.title, artists:albumArtists.length?albumArtists:[], album:albumName,
               genres:[], why:'', credit:'', coverArt, tier:null, remindsOf:[], year:albumYear||null,
               trackNumber:t.trackNumber||(i+1), tidalUrl:url,
+              releaseDate:attrs.releaseDate||null,
             }));
             const dupes = findDuplicates(allImported);
             const dupeKeys = new Set(dupes.map(d=>songKey(d)));
