@@ -854,7 +854,7 @@ function songCardHtml(s, clusterCounts){
           return `<div class="edits-entry"><div class="edits-entry-time">${ts}</div>${e.changes.map(c=>`<div class="edits-entry-change"><span class="edits-entry-field">${escapeHtml(c.field)}</span><span class="edits-entry-old">${escapeHtml(valStr(c.old))}</span><span class="edits-entry-arrow">→</span><span class="edits-entry-new">${escapeHtml(valStr(c.now))}</span></div>`).join('')}</div>`;
         }).join('')}</div>` : ''}
         ${!showEx ? cardBackHtml(s) : ''}
-        ${!showEx ? `<button type="button" class="cb-flip-fab" data-action="flip" title="Ratings & vibes" aria-label="Ratings and vibes">ℹ</button>` : ''}
+        ${!showEx ? `<button type="button" class="cb-flip-fab" data-action="flip" title="Ratings & vibes" aria-label="Ratings and vibes">i</button>` : ''}
       </div>
     `;
 }
