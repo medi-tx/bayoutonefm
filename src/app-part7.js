@@ -314,13 +314,7 @@ document.getElementById('onboardingSaveBtn').addEventListener('click', async ()=
   }
   myProfile = { user_id: currentUserId, username, bio, photo: currentOnboardingPhoto };
   try{ await sb.auth.updateUser({ data: { display_name: username } }); }catch(e){}
-  try{
-    const stickers = (typeof loadStickers === 'function') ? null : null;
-    const { data: ud } = await sb.from('user_data').select('stickers').eq('user_id', currentUserId).maybeSingle();
-    const st = (ud && ud.stickers) || {};
-    st.usernameRedoDone = true;
-    await sb.from('user_data').upsert({ user_id: currentUserId, stickers: st, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
-  }catch(e){}
+  localStorage.setItem('usernameRedoDone_' + currentUserId, '1');
   showAnalyticsExport();
   renderMyAvatar();
   document.getElementById('onboardingOverlay').classList.remove('open');

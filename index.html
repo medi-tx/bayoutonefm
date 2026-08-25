@@ -5465,7 +5465,7 @@ async function loadDiscoverFeed(){
       }catch(e){ return []; }
     }));
     const all = results.flat();
-    all.sort((a,b)=> (b.song.createdAt||0) - (a.song.createdAt||0));
+    for(let i = all.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [all[i], all[j]] = [all[j], all[i]]; }
     if(all.length === 0){
       if(countEl) countEl.textContent = '';
       list.innerHTML = '<div class="feed-empty">Your friends haven\'t added any songs yet.</div>';
@@ -10990,16 +10990,10 @@ async function loadAppForUser(user){
 
   if(!myProfile || !myProfile.username){
     openOnboarding();
-  } else {
-    try{
-      const { data: ud } = await sb.from('user_data').select('stickers').eq('user_id', currentUserId).maybeSingle();
-      const st = (ud && ud.stickers) || {};
-      if(!st.usernameRedoDone){
-        setTimeout(()=>{
-          openOnboarding({ username: myProfile.username, bio: myProfile.bio || '', photo: myProfile.photo || null, promptMessage: 'Welcome back! Take a moment to review your username. You can keep it or pick a new one.' });
-        }, 800);
-      }
-    }catch(e){}
+  } else if(!localStorage.getItem('usernameRedoDone_' + currentUserId)){
+    setTimeout(()=>{
+      openOnboarding({ username: myProfile.username, bio: myProfile.bio || '', photo: myProfile.photo || null, promptMessage: 'Welcome back! Take a moment to review your username. You can keep it or pick a new one.' });
+    }, 800);
   }
   updateRemoveExamplesBtn();
   subscribeNotifications();
@@ -11897,13 +11891,7 @@ document.getElementById('onboardingSaveBtn').addEventListener('click', async ()=
   }
   myProfile = { user_id: currentUserId, username, bio, photo: currentOnboardingPhoto };
   try{ await sb.auth.updateUser({ data: { display_name: username } }); }catch(e){}
-  try{
-    const stickers = (typeof loadStickers === 'function') ? null : null;
-    const { data: ud } = await sb.from('user_data').select('stickers').eq('user_id', currentUserId).maybeSingle();
-    const st = (ud && ud.stickers) || {};
-    st.usernameRedoDone = true;
-    await sb.from('user_data').upsert({ user_id: currentUserId, stickers: st, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
-  }catch(e){}
+  localStorage.setItem('usernameRedoDone_' + currentUserId, '1');
   showAnalyticsExport();
   renderMyAvatar();
   document.getElementById('onboardingOverlay').classList.remove('open');
