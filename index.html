@@ -7290,8 +7290,8 @@ async function handleSingleUrl(url){
   const isSpotifyTrack = /open\.spotify\.com\/track\//.test(url);
   const isSpotifyAlbum = /open\.spotify\.com\/album\//.test(url);
   const appleMatch = url.match(/music\.apple\.com\/.*\/album\/.*\/(\d+)(?:\?i=(\d+))?/);
-  const isTidalTrack = /tidal\.com\/.*\/track\/(\d+)/.test(url);
-  const isTidalAlbum = /tidal\.com\/.*\/album\/(\d+)/.test(url);
+  const isTidalTrack = /tidal\.com\/(?:browse\/)?track\/(\d+)/.test(url);
+  const isTidalAlbum = /tidal\.com\/(?:browse\/)?album\/(\d+)/.test(url);
   const ytMatch = url.match(/(?:music\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]+)|youtu\.be\/([a-zA-Z0-9_-]+)/);
   try{
     if(isSpotifyTrack){
@@ -7364,7 +7364,7 @@ async function handleSingleUrl(url){
       }
     }
     if(isTidalTrack){
-      const trackId = url.match(/tidal\.com\/.*\/track\/(\d+)/)[1];
+      const trackId = url.match(/tidal\.com\/(?:browse\/)?track\/(\d+)/)[1];
       const proxies = [ u=>'https://api.allorigins.win/raw?url='+encodeURIComponent(u), u=>'https://corsproxy.io/?'+encodeURIComponent(u) ];
       for(const proxy of proxies){
         try{
@@ -7388,7 +7388,7 @@ async function handleSingleUrl(url){
       }
     }
     if(isTidalAlbum){
-      const albumId = url.match(/tidal\.com\/.*\/album\/(\d+)/)[1];
+      const albumId = url.match(/tidal\.com\/(?:browse\/)?album\/(\d+)/)[1];
       const proxies = [ u=>'https://api.allorigins.win/raw?url='+encodeURIComponent(u), u=>'https://corsproxy.io/?'+encodeURIComponent(u) ];
       for(const proxy of proxies){
         try{
