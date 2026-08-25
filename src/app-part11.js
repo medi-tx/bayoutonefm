@@ -321,21 +321,32 @@ document.getElementById('feedList').addEventListener('click', e=>{
     const listEl = document.getElementById('feedList');
     const card = discoverAddBtn.closest('[data-discover-row]');
     const idx = Array.from(document.querySelectorAll('#feedList [data-discover-row]')).indexOf(card);
-    const row = (listEl.__discoverData || [])[idx];
-    if(!row) return;
+    const entry = (listEl.__discoverData || [])[idx];
+    if(!entry) return;
+    const row = entry.song || entry;
     document.getElementById('feedOverlay').classList.remove('open');
     openAddFromData({
       title: row.title || '',
-      artists: row.artist ? [row.artist] : [],
+      artists: row.artists || (row.artist ? [row.artist] : []),
       album: row.album || '',
       year: row.year || '',
       genres: row.genres || [],
       tags: [],
-      coverArt: row.cover_art || null,
+      coverArt: row.coverArt || row.cover_art || null,
       why: '',
-      credit: 'from Discover',
+      credit: 'from @' + (entry.who || 'friend') + "'s catalogue",
       tier: null
     });
+    return;
+  }
+  const whoLink = e.target.closest('.mixtape-who');
+  if(whoLink){
+    e.stopPropagation();
+    const username = whoLink.querySelector('span')?.textContent?.replace('@','')?.trim();
+    if(username){
+      document.getElementById('feedOverlay').classList.remove('open');
+      window.location.hash = username;
+    }
     return;
   }
   const addBtn = e.target.closest('[data-feed-add]');

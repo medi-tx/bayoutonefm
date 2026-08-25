@@ -281,6 +281,7 @@ document.getElementById('editProfileSaveBtn').addEventListener('click', async ()
     return;
   }
   myProfile = { user_id: currentUserId, username, bio, photo: currentEditProfilePhoto };
+  try{ await sb.auth.updateUser({ data: { display_name: username } }); }catch(e){}
   renderMyAvatar();
   document.getElementById('editProfileOverlay').classList.remove('open');
 });
@@ -306,6 +307,7 @@ document.getElementById('onboardingSaveBtn').addEventListener('click', async ()=
     return;
   }
   myProfile = { user_id: currentUserId, username, bio, photo: currentOnboardingPhoto };
+  try{ await sb.auth.updateUser({ data: { display_name: username } }); }catch(e){}
   showAnalyticsExport();
   renderMyAvatar();
   document.getElementById('onboardingOverlay').classList.remove('open');

@@ -5377,20 +5377,33 @@ document.getElementById('mixtapeDiscoverBtn').addEventListener('click', ()=>{
   setFeedModeUI('discover');
   loadFeed();
 });
-function discoverCardHtml(row, alreadyOwned){
+function discoverCardHtml(entry){
+  const row = entry.song;
+  const p = entry.profile;
+  const who = entry.who;
+  const initial = (who || '?').charAt(0).toUpperCase();
+  const avatar = (p && p.photo)
+    ? `<img loading="lazy" decoding="async" class="feed-card-avatar" src="${escapeAttr(p.photo)}" alt="${escapeAttr(who)}'s profile photo">`
+    : `<span class="feed-card-avatar">${escapeHtml(initial)}</span>`;
   const cover = row.cover_art
-    ? `<img loading="lazy" decoding="async" class="mixtape-cover" src="${escapeAttr(row.cover_art)}" loading="lazy" decoding="async" alt="Album cover">`
+    ? `<img loading="lazy" decoding="async" class="mixtape-cover" src="${escapeAttr(row.cover_art)}" alt="Album cover">`
     : `<div class="mixtape-cover mixtape-cover-fallback">${escapeHtml((row.title||'?').charAt(0).toUpperCase())}</div>`;
   const artistLine = [row.artist, row.album].filter(Boolean).map(escapeHtml).join(' · ');
-  const actionHtml = alreadyOwned
+  const owned = songs.some(s=> s.title === row.title && (s.artists||[]).join(', ') === (row.artist||''));
+  const actionHtml = owned
     ? '<span class="mixtape-from" style="opacity:0.6;">In your library</span>'
     : '<button type="button" class="feed-add-btn" data-discover-add="1">+ Add to my library</button>';
+  const userLink = who ? `onclick="window.location.hash='${escapeAttr(who)}'"` : '';
   return `
-      <div class="mixtape-item" data-discover-row="1" title="${alreadyOwned ? 'Already in your cataloguex' : 'Click to add this to your cataloguex'}">
+      <div class="mixtape-item" data-discover-row="1" title="${owned ? 'Already in your cataloguex' : 'Click to add this to your cataloguex'}">
         ${cover}
         <div class="mixtape-body">
           <p class="mixtape-title">${escapeHtml(row.title||'Untitled')}</p>
           <p class="mixtape-artist">${artistLine}</p>
+          <div class="mixtape-who" ${userLink} style="cursor:pointer; display:flex; align-items:center; gap:6px; margin-top:4px; font-size:12px; opacity:0.7;">
+            ${avatar}
+            <span>@${escapeHtml(who||'unknown')}</span>
+          </div>
         </div>
         <div class="mixtape-side">
           ${actionHtml}
@@ -5433,23 +5446,36 @@ async function loadDiscoverFeed(){
   if(!list) return;
   list.innerHTML = '<div class="feed-empty">Loading…</div>';
   try{
-    const rows = (await fetchDiscoverRows(40)).filter(r=>r.title);
-    if(rows.length === 0){
+    const friendIds = [...myFriendIds];
+    if(!friendIds.length){
       if(countEl) countEl.textContent = '';
-      list.innerHTML = '<div class="feed-empty">Nothing here yet — be the first to add a song others can discover.</div>';
+      list.innerHTML = '<div class="feed-empty">Add some friends to see what they\'re listening to!</div>';
       list.__feedMode = 'discover';
       list.__discoverData = [];
       return;
     }
-    const ownedKeys = new Set(songs.map(s=>songKey(s)));
-    const sortNote = discoverOrderColumn ? 'recently added' : 'available';
-    if(countEl) countEl.textContent = `${rows.length} ${sortNote} across bayoutonefm`;
-    list.innerHTML = rows.map(row=>{
-      const owned = ownedKeys.has(songKey({ title: row.title, artists: [row.artist] }));
-      return discoverCardHtml(row, owned);
-    }).join('');
+    const results = await Promise.all(friendIds.slice(0,25).map(async id=>{
+      try{
+        const friendSongs = (await fetchReadOnlySongs(id)) || [];
+        const p = allProfilesCache.find(x=>x.user_id === id);
+        return friendSongs
+          .filter(s=>!s.archived && s.title)
+          .map(s=>({ song:s, who: p?.username || 'friend', profile: p }));
+      }catch(e){ return []; }
+    }));
+    const all = results.flat();
+    all.sort((a,b)=> (b.song.createdAt||0) - (a.song.createdAt||0));
+    if(all.length === 0){
+      if(countEl) countEl.textContent = '';
+      list.innerHTML = '<div class="feed-empty">Your friends haven\'t added any songs yet.</div>';
+      list.__feedMode = 'discover';
+      list.__discoverData = [];
+      return;
+    }
+    if(countEl) countEl.textContent = `${all.length} songs from ${friendIds.length} friend${friendIds.length===1?'':'s'}`;
+    list.innerHTML = all.map(entry=> discoverCardHtml(entry)).join('');
     list.__feedMode = 'discover';
-    list.__discoverData = rows;
+    list.__discoverData = all;
   }catch(e){
     console.warn('Could not load discover feed:', e);
     if(countEl) countEl.textContent = '';
@@ -11827,6 +11853,7 @@ document.getElementById('editProfileSaveBtn').addEventListener('click', async ()
     return;
   }
   myProfile = { user_id: currentUserId, username, bio, photo: currentEditProfilePhoto };
+  try{ await sb.auth.updateUser({ data: { display_name: username } }); }catch(e){}
   renderMyAvatar();
   document.getElementById('editProfileOverlay').classList.remove('open');
 });
@@ -11852,6 +11879,7 @@ document.getElementById('onboardingSaveBtn').addEventListener('click', async ()=
     return;
   }
   myProfile = { user_id: currentUserId, username, bio, photo: currentOnboardingPhoto };
+  try{ await sb.auth.updateUser({ data: { display_name: username } }); }catch(e){}
   showAnalyticsExport();
   renderMyAvatar();
   document.getElementById('onboardingOverlay').classList.remove('open');
@@ -13461,21 +13489,32 @@ document.getElementById('feedList').addEventListener('click', e=>{
     const listEl = document.getElementById('feedList');
     const card = discoverAddBtn.closest('[data-discover-row]');
     const idx = Array.from(document.querySelectorAll('#feedList [data-discover-row]')).indexOf(card);
-    const row = (listEl.__discoverData || [])[idx];
-    if(!row) return;
+    const entry = (listEl.__discoverData || [])[idx];
+    if(!entry) return;
+    const row = entry.song || entry;
     document.getElementById('feedOverlay').classList.remove('open');
     openAddFromData({
       title: row.title || '',
-      artists: row.artist ? [row.artist] : [],
+      artists: row.artists || (row.artist ? [row.artist] : []),
       album: row.album || '',
       year: row.year || '',
       genres: row.genres || [],
       tags: [],
-      coverArt: row.cover_art || null,
+      coverArt: row.coverArt || row.cover_art || null,
       why: '',
-      credit: 'from Discover',
+      credit: 'from @' + (entry.who || 'friend') + "'s catalogue",
       tier: null
     });
+    return;
+  }
+  const whoLink = e.target.closest('.mixtape-who');
+  if(whoLink){
+    e.stopPropagation();
+    const username = whoLink.querySelector('span')?.textContent?.replace('@','')?.trim();
+    if(username){
+      document.getElementById('feedOverlay').classList.remove('open');
+      window.location.hash = username;
+    }
     return;
   }
   const addBtn = e.target.closest('[data-feed-add]');
