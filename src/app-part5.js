@@ -518,7 +518,7 @@ async function loadLeaderboard(){
   }
   const counts = {};
   (data || []).forEach(r=>{ if(r && r.user_id) counts[r.user_id] = (counts[r.user_id] || 0) + 1; });
-  const top = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,1);
+  const top = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,10);
   if(top.length === 0){
     list.innerHTML = '<p class="profile-empty-note">No SOTD reactions yet — be the first to react!</p>';
     return;
@@ -527,28 +527,61 @@ async function loadLeaderboard(){
   const { data: profs } = await sb.from('profiles').select('user_id, username, photo').in('user_id', ids);
   const pmap = {};
   (profs || []).forEach(p=>{ pmap[p.user_id] = p; });
-  const medals = ['🥇'];
+  const medals = ['🥇','🥈','🥉'];
   list.innerHTML = top.map((entry, i)=>{
     const userId = entry[0], n = entry[1];
     const p = pmap[userId];
     const name = (p && p.username) ? p.username : 'someone';
-    const initial = name.charAt(0).toUpperCase();
     const isMe = userId === currentUserId;
     const medal = medals[i] || '';
+    const rank = i + 1;
     return `
       <div class="discover-row leaderboard-row" data-user-id="${userId}" style="cursor:pointer;">
-        ${p && p.photo ? `<img loading="lazy" decoding="async" src="${escapeHtml(p.photo)}" alt="Profile photo">` : `<span class="drow-fallback is-pfp"></span>`}
+        ${p && p.photo ? `<img loading="lazy" decoding="async" src="${escapeHtml(p.photo)}" alt="Profile photo">` : `<span class="drow-fallback is-pfp">${escapeHtml(name.charAt(0).toUpperCase())}</span>`}
         <span style="flex:1;">
-          <span class="drow-name">${medal} @${escapeHtml(name)}${isMe ? ' (you)' : ''}</span><br>
+          <span class="drow-name">${medal ? medal + ' ' : '#'+rank+' '}@${escapeHtml(name)}${isMe ? ' (you)' : ''}</span><br>
           <span class="drow-bio">${n} ${n === 1 ? 'reaction' : 'reactions'} to songs of the day</span>
         </span>
       </div>`;
   }).join('');
 }
+
+async function loadCataloguexLeaderboard(){
+  const list = document.getElementById('leaderboardCataloguexList');
+  if(!list) return;
+  list.innerHTML = '<p class="profile-empty-note">Crunching the numbers…</p>';
+  try{
+    const { data: profiles, error } = await sb.from('profiles').select('user_id, username, photo').limit(200);
+    if(error || !profiles){ list.innerHTML = '<p class="profile-empty-note">Could not load.</p>'; return; }
+    const results = await Promise.all(profiles.slice(0,50).map(async p=>{
+      try{
+        const songs = (await fetchReadOnlySongs(p.user_id)) || [];
+        return { user_id:p.user_id, username:p.username, photo:p.photo, count: songs.filter(s=>!s.archived).length };
+      }catch(e){ return { user_id:p.user_id, username:p.username, photo:p.photo, count:0 }; }
+    }));
+    const top = results.filter(r=>r.count > 0).sort((a,b)=>b.count-a.count).slice(0,10);
+    if(top.length === 0){ list.innerHTML = '<p class="profile-empty-note">No cataloguexes yet.</p>'; return; }
+    const medals = ['🥇','🥈','🥉'];
+    list.innerHTML = top.map((r, i)=>{
+      const isMe = r.user_id === currentUserId;
+      const medal = medals[i] || '';
+      const rank = i + 1;
+      return `
+        <div class="discover-row leaderboard-row" data-user-id="${r.user_id}" style="cursor:pointer;">
+          ${r.photo ? `<img loading="lazy" decoding="async" src="${escapeHtml(r.photo)}" alt="Profile photo">` : `<span class="drow-fallback is-pfp">${escapeHtml((r.username||'?').charAt(0).toUpperCase())}</span>`}
+          <span style="flex:1;">
+            <span class="drow-name">${medal ? medal + ' ' : '#'+rank+' '}@${escapeHtml(r.username||'someone')}${isMe ? ' (you)' : ''}</span><br>
+            <span class="drow-bio">${r.count} song${r.count===1?'':'s'} in their cataloguex</span>
+          </span>
+        </div>`;
+    }).join('');
+  }catch(e){ list.innerHTML = '<p class="profile-empty-note">Could not load.</p>'; }
+}
 document.getElementById('leaderboardBtn').addEventListener('click', ()=>{
   trackEvent('open_leaderboard');
   document.getElementById('leaderboardOverlay').classList.add('open');
   loadLeaderboard();
+  loadCataloguexLeaderboard();
   loadFriendLeaderboard();
 });
 document.getElementById('leaderboardCloseBtn').addEventListener('click', ()=>{
@@ -558,6 +591,20 @@ document.getElementById('leaderboardList').addEventListener('click', e=>{
   const row = e.target.closest('[data-user-id]');
   if(row){
     const p = allProfilesCache.find(x=>x.user_id === row.dataset.userId);
+    if(p && p.username){
+      document.getElementById('leaderboardOverlay').classList.remove('open');
+      goToFriendCataloguex(p.username);
+    }
+  }
+});
+document.getElementById('leaderboardCataloguexList').addEventListener('click', e=>{
+  const row = e.target.closest('[data-user-id]');
+  if(row){
+    const p = allProfilesCache.find(x=>x.user_id === row.dataset.userId);
+    if(!p){
+      const uname = row.querySelector('.drow-name')?.textContent?.replace(/^.*@/,'')?.replace(/\s*\(you\).*$/,'').trim();
+      if(uname){ document.getElementById('leaderboardOverlay').classList.remove('open'); goToFriendCataloguex(uname); return; }
+    }
     if(p && p.username){
       document.getElementById('leaderboardOverlay').classList.remove('open');
       goToFriendCataloguex(p.username);

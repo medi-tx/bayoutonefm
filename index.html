@@ -2463,7 +2463,8 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
   .feed-reaction-btn:hover{ opacity:0.8; background:rgba(var(--on-paper-rgb),0.06); }
   .feed-reaction-btn.active{ opacity:1; border-color:rgba(var(--on-paper-rgb),0.2); background:rgba(var(--on-paper-rgb),0.08); }
   .feed-reaction-count{ font-size:10px; font-family:'IBM Plex Mono', monospace; opacity:0.6; margin-left:2px; }
-  .feed-card-head{ display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+  .feed-card-head{ display:flex; align-items:center; gap:8px; margin-bottom:10px; cursor:pointer; }
+  .feed-card-head:hover{ opacity:0.8; }
   .feed-card-avatar{
     width:28px; height:28px; border-radius:50%; background:var(--ink-2); color:var(--on-ink);
     display:flex; align-items:center; justify-content:center;
@@ -2650,13 +2651,13 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
   .timeline-meta{ display:flex; align-items:center; gap:8px; font-family:'IBM Plex Mono', monospace; font-size:10px; color:rgba(var(--on-paper-rgb),0.78); flex-wrap:wrap; }
   .timeline-when{ font-family:'IBM Plex Mono', monospace; font-size:10px; color:rgba(var(--on-paper-rgb),0.72); text-align:right; flex-shrink:0; }
   .stats-modal{ max-width:520px; }
-  .stats-totals{ display:flex; gap:12px; margin:6px 0 18px; }
-  .stat-total{ flex:1; text-align:center; background:rgba(var(--on-paper-rgb),0.05); border-radius:10px; padding:10px 6px; }
-  .stat-total span{ display:block; font-family:'Fraunces', serif; font-weight:700; font-size:26px; color:var(--on-paper); }
-  .stat-total label{ font-family:'IBM Plex Mono', monospace; font-size:10px; letter-spacing:1px; text-transform:uppercase; color:rgba(var(--on-paper-rgb),0.82); }
-  .stat-section{ margin:16px 0; }
-  .stat-label{ font-family:'IBM Plex Mono', monospace; font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:rgba(var(--on-paper-rgb),0.85); margin-bottom:8px; }
-  .stat-chart-note{ font-size:11px; color:rgba(var(--on-paper-rgb),0.78); font-style:italic; }
+  .stats-totals{ display:flex; gap:8px; margin:4px 0 10px; }
+  .stat-total{ flex:1; text-align:center; background:rgba(var(--on-paper-rgb),0.05); border-radius:8px; padding:6px 4px; }
+  .stat-total span{ display:block; font-family:'Fraunces', serif; font-weight:700; font-size:18px; color:var(--on-paper); }
+  .stat-total label{ font-family:'IBM Plex Mono', monospace; font-size:9px; letter-spacing:.5px; text-transform:uppercase; color:rgba(var(--on-paper-rgb),0.82); }
+  .stat-section{ margin:8px 0; }
+  .stat-label{ font-family:'IBM Plex Mono', monospace; font-size:9px; letter-spacing:1px; text-transform:uppercase; color:rgba(var(--on-paper-rgb),0.85); margin-bottom:4px; }
+  .stat-chart-note{ font-size:10px; color:rgba(var(--on-paper-rgb),0.78); font-style:italic; }
   .stat-tags{ display:flex; flex-wrap:wrap; gap:6px; }
   .stat-tags .tag{ background:color-mix(in srgb, var(--lilac) 18%, transparent); border:1px solid var(--lilac); color:var(--lilac); }
   .stat-tags .tag b{ font-weight:700; margin-left:4px; }
@@ -2856,6 +2857,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
 
 @media (max-width:620px){ .auth-logo-row .brand-logo{ height:56px; } .header-brand .brand-logo{ height:56px; } }
 @media (max-width:620px){ #loginBanner{ top: 16px; } }
+@media (max-width:620px){ .stats-modal{ max-width:100%; } .stats-modal canvas{ max-width:100%; height:auto; } .stat-total span{ font-size:16px; } .stat-section{ margin:6px 0; } .stats-totals{ gap:6px; margin:2px 0 8px; } }
 </style>
 </head>
 <body>
@@ -3272,16 +3274,16 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
     </div>
     <div class="stat-section">
       <p class="stat-label">Tier distribution</p>
-      <canvas id="statTierChart" width="460" height="130"></canvas>
+      <canvas id="statTierChart" width="460" height="80"></canvas>
     </div>
     <div class="stat-section">
       <p class="stat-label" style="cursor:pointer;" id="genreLabelToggle">Top genres <span id="genreToggleHint" style="font-size:10px; opacity:0.6; cursor:pointer;">(click for all)</span></p>
-      <canvas id="statGenreChart" width="460" height="190"></canvas>
+      <canvas id="statGenreChart" width="460" height="120"></canvas>
       <div id="allGenresList" class="stat-tags" style="display:none;"></div>
     </div>
     <div class="stat-section">
       <p class="stat-label">Songs added per month</p>
-      <canvas id="statMonthChart" width="460" height="170"></canvas>
+      <canvas id="statMonthChart" width="460" height="90"></canvas>
     </div>
     <div class="stat-section">
       <p class="stat-label">Most-used tags</p>
@@ -3517,11 +3519,13 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
 </div>
 
 <div class="overlay" id="leaderboardOverlay">
-  <div class="modal">
-    <h3>Leaderboards</h3>
-    <p class="theme-section-label">🏆 Top SOTD Reactor</p>
+  <div class="modal" style="max-width:560px;">
+    <h3>🏆 Leaderboards</h3>
+    <p class="theme-section-label">🔥 Most SOTD Reactions (site-wide)</p>
     <div class="discover-list" id="leaderboardList"></div>
-    <p class="theme-section-label">🎧 Friend leaderboard</p>
+    <p class="theme-section-label" style="margin-top:16px;">🎧 Biggest Cataloguex (site-wide)</p>
+    <div class="discover-list" id="leaderboardCataloguexList"></div>
+    <p class="theme-section-label" style="margin-top:16px;">👥 Friend Leaderboard</p>
     <div class="discover-list" id="leaderboardFriendList"></div>
     <div class="modal-actions">
       <button class="btn-cancel" id="leaderboardCloseBtn">Close</button>
@@ -4630,20 +4634,21 @@ function cbRemindsNames(s){
 }
 function musicKeyToCamelot(key){
   if(!key) return '';
-  const k=key.trim().toLowerCase().replace(/♯/g,'#').replace(/♭/g,'b');
+  const k=key.trim();
   const map={
-    'c major':'8b','c minor':'5a',
-    'g major':'9b','g minor':'6a',
-    'd major':'10b','d minor':'7a',
-    'a major':'11b','a minor':'8a',
-    'e major':'12b','e minor':'9a',
-    'b major':'1b','b minor':'10a',
-    'f# major':'2b','f#m':'2b','gb major':'2b','f# minor':'11a','f#m minor':'11a','gb minor':'11a',
-    'c# major':'3b','c#m':'3b','db major':'3b','c# minor':'12a','c#m minor':'12a','db minor':'12a',
-    'g# major':'4b','ab major':'4b','g# minor':'1a','g#m':'1a','ab minor':'1a',
-    'd# major':'5b','eb major':'5b','d# minor':'2a','d#m':'2a','eb minor':'2a',
-    'a# major':'6b','bb major':'6b','a# minor':'3a','a#m':'3a','bb minor':'3a',
-    'f major':'7b','f minor':'4a'
+    'c major':'8b','c minor':'5a','a minor':'8a',
+    'g major':'9b','g minor':'6a','e minor':'9a',
+    'd major':'10b','d minor':'7a','b minor':'10a',
+    'a major':'11b','a minor':'8a','f# minor':'11a','f#m':'11a',
+    'e major':'12b','c# minor':'12a','c#m':'12a','db minor':'12a',
+    'b major':'1b','g# minor':'1a','g#m':'1a','ab minor':'1a',
+    'f# major':'2b','gb major':'2b','d# minor':'2a','d#m':'2a','eb minor':'2a',
+    'db major':'3b','c# major':'3b','bb minor':'3a',
+    'ab major':'4b','f minor':'4a',
+    'eb major':'5b','c minor':'5a',
+    'bb major':'6b','g minor':'6a',
+    'f major':'7b','d minor':'7a',
+    'a# minor':'8a','bb minor':'8a'
   };
   return map[k]||'';
 }
@@ -5381,40 +5386,7 @@ document.getElementById('mixtapeDiscoverBtn').addEventListener('click', ()=>{
   setFeedModeUI('discover');
   loadFeed();
 });
-function discoverCardHtml(entry){
-  const row = entry.song;
-  const p = entry.profile;
-  const who = entry.who;
-  const initial = (who || '?').charAt(0).toUpperCase();
-  const avatar = (p && p.photo)
-    ? `<img loading="lazy" decoding="async" class="feed-card-avatar" src="${escapeAttr(p.photo)}" alt="${escapeAttr(who)}'s profile photo">`
-    : `<span class="feed-card-avatar">${escapeHtml(initial)}</span>`;
-  const cover = row.cover_art
-    ? `<img loading="lazy" decoding="async" class="mixtape-cover" src="${escapeAttr(row.cover_art)}" alt="Album cover">`
-    : `<div class="mixtape-cover mixtape-cover-fallback">${escapeHtml((row.title||'?').charAt(0).toUpperCase())}</div>`;
-  const artistLine = [row.artist, row.album].filter(Boolean).map(escapeHtml).join(' · ');
-  const owned = songs.some(s=> s.title === row.title && (s.artists||[]).join(', ') === (row.artist||''));
-  const actionHtml = owned
-    ? '<span class="mixtape-from" style="opacity:0.6;">In your library</span>'
-    : '<button type="button" class="feed-add-btn" data-discover-add="1">+ Add to my library</button>';
-  const userLink = who ? `onclick="window.location.hash='${escapeAttr(who)}'"` : '';
-  return `
-      <div class="mixtape-item" data-discover-row="1" title="${owned ? 'Already in your cataloguex' : 'Click to add this to your cataloguex'}">
-        ${cover}
-        <div class="mixtape-body">
-          <p class="mixtape-title">${escapeHtml(row.title||'Untitled')}</p>
-          <p class="mixtape-artist">${artistLine}</p>
-          <div class="mixtape-who" ${userLink} style="cursor:pointer; display:flex; align-items:center; gap:6px; margin-top:4px; font-size:12px; opacity:0.7;">
-            ${avatar}
-            <span>@${escapeHtml(who||'unknown')}</span>
-          </div>
-        </div>
-        <div class="mixtape-side">
-          ${actionHtml}
-        </div>
-      </div>
-    `;
-}
+// discoverCardHtml removed — discover feed now uses feedCardHtml for consistency
 // Column name Supabase actually uses for global_songs' recency ordering, discovered at
 // runtime since it wasn't possible to confirm the schema in advance. undefined = not yet
 // probed, null = no working timestamp column found (falls back to unordered), otherwise
@@ -5464,7 +5436,7 @@ async function loadDiscoverFeed(){
         const p = allProfilesCache.find(x=>x.user_id === id);
         return friendSongs
           .filter(s=>!s.archived && s.title)
-          .map(s=>({ song:s, who: p?.username || 'friend', profile: p }));
+          .map(s=>({ song:s, who: p?.username || 'friend', profile: p, ownerId: id }));
       }catch(e){ return []; }
     }));
     const all = results.flat();
@@ -5476,8 +5448,21 @@ async function loadDiscoverFeed(){
       list.__discoverData = [];
       return;
     }
+    try{
+      const ownerIds = [...new Set(all.map(e=>e.ownerId).filter(Boolean))];
+      if(ownerIds.length){
+        const { data: rxData } = await sb.from('feed_reactions')
+          .select('song_owner_id, song_id, reactor_id, emoji')
+          .in('song_owner_id', ownerIds);
+        if(rxData){
+          all.forEach(e=>{
+            e.reactions = rxData.filter(r=>r.song_owner_id===e.ownerId && r.song_id===e.song.id);
+          });
+        }
+      }
+    }catch(err){ console.warn('Could not load discover reactions:', err); }
     if(countEl) countEl.textContent = `${all.length} songs from ${friendIds.length} friend${friendIds.length===1?'':'s'}`;
-    list.innerHTML = all.map(entry=> discoverCardHtml(entry)).join('');
+    list.innerHTML = all.map(entry=> feedCardHtml(entry)).join('');
     list.__feedMode = 'discover';
     list.__discoverData = all;
   }catch(e){
@@ -9169,7 +9154,7 @@ async function loadLeaderboard(){
   }
   const counts = {};
   (data || []).forEach(r=>{ if(r && r.user_id) counts[r.user_id] = (counts[r.user_id] || 0) + 1; });
-  const top = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,1);
+  const top = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,10);
   if(top.length === 0){
     list.innerHTML = '<p class="profile-empty-note">No SOTD reactions yet — be the first to react!</p>';
     return;
@@ -9178,28 +9163,61 @@ async function loadLeaderboard(){
   const { data: profs } = await sb.from('profiles').select('user_id, username, photo').in('user_id', ids);
   const pmap = {};
   (profs || []).forEach(p=>{ pmap[p.user_id] = p; });
-  const medals = ['🥇'];
+  const medals = ['🥇','🥈','🥉'];
   list.innerHTML = top.map((entry, i)=>{
     const userId = entry[0], n = entry[1];
     const p = pmap[userId];
     const name = (p && p.username) ? p.username : 'someone';
-    const initial = name.charAt(0).toUpperCase();
     const isMe = userId === currentUserId;
     const medal = medals[i] || '';
+    const rank = i + 1;
     return `
       <div class="discover-row leaderboard-row" data-user-id="${userId}" style="cursor:pointer;">
-        ${p && p.photo ? `<img loading="lazy" decoding="async" src="${escapeHtml(p.photo)}" alt="Profile photo">` : `<span class="drow-fallback is-pfp"></span>`}
+        ${p && p.photo ? `<img loading="lazy" decoding="async" src="${escapeHtml(p.photo)}" alt="Profile photo">` : `<span class="drow-fallback is-pfp">${escapeHtml(name.charAt(0).toUpperCase())}</span>`}
         <span style="flex:1;">
-          <span class="drow-name">${medal} @${escapeHtml(name)}${isMe ? ' (you)' : ''}</span><br>
+          <span class="drow-name">${medal ? medal + ' ' : '#'+rank+' '}@${escapeHtml(name)}${isMe ? ' (you)' : ''}</span><br>
           <span class="drow-bio">${n} ${n === 1 ? 'reaction' : 'reactions'} to songs of the day</span>
         </span>
       </div>`;
   }).join('');
 }
+
+async function loadCataloguexLeaderboard(){
+  const list = document.getElementById('leaderboardCataloguexList');
+  if(!list) return;
+  list.innerHTML = '<p class="profile-empty-note">Crunching the numbers…</p>';
+  try{
+    const { data: profiles, error } = await sb.from('profiles').select('user_id, username, photo').limit(200);
+    if(error || !profiles){ list.innerHTML = '<p class="profile-empty-note">Could not load.</p>'; return; }
+    const results = await Promise.all(profiles.slice(0,50).map(async p=>{
+      try{
+        const songs = (await fetchReadOnlySongs(p.user_id)) || [];
+        return { user_id:p.user_id, username:p.username, photo:p.photo, count: songs.filter(s=>!s.archived).length };
+      }catch(e){ return { user_id:p.user_id, username:p.username, photo:p.photo, count:0 }; }
+    }));
+    const top = results.filter(r=>r.count > 0).sort((a,b)=>b.count-a.count).slice(0,10);
+    if(top.length === 0){ list.innerHTML = '<p class="profile-empty-note">No cataloguexes yet.</p>'; return; }
+    const medals = ['🥇','🥈','🥉'];
+    list.innerHTML = top.map((r, i)=>{
+      const isMe = r.user_id === currentUserId;
+      const medal = medals[i] || '';
+      const rank = i + 1;
+      return `
+        <div class="discover-row leaderboard-row" data-user-id="${r.user_id}" style="cursor:pointer;">
+          ${r.photo ? `<img loading="lazy" decoding="async" src="${escapeHtml(r.photo)}" alt="Profile photo">` : `<span class="drow-fallback is-pfp">${escapeHtml((r.username||'?').charAt(0).toUpperCase())}</span>`}
+          <span style="flex:1;">
+            <span class="drow-name">${medal ? medal + ' ' : '#'+rank+' '}@${escapeHtml(r.username||'someone')}${isMe ? ' (you)' : ''}</span><br>
+            <span class="drow-bio">${r.count} song${r.count===1?'':'s'} in their cataloguex</span>
+          </span>
+        </div>`;
+    }).join('');
+  }catch(e){ list.innerHTML = '<p class="profile-empty-note">Could not load.</p>'; }
+}
 document.getElementById('leaderboardBtn').addEventListener('click', ()=>{
   trackEvent('open_leaderboard');
   document.getElementById('leaderboardOverlay').classList.add('open');
   loadLeaderboard();
+  loadCataloguexLeaderboard();
   loadFriendLeaderboard();
 });
 document.getElementById('leaderboardCloseBtn').addEventListener('click', ()=>{
@@ -9209,6 +9227,20 @@ document.getElementById('leaderboardList').addEventListener('click', e=>{
   const row = e.target.closest('[data-user-id]');
   if(row){
     const p = allProfilesCache.find(x=>x.user_id === row.dataset.userId);
+    if(p && p.username){
+      document.getElementById('leaderboardOverlay').classList.remove('open');
+      goToFriendCataloguex(p.username);
+    }
+  }
+});
+document.getElementById('leaderboardCataloguexList').addEventListener('click', e=>{
+  const row = e.target.closest('[data-user-id]');
+  if(row){
+    const p = allProfilesCache.find(x=>x.user_id === row.dataset.userId);
+    if(!p){
+      const uname = row.querySelector('.drow-name')?.textContent?.replace(/^.*@/,'')?.replace(/\s*\(you\).*$/,'').trim();
+      if(uname){ document.getElementById('leaderboardOverlay').classList.remove('open'); goToFriendCataloguex(uname); return; }
+    }
     if(p && p.username){
       document.getElementById('leaderboardOverlay').classList.remove('open');
       goToFriendCataloguex(p.username);
@@ -13637,37 +13669,26 @@ async function loadFeed(){
   
 document.getElementById('feedList').addEventListener('click', e=>{
   if(e.target.closest('[data-preview]')) return;
-  const discoverAddBtn = e.target.closest('[data-discover-add]');
-  if(discoverAddBtn){
+  const reactionBtn = e.target.closest('.feed-reaction-btn');
+  if(reactionBtn){
     e.stopPropagation();
-    const listEl = document.getElementById('feedList');
-    const card = discoverAddBtn.closest('[data-discover-row]');
-    const idx = Array.from(document.querySelectorAll('#feedList [data-discover-row]')).indexOf(card);
-    const entry = (listEl.__discoverData || [])[idx];
-    if(!entry) return;
-    const row = entry.song || entry;
-    document.getElementById('feedOverlay').classList.remove('open');
-    openAddFromData({
-      title: row.title || '',
-      artists: row.artists || (row.artist ? [row.artist] : []),
-      album: row.album || '',
-      year: row.year || '',
-      genres: row.genres || [],
-      tags: [],
-      coverArt: row.coverArt || row.cover_art || null,
-      why: '',
-      credit: 'from @' + (entry.who || 'friend') + "'s catalogue",
-      tier: null
-    });
+    handleFeedReaction(reactionBtn);
     return;
   }
-  const whoLink = e.target.closest('.mixtape-who');
-  if(whoLink){
+  const headLink = e.target.closest('.feed-card-head');
+  if(headLink){
     e.stopPropagation();
-    const username = whoLink.querySelector('span')?.textContent?.replace('@','')?.trim();
-    if(username){
+    const card = headLink.closest('.feed-card');
+    if(!card) return;
+    const listEl = document.getElementById('feedList');
+    const allData = listEl.__feedData || listEl.__discoverData || [];
+    const idx = Array.from(document.querySelectorAll('#feedList .feed-card')).indexOf(card);
+    const entry = allData[idx];
+    if(!entry) return;
+    const username = entry.who;
+    if(username && username !== 'you'){
       document.getElementById('feedOverlay').classList.remove('open');
-      window.location.hash = username;
+      goToFriendCataloguex(username);
     }
     return;
   }
@@ -13678,7 +13699,7 @@ document.getElementById('feedList').addEventListener('click', e=>{
     const idx = Array.from(document.querySelectorAll('#feedList .feed-card')).indexOf(card);
     if(idx < 0) return;
     const listEl = document.getElementById('feedList');
-    const allData = listEl.__feedData || [];
+    const allData = listEl.__feedData || listEl.__discoverData || [];
     const entry = allData[idx];
     if(!entry) return;
     document.getElementById('feedOverlay').classList.remove('open');
@@ -13695,12 +13716,6 @@ document.getElementById('feedList').addEventListener('click', e=>{
       credit: `from @${entry.who}'s feed`,
       tier: s.tier || null
     });
-    return;
-  }
-  const reactionBtn = e.target.closest('.feed-reaction-btn');
-  if(reactionBtn){
-    e.stopPropagation();
-    handleFeedReaction(reactionBtn);
     return;
   }
 });

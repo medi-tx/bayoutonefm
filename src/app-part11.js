@@ -315,37 +315,26 @@ async function loadFeed(){
   
 document.getElementById('feedList').addEventListener('click', e=>{
   if(e.target.closest('[data-preview]')) return;
-  const discoverAddBtn = e.target.closest('[data-discover-add]');
-  if(discoverAddBtn){
+  const reactionBtn = e.target.closest('.feed-reaction-btn');
+  if(reactionBtn){
     e.stopPropagation();
-    const listEl = document.getElementById('feedList');
-    const card = discoverAddBtn.closest('[data-discover-row]');
-    const idx = Array.from(document.querySelectorAll('#feedList [data-discover-row]')).indexOf(card);
-    const entry = (listEl.__discoverData || [])[idx];
-    if(!entry) return;
-    const row = entry.song || entry;
-    document.getElementById('feedOverlay').classList.remove('open');
-    openAddFromData({
-      title: row.title || '',
-      artists: row.artists || (row.artist ? [row.artist] : []),
-      album: row.album || '',
-      year: row.year || '',
-      genres: row.genres || [],
-      tags: [],
-      coverArt: row.coverArt || row.cover_art || null,
-      why: '',
-      credit: 'from @' + (entry.who || 'friend') + "'s catalogue",
-      tier: null
-    });
+    handleFeedReaction(reactionBtn);
     return;
   }
-  const whoLink = e.target.closest('.mixtape-who');
-  if(whoLink){
+  const headLink = e.target.closest('.feed-card-head');
+  if(headLink){
     e.stopPropagation();
-    const username = whoLink.querySelector('span')?.textContent?.replace('@','')?.trim();
-    if(username){
+    const card = headLink.closest('.feed-card');
+    if(!card) return;
+    const listEl = document.getElementById('feedList');
+    const allData = listEl.__feedData || listEl.__discoverData || [];
+    const idx = Array.from(document.querySelectorAll('#feedList .feed-card')).indexOf(card);
+    const entry = allData[idx];
+    if(!entry) return;
+    const username = entry.who;
+    if(username && username !== 'you'){
       document.getElementById('feedOverlay').classList.remove('open');
-      window.location.hash = username;
+      goToFriendCataloguex(username);
     }
     return;
   }
@@ -356,7 +345,7 @@ document.getElementById('feedList').addEventListener('click', e=>{
     const idx = Array.from(document.querySelectorAll('#feedList .feed-card')).indexOf(card);
     if(idx < 0) return;
     const listEl = document.getElementById('feedList');
-    const allData = listEl.__feedData || [];
+    const allData = listEl.__feedData || listEl.__discoverData || [];
     const entry = allData[idx];
     if(!entry) return;
     document.getElementById('feedOverlay').classList.remove('open');
@@ -373,12 +362,6 @@ document.getElementById('feedList').addEventListener('click', e=>{
       credit: `from @${entry.who}'s feed`,
       tier: s.tier || null
     });
-    return;
-  }
-  const reactionBtn = e.target.closest('.feed-reaction-btn');
-  if(reactionBtn){
-    e.stopPropagation();
-    handleFeedReaction(reactionBtn);
     return;
   }
 });

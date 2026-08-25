@@ -1376,40 +1376,7 @@ document.getElementById('mixtapeDiscoverBtn').addEventListener('click', ()=>{
   setFeedModeUI('discover');
   loadFeed();
 });
-function discoverCardHtml(entry){
-  const row = entry.song;
-  const p = entry.profile;
-  const who = entry.who;
-  const initial = (who || '?').charAt(0).toUpperCase();
-  const avatar = (p && p.photo)
-    ? `<img loading="lazy" decoding="async" class="feed-card-avatar" src="${escapeAttr(p.photo)}" alt="${escapeAttr(who)}'s profile photo">`
-    : `<span class="feed-card-avatar">${escapeHtml(initial)}</span>`;
-  const cover = row.cover_art
-    ? `<img loading="lazy" decoding="async" class="mixtape-cover" src="${escapeAttr(row.cover_art)}" alt="Album cover">`
-    : `<div class="mixtape-cover mixtape-cover-fallback">${escapeHtml((row.title||'?').charAt(0).toUpperCase())}</div>`;
-  const artistLine = [row.artist, row.album].filter(Boolean).map(escapeHtml).join(' · ');
-  const owned = songs.some(s=> s.title === row.title && (s.artists||[]).join(', ') === (row.artist||''));
-  const actionHtml = owned
-    ? '<span class="mixtape-from" style="opacity:0.6;">In your library</span>'
-    : '<button type="button" class="feed-add-btn" data-discover-add="1">+ Add to my library</button>';
-  const userLink = who ? `onclick="window.location.hash='${escapeAttr(who)}'"` : '';
-  return `
-      <div class="mixtape-item" data-discover-row="1" title="${owned ? 'Already in your cataloguex' : 'Click to add this to your cataloguex'}">
-        ${cover}
-        <div class="mixtape-body">
-          <p class="mixtape-title">${escapeHtml(row.title||'Untitled')}</p>
-          <p class="mixtape-artist">${artistLine}</p>
-          <div class="mixtape-who" ${userLink} style="cursor:pointer; display:flex; align-items:center; gap:6px; margin-top:4px; font-size:12px; opacity:0.7;">
-            ${avatar}
-            <span>@${escapeHtml(who||'unknown')}</span>
-          </div>
-        </div>
-        <div class="mixtape-side">
-          ${actionHtml}
-        </div>
-      </div>
-    `;
-}
+// discoverCardHtml removed — discover feed now uses feedCardHtml for consistency
 // Column name Supabase actually uses for global_songs' recency ordering, discovered at
 // runtime since it wasn't possible to confirm the schema in advance. undefined = not yet
 // probed, null = no working timestamp column found (falls back to unordered), otherwise
@@ -1459,7 +1426,7 @@ async function loadDiscoverFeed(){
         const p = allProfilesCache.find(x=>x.user_id === id);
         return friendSongs
           .filter(s=>!s.archived && s.title)
-          .map(s=>({ song:s, who: p?.username || 'friend', profile: p }));
+          .map(s=>({ song:s, who: p?.username || 'friend', profile: p, ownerId: id }));
       }catch(e){ return []; }
     }));
     const all = results.flat();
@@ -1471,8 +1438,21 @@ async function loadDiscoverFeed(){
       list.__discoverData = [];
       return;
     }
+    try{
+      const ownerIds = [...new Set(all.map(e=>e.ownerId).filter(Boolean))];
+      if(ownerIds.length){
+        const { data: rxData } = await sb.from('feed_reactions')
+          .select('song_owner_id, song_id, reactor_id, emoji')
+          .in('song_owner_id', ownerIds);
+        if(rxData){
+          all.forEach(e=>{
+            e.reactions = rxData.filter(r=>r.song_owner_id===e.ownerId && r.song_id===e.song.id);
+          });
+        }
+      }
+    }catch(err){ console.warn('Could not load discover reactions:', err); }
     if(countEl) countEl.textContent = `${all.length} songs from ${friendIds.length} friend${friendIds.length===1?'':'s'}`;
-    list.innerHTML = all.map(entry=> discoverCardHtml(entry)).join('');
+    list.innerHTML = all.map(entry=> feedCardHtml(entry)).join('');
     list.__feedMode = 'discover';
     list.__discoverData = all;
   }catch(e){
