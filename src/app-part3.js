@@ -622,6 +622,27 @@ function cbRemindsNames(s){
     return pp ? escapeHtml(pp.name) : null;
   }).filter(Boolean).join(', ');
 }
+function musicKeyToCamelot(key){
+  if(!key) return '';
+  const k=key.trim();
+  const map={
+    'c major':'8b','c minor':'5a','a minor':'8a',
+    'g major':'9b','g minor':'6a','e minor':'9a',
+    'd major':'10b','d minor':'7a','b minor':'10a',
+    'a major':'11b','a minor':'8a','f# minor':'11a','f#m':'11a',
+    'e major':'12b','c# minor':'12a','c#m':'12a','db minor':'12a',
+    'b major':'1b','g# minor':'1a','g#m':'1a','ab minor':'1a',
+    'f# major':'2b','gb major':'2b','d# minor':'2a','d#m':'2a','eb minor':'2a',
+    'db major':'3b','c# major':'3b','bb minor':'3a',
+    'ab major':'4b','f minor':'4a',
+    'eb major':'5b','c minor':'5a',
+    'bb major':'6b','g minor':'6a',
+    'f major':'7b','d minor':'7a',
+    'a# minor':'8a','bb minor':'8a'
+  };
+  return map[k]||'';
+}
+
 function cardBackHtml(s){
   const streamLinks = [];
   if(s.spotifyUrl) streamLinks.push(`<a class="back-link" href="${escapeHtml(s.spotifyUrl)}" target="_blank" rel="noopener">Spotify</a>`);
@@ -640,7 +661,7 @@ function cardBackHtml(s){
         ${cbField('Producers', s.producer ? escapeHtml(s.producer) : '')}
         ${cbField('Songwriters', s.songwriters ? escapeHtml(s.songwriters) : '')}
         ${cbField('BPM', s.bpm ? escapeHtml(String(s.bpm)) : '')}
-        ${cbField('Key', s.musicKey ? escapeHtml(s.musicKey) : '')}
+        ${cbField('Key', s.musicKey ? escapeHtml(s.musicKey) + (musicKeyToCamelot(s.musicKey) ? ' <span class="camelot-chip">'+escapeHtml(musicKeyToCamelot(s.musicKey))+'</span>' : '') : '')}
         ${cbField('Duration', s.duration ? escapeHtml(s.duration) : '')}
         ${streamLinks.length ? '<div class="cb-field"><span class="cb-flabel">Listen</span><span class="cb-fval">' + streamLinks.join(' · ') + '</span></div>' : ''}
       </div>
