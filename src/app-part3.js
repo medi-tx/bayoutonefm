@@ -792,10 +792,8 @@ function coverThumbHtml(s){
 }
 
 function songCardHtml(s, clusterCounts){
-  const showEx = !!s.isSeedExample;
   return `
-      <div class="card ${s.archived?'archived':''}${showEx?' example-card':''}" data-id="${s.id}">
-        ${showEx ? '<span class="example-badge">EXAMPLE</span>' : ''}
+      <div class="card ${s.archived?'archived':''}" data-id="${s.id}">
         <button class="pin-btn ${s.favorited?'pinned':''}" data-action="pin" data-help="Add to or remove from your personal favourites list." aria-pressed="${s.favorited?'true':'false'}" aria-label="${s.favorited?'Remove from favorites':'Add to favorites'}" title="${s.favorited?'Remove from favorites':'Add to favorites'}">${s.favorited?'♥':'♡'}</button>
         ${(s.tier) ? `<div class="card-tier-badge">${renderTierBadge(s.tier)}${(s.score !== null && s.score !== undefined && s.score !== '') ? `<span class="score-chip">${escapeHtml(String(s.score))}</span>` : ''}</div>` : ''}
         <div class="card-top">
@@ -807,8 +805,8 @@ function songCardHtml(s, clusterCounts){
           </div>
         </div>
         <div class="meta-row">
-          ${s.year ? `<span>${escapeHtml(s.year)}</span>` : (showEx ? `<span class="ex">e.g. 2016</span>` : '')}
-          ${(s.genres&&s.genres.length) ? `<span class="meta-genres">· ${s.genres.map(g=>escapeHtml(g)).join(', ')}</span>` : (showEx ? `<span class="ex">· e.g. Rock, Funk/Soul</span>` : '')}
+          ${s.year ? `<span>${escapeHtml(s.year)}</span>` : ''}
+          ${(s.genres&&s.genres.length) ? `<span class="meta-genres">· ${s.genres.map(g=>escapeHtml(g)).join(', ')}</span>` : ''}
         </div>
         ${cardRatingsStripHtml(s)}
         <div class="preview-row">
@@ -817,7 +815,7 @@ function songCardHtml(s, clusterCounts){
         </div>
         ${songStackBadgesHtml(s, clusterCounts)}
 
-        ${s.quickThought ? `<p class="card-thought">“${escapeHtml(s.quickThought)}”</p>` : (showEx ? `<p class="why ex">e.g. the bassline just doesn't let go</p>` : '')}
+        ${s.quickThought ? `<p class="card-thought">"${escapeHtml(s.quickThought)}"</p>` : ''}
         ${s.why ? `<p class="card-opinions">${escapeHtml(s.why)}</p>` : ''}
         ${s.credit ? `<p class="credit-note"><b>Borrowed from / Where I Heard It:</b> ${escapeHtml(s.credit)}</p>` : ''}
         ${(s.remindsOf && s.remindsOf.length) ? `<div class="reminds-badges">${s.remindsOf.map(pid=>{
@@ -827,16 +825,16 @@ function songCardHtml(s, clusterCounts){
           const photo = (lp && lp.photo) ? lp.photo : p.photo;
           const tip = lp ? 'Friend @' + escapeAttr(lp.username) + ' on bayoutonefm' : 'Songs that remind me of ' + escapeAttr(p.name);
           return `<span class="reminds-badge${lp?' linked':''}" data-person="${p.id}" title="${tip}">${photo?`<img loading="lazy" decoding="async" src="${photo}" loading="lazy" decoding="async" alt="Image">`:''}${escapeHtml(p.name)}<button type="button" class="reminds-badge-x" data-remove-reminder="${s.id}|${p.id}" title="Remove ${escapeAttr(p.name)} from this song">×</button></span>`;
-        }).join('')}</div>` : (showEx ? `<div class="reminds-badges"><span class="reminds-badge ex">e.g. Mom</span><span class="reminds-badge ex">e.g. a college roommate</span></div>` : '')}
+        }).join('')}</div>` : ''}
         <div class="card-actions">
-          ${!showEx && geniusLyricsUrl(s.title, s.artists) ? `<a href="${escapeAttr(geniusLyricsUrl(s.title, s.artists))}" target="_blank" rel="noopener" title="Open lyrics on Genius" data-help="Search for full lyrics on Genius.">LYRICS ↗</a>` : ''}
+          ${geniusLyricsUrl(s.title, s.artists) ? `<a href="${escapeAttr(geniusLyricsUrl(s.title, s.artists))}" target="_blank" rel="noopener" title="Open lyrics on Genius" data-help="Search for full lyrics on Genius.">LYRICS ↗</a>` : ''}
           <button data-action="edit" data-help="Open the editor to change this song's details.">EDIT</button>
           <button data-action="archive" data-help="Hide this card from your main grid without deleting it.">${s.archived ? 'UNARCHIVE' : 'ARCHIVE'}</button>
           <button data-action="delete" class="del" data-help="Permanently remove this song from your cataloguex.">DELETE</button>
-          ${!showEx ? `<button data-action="share" class="share-card-btn" data-help="Generate a shareable image of this song card." title="Generate a shareable card for this song">↗ SHARE</button>` : ''}
+          <button data-action="share" class="share-card-btn" data-help="Generate a shareable image of this song card." title="Generate a shareable card for this song">↗ SHARE</button>
         </div>
-        ${!showEx ? cardBackHtml(s) : ''}
-        ${!showEx ? `<button type="button" class="cb-flip-fab" data-action="flip" data-help="Flip the card to see extra details on the back." title="Flip card" aria-label="Flip card">↻</button>` : ''}
+        ${cardBackHtml(s)}
+        <button type="button" class="cb-flip-fab" data-action="flip" data-help="Flip the card to see extra details on the back." title="Flip card" aria-label="Flip card">↻</button>
       </div>
     `;
 }
