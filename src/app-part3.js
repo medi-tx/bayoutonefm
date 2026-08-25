@@ -940,29 +940,6 @@ document.getElementById('timeline').addEventListener('click', e=>{
   if(song) openModal(song);
 });
 
-/* ---- score-sorted view ---- */
-function renderScoreSort(){
-  const grid = document.getElementById('grid');
-  const empty = document.getElementById('emptyState');
-  grid.style.display = '';
-  grid.classList.remove('clusters-view');
-  const active = songs.filter(s=>!s.archived);
-  const scored = active.filter(s=> s.score !== null && s.score !== undefined && s.score !== '');
-  scored.sort((a,b)=> (Number(b.score)||0) - (Number(a.score)||0));
-  if(!scored.length){
-    grid.innerHTML = '';
-    empty.querySelector('p').textContent = 'No scored songs yet — rate your songs to see them ranked here.';
-    empty.style.display = 'block';
-    return;
-  }
-  empty.style.display = 'none';
-  grid.innerHTML = scored.map(s=> songCardHtml(s)).join('');
-  document.querySelectorAll('.card', grid).forEach(card => {
-    const id = card.dataset.id;
-    if(pinnedIds.has(id)) card.querySelector('.pin-btn')?.classList.add('pinned');
-  });
-}
-
 /* ---- stats page ---- */
 const TIER_CHART_COLORS = { '★':'#d5873f', S:'#E63946', A:'#2A9D8F', B:'#8E44AD', C:'#264653' };
 function statChartCanvas(id){
@@ -1465,7 +1442,7 @@ async function loadDiscoverFeed(){
       }catch(e){ return []; }
     }));
     const all = results.flat();
-    all.sort((a,b)=> (b.song.createdAt||0) - (a.song.createdAt||0));
+    for(let i = all.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [all[i], all[j]] = [all[j], all[i]]; }
     if(all.length === 0){
       if(countEl) countEl.textContent = '';
       list.innerHTML = '<div class="feed-empty">Your friends haven\'t added any songs yet.</div>';
@@ -2276,19 +2253,6 @@ function render(){
     renderTimeline();
     return;
   }
-  if(viewingScoreSort){
-    document.getElementById('grid').style.display = 'none';
-    document.getElementById('gridSentinel').style.display = 'none';
-    document.getElementById('emptyState').style.display = 'none';
-    document.getElementById('tierBoard').style.display = 'none';
-    document.getElementById('tierBoardToolbar').style.display = 'none';
-    document.getElementById('tierBoardEmptyState').style.display = 'none';
-    document.getElementById('timeline').style.display = 'none';
-    document.getElementById('timelineEmptyState').style.display = 'none';
-    renderLastAdded();
-    renderScoreSort();
-    return;
-  }
   if(viewingWishlist){
     document.getElementById('tierBoard').style.display = 'none';
     document.getElementById('tierBoardToolbar').style.display = 'none';
@@ -2339,6 +2303,8 @@ function render(){
     if(sortBy === 'pinned') return (b.favorited?1:0) - (a.favorited?1:0) || (tierRank(b.tier) - tierRank(a.tier));
     if(sortBy === 'rating-desc') return tierRank(b.tier) - tierRank(a.tier);
     if(sortBy === 'rating-asc') return tierRank(a.tier) - tierRank(b.tier);
+    if(sortBy === 'score-desc') return (Number(b.score)||0) - (Number(a.score)||0);
+    if(sortBy === 'score-asc') return (Number(a.score)||0) - (Number(b.score)||0);
     if(sortBy === 'year-desc') return (parseInt(b.year)||0) - (parseInt(a.year)||0);
     if(sortBy === 'year-asc') return (parseInt(a.year)||0) - (parseInt(b.year)||0);
     if(sortBy === 'title') return a.title.localeCompare(b.title);
@@ -2492,9 +2458,7 @@ function openModal(song){
   favBtn.textContent = currentFav ? '♥' : '♡';
   favBtn.classList.toggle('on', currentFav);
   document.getElementById('overlay').classList.add('open');
-  document.getElementById('f-search-field').style.display = song ? 'none' : '';
   resetEditorTabs('single');
-  if(!song){ document.getElementById('f-song-search').focus(); }
 }
 function closeModal(){
   document.getElementById('overlay').classList.remove('open');
@@ -3047,7 +3011,6 @@ function updateViewUI(){
   const wishBtn = document.getElementById('toggleWishlist');
   const tierBtn = document.getElementById('toggleTierBoard');
   const timeBtn = document.getElementById('toggleTimeline');
-  const scoreBtn = document.getElementById('toggleScoreSort');
   archBtn.textContent = showArchived ? '← Back to cataloguex' : 'View archive';
   archBtn.classList.toggle('active', showArchived);
   archBtn.setAttribute('aria-pressed', showArchived ? 'true' : 'false');
@@ -3060,9 +3023,6 @@ function updateViewUI(){
   timeBtn.textContent = viewingTimeline ? '← Back to cataloguex' : '🕰 Timeline';
   timeBtn.classList.toggle('active', viewingTimeline);
   timeBtn.setAttribute('aria-pressed', viewingTimeline ? 'true' : 'false');
-  scoreBtn.textContent = viewingScoreSort ? '← Back to cataloguex' : '📊 By score';
-  scoreBtn.classList.toggle('active', viewingScoreSort);
-  scoreBtn.setAttribute('aria-pressed', viewingScoreSort ? 'true' : 'false');
 
   const otherMode = showArchived || viewingWishlist;
   document.getElementById('openAddMusic').style.display = otherMode ? 'none' : '';
@@ -3072,10 +3032,10 @@ function updateViewUI(){
   document.getElementById('resetCataloguexBtn').style.display = otherMode ? 'none' : '';
   document.getElementById('openWish').style.display = viewingWishlist ? '' : 'none';
   document.getElementById('peopleSection').style.display = viewingWishlist ? 'none' : '';
-  document.getElementById('filterGenre').style.display = (viewingWishlist || viewingTierBoard || viewingTimeline || viewingScoreSort) ? 'none' : '';
-  document.getElementById('filterMood').style.display = (viewingWishlist || viewingTierBoard || viewingTimeline || viewingScoreSort) ? 'none' : '';
-  document.getElementById('sortBy').style.display = (viewingWishlist || viewingTierBoard || viewingTimeline || viewingScoreSort) ? 'none' : '';
-  document.getElementById('search').style.display = (viewingTierBoard || viewingTimeline || viewingScoreSort) ? 'none' : '';
+  document.getElementById('filterGenre').style.display = (viewingWishlist || viewingTierBoard || viewingTimeline) ? 'none' : '';
+  document.getElementById('filterMood').style.display = (viewingWishlist || viewingTierBoard || viewingTimeline) ? 'none' : '';
+  document.getElementById('sortBy').style.display = (viewingWishlist || viewingTierBoard || viewingTimeline) ? 'none' : '';
+  document.getElementById('search').style.display = (viewingTierBoard || viewingTimeline) ? 'none' : '';
   archBtn.style.display = (viewingWishlist || viewingTierBoard || viewingTimeline) ? 'none' : '';
   wishBtn.style.display = (showArchived || viewingTierBoard || viewingTimeline) ? 'none' : '';
   tierBtn.style.display = (showArchived || viewingWishlist || viewingTimeline) ? 'none' : '';
@@ -3085,35 +3045,28 @@ function updateViewUI(){
 document.getElementById('toggleArchive').addEventListener('click', ()=>{
   trackEvent('toggle_archive');
   showArchived = !showArchived;
-  if(showArchived){ viewingWishlist = false; viewingTierBoard = false; viewingTimeline = false; viewingScoreSort = false; }
+  if(showArchived){ viewingWishlist = false; viewingTierBoard = false; viewingTimeline = false; }
   updateViewUI();
   render();
 });
 document.getElementById('toggleWishlist').addEventListener('click', ()=>{
   trackEvent('toggle_wishlist');
   viewingWishlist = !viewingWishlist;
-  if(viewingWishlist){ showArchived = false; viewingTierBoard = false; viewingTimeline = false; viewingScoreSort = false; }
+  if(viewingWishlist){ showArchived = false; viewingTierBoard = false; viewingTimeline = false; }
   updateViewUI();
   render();
 });
 document.getElementById('toggleTierBoard').addEventListener('click', ()=>{
   trackEvent('toggle_tier_board');
   viewingTierBoard = !viewingTierBoard;
-  if(viewingTierBoard){ showArchived = false; viewingWishlist = false; viewingTimeline = false; viewingScoreSort = false; }
+  if(viewingTierBoard){ showArchived = false; viewingWishlist = false; viewingTimeline = false; }
   updateViewUI();
   render();
 });
 document.getElementById('toggleTimeline').addEventListener('click', ()=>{
   trackEvent('toggle_timeline');
   viewingTimeline = !viewingTimeline;
-  if(viewingTimeline){ showArchived = false; viewingWishlist = false; viewingTierBoard = false; viewingScoreSort = false; }
-  updateViewUI();
-  render();
-});
-document.getElementById('toggleScoreSort').addEventListener('click', ()=>{
-  trackEvent('toggle_score_sort');
-  viewingScoreSort = !viewingScoreSort;
-  if(viewingScoreSort){ showArchived = false; viewingWishlist = false; viewingTierBoard = false; viewingTimeline = false; }
+  if(viewingTimeline){ showArchived = false; viewingWishlist = false; viewingTierBoard = false; }
   updateViewUI();
   render();
 });
@@ -3338,6 +3291,7 @@ async function handleSingleUrl(url){
   const isSpotifyAlbum = /open\.spotify\.com\/album\//.test(url);
   const appleMatch = url.match(/music\.apple\.com\/.*\/album\/.*\/(\d+)(?:\?i=(\d+))?/);
   const isTidalTrack = /tidal\.com\/.*\/track\/(\d+)/.test(url);
+  const isTidalAlbum = /tidal\.com\/.*\/album\/(\d+)/.test(url);
   const ytMatch = url.match(/(?:music\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]+)|youtu\.be\/([a-zA-Z0-9_-]+)/);
   try{
     if(isSpotifyTrack){
@@ -3384,6 +3338,31 @@ async function handleSingleUrl(url){
         }
       }
     }
+    if(appleMatch && appleMatch[1] && !appleMatch[2]){
+      const albumId = appleMatch[1];
+      const albumResp = await fetch('https://itunes.apple.com/lookup?id=' + albumId + '&entity=album');
+      if(albumResp.ok){
+        const ad = await albumResp.json();
+        const albumInfo = ad.results && ad.results.find(r=> r.wrapperType === 'collection');
+        if(albumInfo){
+          const trackResp = await fetch('https://itunes.apple.com/lookup?id=' + albumId + '&entity=song&limit=200');
+          if(trackResp.ok){
+            const td = await trackResp.json();
+            const tracks = (td.results||[]).filter(r=> r.wrapperType === 'track' && r.collectionId == albumId).map((t,i)=>({ title:t.trackName, artists:[t.artistName], trackNumber:t.trackNumber }));
+            document.getElementById('spotifyImportOverlay').classList.remove('open');
+            openMultiModal('album');
+            document.getElementById('mf-artist').value = albumInfo.artistName || '';
+            document.getElementById('mf-album').value = albumInfo.collectionName || '';
+            document.getElementById('mf-year').value = albumInfo.releaseDate || '';
+            if(albumInfo.artworkUrl100){ currentMultiCoverArt = albumInfo.artworkUrl100.replace('100x100','600x600'); setImagePreview('mf-cover', currentMultiCoverArt); }
+            const boxes = document.getElementById('titleBoxes');
+            boxes.innerHTML = '';
+            tracks.forEach((t,i)=> addTitleBoxRow(i===0, t.title));
+            return;
+          }
+        }
+      }
+    }
     if(isTidalTrack){
       const trackId = url.match(/tidal\.com\/.*\/track\/(\d+)/)[1];
       const proxies = [ u=>'https://api.allorigins.win/raw?url='+encodeURIComponent(u), u=>'https://corsproxy.io/?'+encodeURIComponent(u) ];
@@ -3401,6 +3380,36 @@ async function handleSingleUrl(url){
                 document.getElementById('spotifyImportOverlay').classList.remove('open');
                 openAddFromData(trackData);
                 if(trackData.tidalUrl) document.getElementById('f-tidal').value = trackData.tidalUrl;
+                return;
+              }
+            }
+          }
+        }catch(e){}
+      }
+    }
+    if(isTidalAlbum){
+      const albumId = url.match(/tidal\.com\/.*\/album\/(\d+)/)[1];
+      const proxies = [ u=>'https://api.allorigins.win/raw?url='+encodeURIComponent(u), u=>'https://corsproxy.io/?'+encodeURIComponent(u) ];
+      for(const proxy of proxies){
+        try{
+          const resp = await fetch(proxy('https://tidal.com/browse/album/' + albumId), { redirect:'follow' });
+          if(resp.ok){
+            const html = await resp.text();
+            const doc = new DOMParser().parseFromString(html, 'text/html');
+            const ldScript = doc.querySelector('script[type="application/ld+json"]');
+            if(ldScript){
+              const ld = JSON.parse(ldScript.textContent);
+              if(ld && ld.name){
+                const tracks = (ld.track||[]).map((t,i)=>({ title:t.name||'', artists:t.artist?[t.artist]:[], trackNumber:t.position||(i+1) }));
+                document.getElementById('spotifyImportOverlay').classList.remove('open');
+                openMultiModal('album');
+                document.getElementById('mf-artist').value = ld.artist || '';
+                document.getElementById('mf-album').value = ld.name || '';
+                document.getElementById('mf-year').value = ld.dateCreated || '';
+                if(ld.image){ currentMultiCoverArt = ld.image; setImagePreview('mf-cover', currentMultiCoverArt); }
+                const boxes = document.getElementById('titleBoxes');
+                boxes.innerHTML = '';
+                tracks.forEach((t,i)=> addTitleBoxRow(i===0, t.title));
                 return;
               }
             }
@@ -4062,8 +4071,14 @@ document.getElementById('spotifyImportConfirmBtn').addEventListener('click', ()=
 document.getElementById('cancelBtn').addEventListener('click', closeModal);
 document.getElementById('overlay').addEventListener('click', e=>{
   if(e.target.id !== 'overlay') return;
-  const hasTextField = e.target.querySelector('input[type="text"], input[type="number"], input[type="url"], textarea');
-  if(!hasTextField) closeModal();
+  closeModal();
+});
+document.querySelectorAll('.overlay').forEach(ov=>{
+  if(ov.id === 'overlay' || ov.id === 'termsGateOverlay' || ov.id === 'onboardingOverlay') return;
+  ov.addEventListener('click', e=>{
+    if(e.target !== ov) return;
+    ov.classList.remove('open');
+  });
 });
 document.getElementById('saveBtn').addEventListener('click', handleSave);
 document.getElementById('modalFavBtn').addEventListener('click', ()=>{

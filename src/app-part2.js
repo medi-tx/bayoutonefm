@@ -35,7 +35,6 @@ function trackEvent(feature, detail){
   try{ analyticsLog = JSON.parse(localStorage.getItem(ANALYTICS_KEY)||'[]'); }catch(e){ analyticsLog = []; }
 })();
 let viewingTimeline = false;
-let viewingScoreSort = false;
 let multiMode = 'cluster'; // 'cluster' or 'album'
 let currentMultiTier = null;
 let clusterFilterId = null;

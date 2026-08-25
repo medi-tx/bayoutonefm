@@ -677,6 +677,7 @@ async function loadAppForUser(user){
   if(!myProfile || !myProfile.username){
     openOnboarding();
   } else if(!localStorage.getItem('usernameRedoDone_' + currentUserId)){
+    localStorage.setItem('usernameRedoDone_' + currentUserId, '1');
     setTimeout(()=>{
       openOnboarding({ username: myProfile.username, bio: myProfile.bio || '', photo: myProfile.photo || null, promptMessage: 'Welcome back! Take a moment to review your username. You can keep it or pick a new one.' });
     }, 800);
