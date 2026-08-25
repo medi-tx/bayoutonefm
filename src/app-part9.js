@@ -279,6 +279,11 @@
     if(error){ console.error('Error loading song of the day:', error); }
     sotdSong = (data && data.song) || null;
     sotdPickedBy = (data && data.picked_by) || null;
+    if(sotdSong){
+      delete previewCache['sotd'];
+      previewFailed.delete('sotd');
+      previewInflight.delete('sotd');
+    }
     sotdReactions = [];
     sotdProfiles = [];
     if(sotdSong){
@@ -318,6 +323,9 @@
     if(error){ console.error('Error saving song of the day:', error); renderSotdDock({ error: "Couldn't save today's song." }); return; }
     sotdSong = song;
     sotdPickedBy = currentUserId;
+    delete previewCache['sotd'];
+    previewFailed.delete('sotd');
+    previewInflight.delete('sotd');
     renderSotdDock();
   }
   async function sotdReact(emoji){
