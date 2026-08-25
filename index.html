@@ -7369,7 +7369,10 @@ async function handleSingleUrl(url){
       const proxies = [ u=>'https://api.allorigins.win/raw?url='+encodeURIComponent(u), u=>'https://corsproxy.io/?'+encodeURIComponent(u) ];
       for(const proxy of proxies){
         try{
-          const resp = await fetch(proxy('https://tidal.com/browse/track/' + trackId), { redirect:'follow' });
+          const ac = new AbortController();
+          const timer = setTimeout(()=>ac.abort(), 6000);
+          const resp = await fetch(proxy('https://tidal.com/browse/track/' + trackId), { redirect:'follow', signal:ac.signal });
+          clearTimeout(timer);
           if(resp.ok){
             const html = await resp.text();
             const doc = new DOMParser().parseFromString(html, 'text/html');
@@ -7401,7 +7404,10 @@ async function handleSingleUrl(url){
       const proxies = [ u=>'https://api.allorigins.win/raw?url='+encodeURIComponent(u), u=>'https://corsproxy.io/?'+encodeURIComponent(u) ];
       for(const proxy of proxies){
         try{
-          const resp = await fetch(proxy('https://tidal.com/browse/album/' + albumId), { redirect:'follow' });
+          const ac = new AbortController();
+          const timer = setTimeout(()=>ac.abort(), 6000);
+          const resp = await fetch(proxy('https://tidal.com/browse/album/' + albumId), { redirect:'follow', signal:ac.signal });
+          clearTimeout(timer);
           if(resp.ok){
             const html = await resp.text();
             const doc = new DOMParser().parseFromString(html, 'text/html');
