@@ -653,7 +653,6 @@ function cardBackHtml(s){
     <div class="card-back">
       <div class="cb-head">
         <span class="cb-title">${escapeHtml(s.title||'Untitled')}${s.explicit ? ' <span class="explicit-badge" title="Explicit content">E</span>' : ''}</span>
-        <button type="button" class="cb-flip-fab cb-head-flip" data-action="flip" title="Flip back" aria-label="Flip back">↻</button>
       </div>
       <div class="cb-fields">
         ${cbField('Track #', trackNoDisplay(s))}
