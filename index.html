@@ -7072,29 +7072,28 @@ document.getElementById('toggleTimeline').addEventListener('click', ()=>{
 });
 document.getElementById('openAddMusic').addEventListener('click', ()=>{
   trackEvent('open_add_music');
-  document.getElementById('addMusicOverlay').classList.add('open');
+  openImportUrlScreen('song');
 });
 document.querySelectorAll('.empty-state-add-btn').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     trackEvent('open_add_music_from_empty_state');
-    document.getElementById('addMusicOverlay').classList.add('open');
+    openImportUrlScreen('song');
   });
 });
 let addMusicMode = null;
 function openImportUrlScreen(mode){
-  addMusicMode = mode || 'playlist';
+  addMusicMode = 'song';
   const ov = document.getElementById('spotifyImportOverlay');
   ov.classList.add('open');
   const titleEl = document.getElementById('importModalTitle');
   const labelEl = ov.querySelector('label');
-  if(addMusicMode === 'song'){ titleEl.textContent = 'Add a song'; labelEl.textContent = 'Paste a Spotify, Apple Music, or Tidal song URL'; }
-  else if(addMusicMode === 'album'){ titleEl.textContent = 'Add an album'; labelEl.textContent = 'Paste a Spotify, Apple Music, or Tidal album URL'; }
-  else { titleEl.textContent = 'Import Playlist'; labelEl.textContent = 'Playlist URL (Spotify, Apple Music, or Tidal)'; }
+  titleEl.textContent = 'Add Music';
+  labelEl.textContent = 'Paste a Spotify, Apple Music, YouTube, or Tidal link';
   document.getElementById('spotify-url-input').value = '';
   document.getElementById('spotifyImportResults').style.display = 'none';
   document.getElementById('spotifyImportError').style.display = 'none';
   document.getElementById('spotifyImportConfirmBtn').disabled = true;
-  document.getElementById('spotifyImportCancelBtn').textContent = 'Close';
+  document.getElementById('spotifyImportCancelBtn').textContent = 'Cancel';
   document.getElementById('spotifyImportStopBtn').style.display = 'none';
   document.getElementById('spotifyImportPauseBtn').style.display = 'none';
   playlistImportedTracks = [];
@@ -7513,6 +7512,10 @@ async function handleSingleUrl(url){
       document.getElementById('spotifyImportOverlay').classList.remove('open');
       openAddFromData(trackData);
       document.getElementById('f-youtube').value = url;
+      return;
+    }
+    if(detectPlaylistService(url)){
+      await loadPlaylist(url);
       return;
     }
     errEl.style.display = 'block';
@@ -8082,11 +8085,7 @@ document.getElementById('spotify-url-input').addEventListener('input', e=>{
   if(playlistImportInProgress && val === playlistImportUrl){
     return;
   }
-  if(addMusicMode === 'song' || addMusicMode === 'album'){
-    spotifyUrlDebounce = setTimeout(()=>handleSingleUrl(val), 600);
-  } else {
-    spotifyUrlDebounce = setTimeout(()=>loadPlaylist(val), 600);
-  }
+  spotifyUrlDebounce = setTimeout(()=>handleSingleUrl(val), 600);
 });
 
 document.getElementById('spotifyImportConfirmBtn').addEventListener('click', ()=>{
@@ -8159,7 +8158,7 @@ document.getElementById('overlay').addEventListener('click', e=>{
   closeModal();
 });
 document.querySelectorAll('.overlay').forEach(ov=>{
-  if(ov.id === 'overlay' || ov.id === 'termsGateOverlay' || ov.id === 'onboardingOverlay') return;
+  if(ov.id === 'overlay' || ov.id === 'termsGateOverlay' || ov.id === 'onboardingOverlay' || ov.id === 'spotifyImportOverlay') return;
   ov.addEventListener('click', e=>{
     if(e.target !== ov) return;
     ov.classList.remove('open');
