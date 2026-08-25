@@ -451,7 +451,7 @@ function renderRemindsPicker(prefix, selectedIds){
       ? `<img loading="lazy" decoding="async" src="${photo}" alt="Image">`
       : `<span class="rc-fallback">${escapeHtml((p.name||'?').charAt(0).toUpperCase())}</span>`;
     const friendMark = lp ? `<span class="rc-linked" title="Actual friend on bayoutonefm">✓</span>` : '';
-    label.innerHTML = `<input type="checkbox" value="${escapeAttr(p.id)}" ${selectedIds.includes(p.id)?'checked':''}> ${imgOrFallback} ${escapeHtml(p.name)}${friendMark}`;
+    label.innerHTML = `<input type="checkbox" value="${escapeAttr(p.id)}" ${selectedIds.includes(p.id)?'checked':''}> ${imgOrFallback} ${escapeHtml(p.name)}`;
     label.querySelector('input').addEventListener('change', e=>{
       label.classList.toggle('selected', e.target.checked);
     });
@@ -634,6 +634,7 @@ function cardBackHtml(s){
         <button type="button" class="cb-close" data-action="flip" title="Flip back" aria-label="Flip back">✕</button>
       </div>
       <div class="cb-fields">
+        ${cbField('Track #', trackNoDisplay(s))}
         ${cbField('Record label', s.recordLabel ? escapeHtml(s.recordLabel) : '')}
         ${cbField('Producers', s.producer ? escapeHtml(s.producer) : '')}
         ${cbField('Songwriters', s.songwriters ? escapeHtml(s.songwriters) : '')}
@@ -801,8 +802,8 @@ function songCardHtml(s, clusterCounts){
           <div class="title-stack">
             ${s.archived ? '<span class="archived-badge">ARCHIVED</span>' : ''}
             <p class="track-title" style="${s.tier ? 'color:'+tierColor(s.tier) : ''}">${escapeHtml(s.title||'Untitled')}${s.explicit ? ' <span class="explicit-badge" title="Explicit content">E</span>' : ''}</p>
-            <p class="track-artist">${escapeHtml(formatArtists(s.artists))}${s.album ? ' · '+escapeHtml(s.album) : ''}${trackNoDisplay(s)}</p>
-            ${(s.tier) ? `<div class="cover-score">${renderTierBadge(s.tier)}${(s.score !== null && s.score !== undefined && s.score !== '') ? `<span class="score-chip">${escapeHtml(String(s.score))}</span><span class="cs-band">→ ${escapeHtml(tierBandLabel(s.tier))}</span>` : ''}</div>` : ''}
+            <p class="track-artist">${escapeHtml(formatArtists(s.artists))}${s.album ? ' · '+escapeHtml(s.album) : ''}</p>
+            ${(s.tier) ? `<div class="cover-score">${renderTierBadge(s.tier)}${(s.score !== null && s.score !== undefined && s.score !== '') ? `<span class="score-chip">${escapeHtml(String(s.score))}</span>` : ''}</div>` : ''}
           </div>
         </div>
         <div class="meta-row">
@@ -825,7 +826,7 @@ function songCardHtml(s, clusterCounts){
           const lp = linkedProfile(p);
           const photo = (lp && lp.photo) ? lp.photo : p.photo;
           const tip = lp ? 'Friend @' + escapeAttr(lp.username) + ' on bayoutonefm' : 'Songs that remind me of ' + escapeAttr(p.name);
-          return `<span class="reminds-badge${lp?' linked':''}" data-person="${p.id}" title="${tip}">${photo?`<img loading="lazy" decoding="async" src="${photo}" loading="lazy" decoding="async" alt="Image">`:''}${escapeHtml(p.name)}${lp?' <span class="rc-linked">✓</span>':''}<button type="button" class="reminds-badge-x" data-remove-reminder="${s.id}|${p.id}" title="Remove ${escapeAttr(p.name)} from this song">×</button></span>`;
+          return `<span class="reminds-badge${lp?' linked':''}" data-person="${p.id}" title="${tip}">${photo?`<img loading="lazy" decoding="async" src="${photo}" loading="lazy" decoding="async" alt="Image">`:''}${escapeHtml(p.name)}<button type="button" class="reminds-badge-x" data-remove-reminder="${s.id}|${p.id}" title="Remove ${escapeAttr(p.name)} from this song">×</button></span>`;
         }).join('')}</div>` : (showEx ? `<div class="reminds-badges"><span class="reminds-badge ex">e.g. Mom</span><span class="reminds-badge ex">e.g. a college roommate</span></div>` : '')}
         <div class="card-actions">
           ${!showEx && geniusLyricsUrl(s.title, s.artists) ? `<a href="${escapeAttr(geniusLyricsUrl(s.title, s.artists))}" target="_blank" rel="noopener" title="Open lyrics on Genius">LYRICS ↗</a>` : ''}
@@ -834,11 +835,6 @@ function songCardHtml(s, clusterCounts){
           <button data-action="delete" class="del">DELETE</button>
           ${!showEx ? `<button data-action="share" class="share-card-btn" title="Generate a shareable card for this song">↗ SHARE</button>` : ''}
         </div>
-        ${(!showEx && s.edits && s.edits.length) ? `<button class="edits-toggle" onclick="this.nextElementSibling.classList.toggle('open')">${s.edits.length} edit${s.edits.length!==1?'s':''} — view log</button><div class="edits-log">${s.edits.slice().reverse().map(e=>{
-          const ts = new Date(e.at).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'}) + ' at ' + new Date(e.at).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
-          const valStr = v=> Array.isArray(v) ? (v.length ? v.join(', ') : 'none') : (v || 'none');
-          return `<div class="edits-entry"><div class="edits-entry-time">${ts}</div>${e.changes.map(c=>`<div class="edits-entry-change"><span class="edits-entry-field">${escapeHtml(c.field)}</span><span class="edits-entry-old">${escapeHtml(valStr(c.old))}</span><span class="edits-entry-arrow">→</span><span class="edits-entry-new">${escapeHtml(valStr(c.now))}</span></div>`).join('')}</div>`;
-        }).join('')}</div>` : ''}
         ${!showEx ? cardBackHtml(s) : ''}
         ${!showEx ? `<button type="button" class="cb-flip-fab" data-action="flip" title="Flip card" aria-label="Flip card">↻</button>` : ''}
       </div>
