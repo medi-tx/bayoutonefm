@@ -2820,6 +2820,12 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
 
 .editor-section{ margin-top:14px; padding-top:10px; border-top:1px solid var(--border); }
 .editor-section:first-child{ margin-top:0; padding-top:0; border-top:none; }
+.editor-toggle-bar{ display:flex; gap:0; margin-bottom:12px; border:1px solid var(--border); border-radius:8px; overflow:hidden; }
+.editor-tab{ flex:1; padding:8px 12px; background:transparent; border:none; font-family:'Space Grotesk',sans-serif; font-size:13px; font-weight:600; color:var(--text-dim,#888); cursor:pointer; transition:background .15s, color .15s; }
+.editor-tab.active{ background:var(--teal); color:#fff; }
+.editor-tab:not(.active):hover{ background:rgba(var(--on-paper-rgb),0.08); }
+.editor-section[data-editor-panel]{ display:none; }
+.editor-section[data-editor-panel].show{ display:block; }
 .editor-section h4{ font-size:12px; font-weight:700; color:var(--text-dim,#888); text-transform:uppercase; letter-spacing:0.8px; margin:0 0 8px; }
 .back-link{ display:inline-block; font-size:12px; color:var(--teal); text-decoration:none; margin:2px 0; }
 .back-link:hover{ text-decoration:underline; }
@@ -3132,8 +3138,11 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
   <div class="modal">
     <h3 id="modalTitle">Add a song</h3>
     <button type="button" id="modalFavBtn" class="modal-fav-btn" title="Add to favorites">♡</button>
-    <div class="editor-section">
-    <h4>Front</h4>
+    <div class="editor-toggle-bar">
+      <button type="button" class="editor-tab active" data-editor-tab="front-single">Front</button>
+      <button type="button" class="editor-tab" data-editor-tab="back-single">Back</button>
+    </div>
+    <div class="editor-section" data-editor-panel="front-single">
     <div class="field">
       <label>Artwork</label>
       <div class="cover-upload">
@@ -3204,8 +3213,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
       <p class="reminds-hint" id="f-reminds-hint" style="display:none;">Add people in the "Songs that remind me of…" section first.</p>
     </div>
     </div>
-    <div class="editor-section">
-    <h4>Back</h4>
+    <div class="editor-section" data-editor-panel="back-single">
     <div class="field"><label>Record label</label><input id="f-label" type="text" placeholder="e.g. Motown, Ghostly…"></div>
     <div class="two-col">
       <div class="field"><label>Producers</label><input id="f-producer" type="text" placeholder="e.g. Rick Rubin, Max Martin"></div>
@@ -3348,8 +3356,11 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
   <div class="modal">
     <h3 id="multiModalTitle">New Linked Stack</h3>
     <p class="multi-hint" id="multiHint">These fields apply to every song you add below.</p>
-    <div class="editor-section">
-    <h4>Front</h4>
+    <div class="editor-toggle-bar">
+      <button type="button" class="editor-tab active" data-editor-tab="front-multi">Front</button>
+      <button type="button" class="editor-tab" data-editor-tab="back-multi">Back</button>
+    </div>
+    <div class="editor-section" data-editor-panel="front-multi">
     <div class="field">
       <label id="multiCoverLabel">Artwork (shared)</label>
       <div class="cover-upload">
@@ -3380,8 +3391,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
       <p class="reminds-hint" id="mf-reminds-hint" style="display:none;">Add people in the "Songs that remind me of…" section first.</p>
     </div>
     </div>
-    <div class="editor-section">
-    <h4>Back</h4>
+    <div class="editor-section" data-editor-panel="back-multi">
     <div class="field"><label>Record label</label><input id="mf-label" type="text" placeholder="e.g. Motown, Ghostly…"></div>
     <div class="two-col">
       <div class="field"><label>Producers</label><input id="mf-producer" type="text" placeholder="e.g. Rick Rubin, Max Martin"></div>
@@ -3716,7 +3726,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
       <div class="obsessed-strip" id="myObsessedStrip"></div>
     </div>
     <p class="profile-sotd-count" id="myProfileSotdCount" style="display:none;"></p>
-    <p class="bug-contact-note" style="font-size:12.5px; color:rgba(var(--on-paper-rgb),0.72); line-height:1.5; margin:10px 0;">Please contact <a href="mailto:samleblanc92@gmail.com" style="color:var(--teal);">samleblanc92@gmail.com</a> if you run into any bugs/issues. We are so sorry about the issue, and would like to fix it. Thanks! :)</p>
+    <p class="bug-contact-note" style="font-size:12.5px; color:rgba(var(--on-paper-rgb),0.72); line-height:1.5; margin:10px 0;">Please contact <a href="mailto:bayoutonefm@outlook.com" style="color:var(--teal);">bayoutonefm@outlook.com</a> if you run into any bugs/issues. We are so sorry about the issue, and would like to fix it. Thanks! :)</p>
     <div class="profile-actions">
       <button type="button" id="myShareCardBtn">🃏 Share card</button>
       <button type="button" id="shareProfileBtn">🔗 Share profile link</button>
@@ -3774,7 +3784,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
   <div class="modal">
     <h3>Set up your profile</h3>
     <p class="multi-hint">Pick a username so other listeners can find and view your cataloguex.</p>
-    <p class="bug-contact-note" style="font-size:12.5px; color:rgba(var(--on-paper-rgb),0.72); line-height:1.5; margin:-4px 0 10px;">Please contact <a href="mailto:samleblanc92@gmail.com" style="color:var(--teal);">samleblanc92@gmail.com</a> if you run into any bugs/issues. We are so sorry about the issue, and would like to fix it. Thanks! :)</p>
+    <p class="bug-contact-note" style="font-size:12.5px; color:rgba(var(--on-paper-rgb),0.72); line-height:1.5; margin:-4px 0 10px;">Please contact <a href="mailto:bayoutonefm@outlook.com" style="color:var(--teal);">bayoutonefm@outlook.com</a> if you run into any bugs/issues. We are so sorry about the issue, and would like to fix it. Thanks! :)</p>
     <div class="field">
       <label>Photo (optional)</label>
       <div class="cover-upload">
@@ -6390,12 +6400,35 @@ function openModal(song){
   favBtn.textContent = currentFav ? '♥' : '♡';
   favBtn.classList.toggle('on', currentFav);
   document.getElementById('overlay').classList.add('open');
+  resetEditorTabs('single');
   document.getElementById('f-song-search').focus();
 }
 function closeModal(){
   document.getElementById('overlay').classList.remove('open');
   editingId = null;
 }
+function resetEditorTabs(prefix){
+  var tabs = document.querySelectorAll('[data-editor-tab$="-'+prefix+'"]');
+  var panels = document.querySelectorAll('[data-editor-panel$="-'+prefix+'"]');
+  tabs.forEach(function(t){ t.classList.remove('active'); });
+  panels.forEach(function(p){ p.classList.remove('show'); });
+  var firstTab = document.querySelector('[data-editor-tab="front-'+prefix+'"]');
+  var firstPanel = document.querySelector('[data-editor-panel="front-'+prefix+'"]');
+  if(firstTab) firstTab.classList.add('active');
+  if(firstPanel) firstPanel.classList.add('show');
+}
+document.addEventListener('click', function(e){
+  var tab = e.target.closest('.editor-tab');
+  if(!tab) return;
+  var name = tab.getAttribute('data-editor-tab');
+  var suffix = name.split('-').pop();
+  var bar = tab.closest('.editor-toggle-bar');
+  if(bar) bar.querySelectorAll('.editor-tab').forEach(function(t){ t.classList.remove('active'); });
+  tab.classList.add('active');
+  document.querySelectorAll('[data-editor-panel$="-'+suffix+'"]').forEach(function(p){ p.classList.remove('show'); });
+  var panel = document.querySelector('[data-editor-panel="'+name+'"]');
+  if(panel) panel.classList.add('show');
+});
 function renderTierPicker(){
   const el = document.getElementById('tierPicker');
   el.innerHTML = '';
@@ -6651,6 +6684,7 @@ function openMultiModal(mode){
   currentMultiTier = null;
   resetTitleBoxes();
   document.getElementById('multiOverlay').classList.add('open');
+  resetEditorTabs('multi');
   if(isAlbum) document.getElementById('mf-album-search').focus();
 }
 function closeMultiModal(){
@@ -10614,6 +10648,22 @@ function renderMyAvatar(){
   }
 }
 
+function showLoginBanner(){
+  var old = document.getElementById('loginBanner');
+  if(old) old.remove();
+  var d = document.createElement('div');
+  d.id = 'loginBanner';
+  d.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9998;background:var(--paper);color:var(--on-paper);border-bottom:1px solid var(--border);padding:12px 44px 12px 16px;font-family:"Space Grotesk",sans-serif;font-size:13px;line-height:1.5;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.15);';
+  d.innerHTML = 'Please contact <a href="mailto:bayoutonefm@outlook.com" style="color:var(--teal);">bayoutonefm@outlook.com</a> if you run into any bugs/issues. We are so sorry about the issue, and would like to fix it. Thanks! :)';
+  var x = document.createElement('button');
+  x.textContent = '\u00d7';
+  x.style.cssText = 'position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:20px;cursor:pointer;color:var(--on-paper);padding:4px 8px;line-height:1;';
+  x.addEventListener('click', function(){ d.remove(); });
+  d.appendChild(x);
+  document.body.appendChild(d);
+  setTimeout(function(){ d.style.transition='opacity 0.3s'; d.style.opacity='0'; setTimeout(function(){ d.remove(); }, 300); }, 8000);
+}
+
 async function loadAppForUser(user){
   if(appBootedFor === user.id) return;
   appBootedFor = user.id;
@@ -10711,6 +10761,7 @@ async function loadAppForUser(user){
   if(!accepted) return; // user chose to log out instead of accepting
 
   showApp();
+  showLoginBanner();
   checkRoute();
 
   if(!myProfile || !myProfile.username){

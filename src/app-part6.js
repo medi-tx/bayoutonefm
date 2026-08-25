@@ -558,6 +558,22 @@ function renderMyAvatar(){
   }
 }
 
+function showLoginBanner(){
+  var old = document.getElementById('loginBanner');
+  if(old) old.remove();
+  var d = document.createElement('div');
+  d.id = 'loginBanner';
+  d.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9998;background:var(--paper);color:var(--on-paper);border-bottom:1px solid var(--border);padding:12px 44px 12px 16px;font-family:"Space Grotesk",sans-serif;font-size:13px;line-height:1.5;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.15);';
+  d.innerHTML = 'Please contact <a href="mailto:bayoutonefm@outlook.com" style="color:var(--teal);">bayoutonefm@outlook.com</a> if you run into any bugs/issues. We are so sorry about the issue, and would like to fix it. Thanks! :)';
+  var x = document.createElement('button');
+  x.textContent = '\u00d7';
+  x.style.cssText = 'position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:20px;cursor:pointer;color:var(--on-paper);padding:4px 8px;line-height:1;';
+  x.addEventListener('click', function(){ d.remove(); });
+  d.appendChild(x);
+  document.body.appendChild(d);
+  setTimeout(function(){ d.style.transition='opacity 0.3s'; d.style.opacity='0'; setTimeout(function(){ d.remove(); }, 300); }, 8000);
+}
+
 async function loadAppForUser(user){
   if(appBootedFor === user.id) return;
   appBootedFor = user.id;
@@ -655,6 +671,7 @@ async function loadAppForUser(user){
   if(!accepted) return; // user chose to log out instead of accepting
 
   showApp();
+  showLoginBanner();
   checkRoute();
 
   if(!myProfile || !myProfile.username){

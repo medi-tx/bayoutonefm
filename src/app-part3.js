@@ -2427,12 +2427,35 @@ function openModal(song){
   favBtn.textContent = currentFav ? '♥' : '♡';
   favBtn.classList.toggle('on', currentFav);
   document.getElementById('overlay').classList.add('open');
+  resetEditorTabs('single');
   document.getElementById('f-song-search').focus();
 }
 function closeModal(){
   document.getElementById('overlay').classList.remove('open');
   editingId = null;
 }
+function resetEditorTabs(prefix){
+  var tabs = document.querySelectorAll('[data-editor-tab$="-'+prefix+'"]');
+  var panels = document.querySelectorAll('[data-editor-panel$="-'+prefix+'"]');
+  tabs.forEach(function(t){ t.classList.remove('active'); });
+  panels.forEach(function(p){ p.classList.remove('show'); });
+  var firstTab = document.querySelector('[data-editor-tab="front-'+prefix+'"]');
+  var firstPanel = document.querySelector('[data-editor-panel="front-'+prefix+'"]');
+  if(firstTab) firstTab.classList.add('active');
+  if(firstPanel) firstPanel.classList.add('show');
+}
+document.addEventListener('click', function(e){
+  var tab = e.target.closest('.editor-tab');
+  if(!tab) return;
+  var name = tab.getAttribute('data-editor-tab');
+  var suffix = name.split('-').pop();
+  var bar = tab.closest('.editor-toggle-bar');
+  if(bar) bar.querySelectorAll('.editor-tab').forEach(function(t){ t.classList.remove('active'); });
+  tab.classList.add('active');
+  document.querySelectorAll('[data-editor-panel$="-'+suffix+'"]').forEach(function(p){ p.classList.remove('show'); });
+  var panel = document.querySelector('[data-editor-panel="'+name+'"]');
+  if(panel) panel.classList.add('show');
+});
 function renderTierPicker(){
   const el = document.getElementById('tierPicker');
   el.innerHTML = '';
@@ -2688,6 +2711,7 @@ function openMultiModal(mode){
   currentMultiTier = null;
   resetTitleBoxes();
   document.getElementById('multiOverlay').classList.add('open');
+  resetEditorTabs('multi');
   if(isAlbum) document.getElementById('mf-album-search').focus();
 }
 function closeMultiModal(){
