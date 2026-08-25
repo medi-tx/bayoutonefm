@@ -3242,7 +3242,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
       <div class="field"><label>Apple Music URL</label><input id="f-apple" type="url" placeholder="https://music.apple.com/…"></div>
     </div>
     <div class="two-col">
-      <div class="field"><label>YouTube Music URL</label><input id="f-youtube" type="url" placeholder="https://music.youtube.com/watch?…"></div>
+      <div class="field"><label>YouTube URL</label><input id="f-youtube" type="url" placeholder="https://youtube.com/watch?…"></div>
       <div class="field"><label>Tidal URL</label><input id="f-tidal" type="url" placeholder="https://tidal.com/browse/track/…"></div>
     </div>
     </div>
@@ -3423,7 +3423,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
       <div class="field"><label>Apple Music URL</label><input id="mf-apple" type="url" placeholder="https://music.apple.com/…"></div>
     </div>
     <div class="two-col">
-      <div class="field"><label>YouTube Music URL</label><input id="mf-youtube" type="url" placeholder="https://music.youtube.com/watch?…"></div>
+      <div class="field"><label>YouTube URL</label><input id="mf-youtube" type="url" placeholder="https://youtube.com/watch?…"></div>
       <div class="field"><label>Tidal URL</label><input id="mf-tidal" type="url" placeholder="https://tidal.com/browse/track/…"></div>
     </div>
     </div>
@@ -4620,7 +4620,7 @@ function cardBackHtml(s){
   const streamLinks = [];
   if(s.spotifyUrl) streamLinks.push(`<a class="back-link" href="${escapeHtml(s.spotifyUrl)}" target="_blank" rel="noopener">Spotify</a>`);
   if(s.appleMusicUrl) streamLinks.push(`<a class="back-link" href="${escapeHtml(s.appleMusicUrl)}" target="_blank" rel="noopener">Apple Music</a>`);
-  if(s.youtubeMusicUrl) streamLinks.push(`<a class="back-link" href="${escapeHtml(s.youtubeMusicUrl)}" target="_blank" rel="noopener">YouTube Music</a>`);
+  if(s.youtubeMusicUrl) streamLinks.push(`<a class="back-link" href="${escapeHtml(s.youtubeMusicUrl)}" target="_blank" rel="noopener">YouTube</a>`);
   if(s.tidalUrl) streamLinks.push(`<a class="back-link" href="${escapeHtml(s.tidalUrl)}" target="_blank" rel="noopener">Tidal</a>`);
   return `
     <div class="card-back">

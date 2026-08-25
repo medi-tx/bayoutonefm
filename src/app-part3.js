@@ -626,7 +626,7 @@ function cardBackHtml(s){
   const streamLinks = [];
   if(s.spotifyUrl) streamLinks.push(`<a class="back-link" href="${escapeHtml(s.spotifyUrl)}" target="_blank" rel="noopener">Spotify</a>`);
   if(s.appleMusicUrl) streamLinks.push(`<a class="back-link" href="${escapeHtml(s.appleMusicUrl)}" target="_blank" rel="noopener">Apple Music</a>`);
-  if(s.youtubeMusicUrl) streamLinks.push(`<a class="back-link" href="${escapeHtml(s.youtubeMusicUrl)}" target="_blank" rel="noopener">YouTube Music</a>`);
+  if(s.youtubeMusicUrl) streamLinks.push(`<a class="back-link" href="${escapeHtml(s.youtubeMusicUrl)}" target="_blank" rel="noopener">YouTube</a>`);
   if(s.tidalUrl) streamLinks.push(`<a class="back-link" href="${escapeHtml(s.tidalUrl)}" target="_blank" rel="noopener">Tidal</a>`);
   return `
     <div class="card-back">
