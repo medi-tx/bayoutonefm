@@ -3204,7 +3204,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
     <h4>Back</h4>
     <div class="field"><label>Record label</label><input id="f-label" type="text" placeholder="e.g. Motown, Ghostly…"></div>
     <div class="two-col">
-      <div class="field"><label>Producer</label><input id="f-producer" type="text" placeholder="e.g. Rick Rubin, Max Martin"></div>
+      <div class="field"><label>Producers</label><input id="f-producer" type="text" placeholder="e.g. Rick Rubin, Max Martin"></div>
       <div class="field"><label>Songwriters</label><input id="f-songwriters" type="text" placeholder="e.g. Lennon, McCartney"></div>
     </div>
     <div class="two-col">
@@ -3379,7 +3379,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
     <h4>Back</h4>
     <div class="field"><label>Record label</label><input id="mf-label" type="text" placeholder="e.g. Motown, Ghostly…"></div>
     <div class="two-col">
-      <div class="field"><label>Producer</label><input id="mf-producer" type="text" placeholder="e.g. Rick Rubin, Max Martin"></div>
+      <div class="field"><label>Producers</label><input id="mf-producer" type="text" placeholder="e.g. Rick Rubin, Max Martin"></div>
       <div class="field"><label>Songwriters</label><input id="mf-songwriters" type="text" placeholder="e.g. Lennon, McCartney"></div>
     </div>
     <div class="two-col">
@@ -4581,8 +4581,6 @@ function cbRemindsNames(s){
   }).filter(Boolean).join(', ');
 }
 function cardBackHtml(s){
-  const st = s.stars || {};
-  const score = (s.score === null || s.score === undefined || s.score === '') ? null : s.score;
   const streamLinks = [];
   if(s.spotifyUrl) streamLinks.push(`<a class="back-link" href="${escapeHtml(s.spotifyUrl)}" target="_blank" rel="noopener">Spotify</a>`);
   if(s.appleMusicUrl) streamLinks.push(`<a class="back-link" href="${escapeHtml(s.appleMusicUrl)}" target="_blank" rel="noopener">Apple Music</a>`);
@@ -4594,35 +4592,17 @@ function cardBackHtml(s){
         <button type="button" class="cb-close" data-action="flip" title="Flip back" aria-label="Flip back">✕</button>
       </div>
       <div class="cb-fields">
-        ${cbField('Year', escapeHtml(s.year||''))}
-        ${cbField('Genres', s.genres && s.genres.length ? escapeHtml(s.genres.join(', ')) : '')}
         ${cbField('Record label', s.recordLabel ? escapeHtml(s.recordLabel) : '')}
-        ${cbField('Producer', s.producer ? escapeHtml(s.producer) : '')}
+        ${cbField('Producers', s.producer ? escapeHtml(s.producer) : '')}
         ${cbField('Songwriters', s.songwriters ? escapeHtml(s.songwriters) : '')}
         ${cbField('BPM', s.bpm ? escapeHtml(String(s.bpm)) : '')}
         ${cbField('Key', s.musicKey ? escapeHtml(s.musicKey) : '')}
         ${streamLinks.length ? '<div class="cb-field"><span class="cb-flabel">Listen</span><span class="cb-fval">' + streamLinks.join(' · ') + '</span></div>' : ''}
       </div>
-      <div class="cb-score-row">
-        <span class="cb-flabel">Score</span>
-        ${renderTierBadge(s.tier)}
-        ${score !== null ? `<span class="score-chip big">${escapeHtml(String(score))}</span><span class="cb-band">${escapeHtml(tierBandLabel(s.tier))}</span>` : '<span class="cb-unrated">Not scored yet</span>'}
-      </div>
       <div class="cb-fields">
-        ${cbField('🎤 Lyrics', starsHtml(st.lyrics) + ` <span class="cb-star-num">${st.lyrics||0}/5</span>`)}
-        ${cbField('🎶 Vocals', starsHtml(st.vocals) + ` <span class="cb-star-num">${st.vocals||0}/5</span>`)}
-        ${cbField('🔁 Replay-ability', starsHtml(st.replay) + ` <span class="cb-star-num">${st.replay||0}/5</span>`)}
-      </div>
-      <div class="vibe-bars">
-        ${vibeBarHtml('⚡ Energy', s.vibeEnergy, 'energy', 'chill ↔ electric')}
-        ${vibeBarHtml('🌗 Mood', s.vibeMood, 'mood', 'stormy ↔ sunny')}
-        ${vibeBarHtml('🕰️ Nostalgia', s.vibeNostalgia, 'nostalgia', 'new ↔ familiar')}
-      </div>
-      <div class="cb-fields">
-        ${cbField('Quick thought', s.quickThought ? `"${escapeHtml(s.quickThought)}"` : '')}
+        ${cbField('Opinions', s.why ? escapeHtml(s.why) : '')}
         ${cbField('Borrowed from / Where I heard it', s.credit ? escapeHtml(s.credit) : '')}
         ${cbField('Reminds me of', cbRemindsNames(s))}
-        ${cbField('Added', s.createdAt ? escapeHtml(formatAddedDate(s.createdAt)) : '')}
       </div>
     </div>`;
 }
@@ -4811,7 +4791,6 @@ function songCardHtml(s, clusterCounts){
           <button data-action="delete" class="del">DELETE</button>
           ${!showEx ? `<button data-action="share" class="share-card-btn" title="Generate a shareable card for this song">↗ SHARE</button>` : ''}
         </div>
-        ${s.createdAt && !showEx ? `<p class="card-date">🕒 Added ${escapeHtml(formatAddedDate(s.createdAt))}</p>` : ''}
         ${(!showEx && s.edits && s.edits.length) ? `<button class="edits-toggle" onclick="this.nextElementSibling.classList.toggle('open')">${s.edits.length} edit${s.edits.length!==1?'s':''} — view log</button><div class="edits-log">${s.edits.slice().reverse().map(e=>{
           const ts = new Date(e.at).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'}) + ' at ' + new Date(e.at).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
           const valStr = v=> Array.isArray(v) ? (v.length ? v.join(', ') : 'none') : (v || 'none');
