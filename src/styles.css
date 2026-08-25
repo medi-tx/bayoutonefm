@@ -1460,13 +1460,13 @@
   .card:has(> .sticker-drag){ overflow:visible; }
   /* DUAL-FACE CARD (details flip) */
   .card-back{
-    position:absolute; inset:0; z-index:7;
     display:none; flex-direction:column; gap:8px;
     background:var(--paper); color:var(--on-paper);
     border-radius:10px; border-top:3px solid var(--gold);
-    padding:13px 15px;
-    overflow-y:auto; text-align:left;
+    padding:13px 15px; text-align:left;
   }
+  .card.flipped{ overflow:visible; }
+  .card.flipped > :not(.card-back):not(.cb-flip-fab){ display:none; }
   .card.flipped .card-back{ display:flex; }
   .card.flipped .sticker-drag{ visibility:hidden; }
   .cb-fields{ display:flex; flex-direction:column; gap:4px; }

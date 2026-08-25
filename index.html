@@ -1511,13 +1511,13 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
   .card:has(> .sticker-drag){ overflow:visible; }
   /* DUAL-FACE CARD (details flip) */
   .card-back{
-    position:absolute; inset:0; z-index:7;
     display:none; flex-direction:column; gap:8px;
     background:var(--paper); color:var(--on-paper);
     border-radius:10px; border-top:3px solid var(--gold);
-    padding:13px 15px;
-    overflow-y:auto; text-align:left;
+    padding:13px 15px; text-align:left;
   }
+  .card.flipped{ overflow:visible; }
+  .card.flipped > :not(.card-back):not(.cb-flip-fab){ display:none; }
   .card.flipped .card-back{ display:flex; }
   .card.flipped .sticker-drag{ visibility:hidden; }
   .cb-fields{ display:flex; flex-direction:column; gap:4px; }
@@ -11085,6 +11085,45 @@ async function renderSongSearchResults(query){
   if(!q){ wrap.style.display = 'none'; wrap.innerHTML = ''; return; }
   wrap.style.display = 'block';
   wrap.innerHTML = '<p class="profile-empty-note">Searching…</p>';
+  const trackUrlMatch = q.match(/open\.spotify\.com\/track\/([a-zA-Z0-9]+)/);
+  const albumUrlMatch = q.match(/open\.spotify\.com\/album\/([a-zA-Z0-9]+)/);
+  const appleTrackMatch = q.match(/music\.apple\.com\/.*\/album\/.*\/(\d+)(?:\?i=(\d+))?/);
+  if(trackUrlMatch || (appleTrackMatch && appleTrackMatch[2])){
+    try{
+      let trackData = null;
+      if(trackUrlMatch){
+        const token = await fetchSpotifyToken();
+        const resp = await fetch('https://api.spotify.com/v1/tracks/' + trackUrlMatch[1], { headers:{ Authorization:'Bearer '+token } });
+        if(resp.ok){
+          const t = await resp.json();
+          trackData = { title:t.name, artists:(t.artists||[]).map(a=>a.name), album:(t.album&&t.album.name)||'', year:(t.album&&t.album.release_date)||'', coverArt:(t.album&&t.album.images&&t.album.images[0]&&t.album.images[0].url)||null, explicit:!!t.explicit, previewUrl:t.preview_url||'', spotifyUrl:t.external_urls&&t.external_urls.spotify||'' };
+        }
+      } else if(appleTrackMatch && appleTrackMatch[2]){
+        const resp = await fetch('https://itunes.apple.com/lookup?id=' + appleTrackMatch[2] + '&entity=song');
+        if(resp.ok){
+          const d = await resp.json();
+          if(d.results&&d.results.length){ const t=d.results[0]; trackData = { title:t.trackName, artists:[t.artistName], album:t.collectionName||'', year:t.releaseDate||'', coverArt:t.artworkUrl100||null, explicit:!!t.trackExplicitness, previewUrl:t.previewUrl||'', appleMusicUrl:t.trackViewUrl||'' }; }
+        }
+      }
+      if(trackData){
+        document.getElementById('songSearchResults').style.display='none';
+        document.getElementById('songSearchResults').innerHTML='';
+        openAddFromData(trackData);
+        if(trackData.spotifyUrl) document.getElementById('f-spotify').value=trackData.spotifyUrl;
+        if(trackData.appleMusicUrl) document.getElementById('f-apple').value=trackData.appleMusicUrl;
+        return;
+      }
+    }catch(e){ console.warn('URL lookup failed:', e); }
+  }
+  const playlistUrl = q.match(/(open\.spotify\.com\/playlist|music\.apple\.com\/.*\/playlist|tidal\.com\/.*\/playlist|music\.youtube\.com\/playlist|youtube\.com\/playlist)/);
+  if(playlistUrl){
+    document.getElementById('songSearchResults').style.display='none';
+    document.getElementById('songSearchResults').innerHTML='';
+    document.getElementById('spotify-url-input').value = q;
+    document.getElementById('spotifyImportOverlay').classList.add('open');
+    document.getElementById('spotify-url-input').dispatchEvent(new Event('input'));
+    return;
+  }
   let results;
   try{
     const globalResults = await searchGlobalSongs(q, 25);
