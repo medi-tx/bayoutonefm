@@ -502,25 +502,37 @@ window.resetCataloguex = async function(){
 };
 let myProfile = null;
 let myFriendsCount = 0;
+let appBootedFor = null;
 
 async function fetchMyProfile(userId){
-  const { data, error } = await sb
-    .from('profiles')
-    .select('user_id, username, bio, photo, theme, custom_themes')
-    .eq('user_id', userId)
-    .maybeSingle();
-  if(error){
-    console.error('Error loading your profile (retrying without theme column):', error);
-    // theme column may not exist in this database yet — fall back so onboarding/login still works
-    const retry = await sb
+  let lastError = null;
+  for(let attempt = 0; attempt < 3; attempt++){
+    const { data, error } = await sb
       .from('profiles')
-      .select('user_id, username, bio, photo')
+      .select('user_id, username, bio, photo, theme, custom_themes')
       .eq('user_id', userId)
       .maybeSingle();
-    if(retry.error){ console.error('Error loading your profile:', retry.error); return null; }
-    return retry.data;
+    if(error){
+      lastError = error;
+      console.error('Error loading your profile (retrying without theme column):', error);
+      // theme column may not exist in this database yet — fall back so onboarding/login still works
+      const retry = await sb
+        .from('profiles')
+        .select('user_id, username, bio, photo')
+        .eq('user_id', userId)
+        .maybeSingle();
+      if(retry.error){
+        console.error('Error loading your profile (attempt ' + (attempt+1) + '):', retry.error);
+        lastError = retry.error;
+        await new Promise(r=>setTimeout(r, 500 * (attempt+1)));
+        continue;
+      }
+      return retry.data;
+    }
+    return data;
   }
-  return data;
+  if(lastError) console.error('Gave up loading profile after retries:', lastError);
+  return null;
 }
 
 async function upsertMyProfile(fields){
@@ -547,6 +559,8 @@ function renderMyAvatar(){
 }
 
 async function loadAppForUser(user){
+  if(appBootedFor === user.id) return;
+  appBootedFor = user.id;
   currentUserId = user.id;
   currentUserEmail = user.email || null;
   updateEmailConfirmBanner(user);
@@ -1147,6 +1161,7 @@ sb.auth.onAuthStateChange((event, session)=>{
   } else {
     currentUserId = null;
     myProfile = null;
+    appBootedFor = null;
     localStorage.removeItem(THEME_KEY);
     localStorage.removeItem(CUSTOM_THEMES_KEY);
     applyTheme(DEFAULT_THEME);
