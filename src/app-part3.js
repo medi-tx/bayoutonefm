@@ -4035,7 +4035,9 @@ document.getElementById('spotifyImportConfirmBtn').addEventListener('click', ()=
 });
 document.getElementById('cancelBtn').addEventListener('click', closeModal);
 document.getElementById('overlay').addEventListener('click', e=>{
-  if(e.target.id === 'overlay' && editingId) closeModal();
+  if(e.target.id !== 'overlay') return;
+  const hasTextField = e.target.querySelector('input[type="text"], input[type="number"], input[type="url"], textarea');
+  if(!hasTextField) closeModal();
 });
 document.getElementById('saveBtn').addEventListener('click', handleSave);
 document.getElementById('modalFavBtn').addEventListener('click', ()=>{

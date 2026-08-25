@@ -564,7 +564,7 @@ function showLoginBanner(){
   var d = document.createElement('div');
   d.id = 'loginBanner';
   d.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9998;background:var(--paper);color:var(--on-paper);border-bottom:1px solid var(--border);padding:14px 44px 14px 14px;font-family:"Space Grotesk",sans-serif;font-size:13px;line-height:1.5;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.15);word-break:break-word;';
-  d.innerHTML = 'Please contact <a href="mailto:bayoutonefm@outlook.com" style="color:var(--teal);">bayoutonefm@outlook.com</a> if you run into any bugs/issues. We are so sorry about the issue, and would like to fix it. Thanks! :)';
+  d.innerHTML = 'Please contact <a href="mailto:bayoutonefm@outlook.com" style="color:var(--teal);">bayoutonefm@outlook.com</a> with any bugs, questions, suggestions, or concerns. We are always happy to help. Thanks! :)';
   var x = document.createElement('button');
   x.textContent = '\u00d7';
   x.style.cssText = 'position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:20px;cursor:pointer;color:var(--on-paper);padding:4px 8px;line-height:1;';
