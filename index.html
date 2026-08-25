@@ -3807,6 +3807,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
 <div class="overlay" id="onboardingOverlay">
   <div class="modal">
     <h3>Set up your profile</h3>
+    <p id="ob-prompt-msg" class="multi-hint" style="display:none; padding:10px; background:rgba(var(--on-paper-rgb),0.06); border-radius:8px; margin-bottom:10px;"></p>
     <p class="multi-hint">Pick a username so other listeners can find and view your cataloguex.</p>
     <p class="bug-contact-note" style="font-size:12.5px; color:rgba(var(--on-paper-rgb),0.72); line-height:1.5; margin:8px 0 14px; padding:12px; background:rgba(var(--on-paper-rgb),0.06); border-radius:8px; word-break:break-word;">Please contact <a href="mailto:bayoutonefm@outlook.com" style="color:var(--teal);">bayoutonefm@outlook.com</a> with any bugs, questions, suggestions, or concerns. We are always happy to help. Thanks! :)</p>
     <div class="field">
@@ -10989,6 +10990,16 @@ async function loadAppForUser(user){
 
   if(!myProfile || !myProfile.username){
     openOnboarding();
+  } else {
+    try{
+      const { data: ud } = await sb.from('user_data').select('stickers').eq('user_id', currentUserId).maybeSingle();
+      const st = (ud && ud.stickers) || {};
+      if(!st.usernameRedoDone){
+        setTimeout(()=>{
+          openOnboarding({ username: myProfile.username, bio: myProfile.bio || '', photo: myProfile.photo || null, promptMessage: 'Welcome back! Take a moment to review your username. You can keep it or pick a new one.' });
+        }, 800);
+      }
+    }catch(e){}
   }
   updateRemoveExamplesBtn();
   subscribeNotifications();
@@ -11858,12 +11869,18 @@ document.getElementById('editProfileSaveBtn').addEventListener('click', async ()
   document.getElementById('editProfileOverlay').classList.remove('open');
 });
 
-function openOnboarding(){
-  currentOnboardingPhoto = null;
-  document.getElementById('ob-username').value = '';
-  document.getElementById('ob-bio').value = '';
-  setImagePreview('ob-photo', null);
+function openOnboarding(preset){
+  currentOnboardingPhoto = (preset && preset.photo) || null;
+  document.getElementById('ob-username').value = (preset && preset.username) || '';
+  document.getElementById('ob-bio').value = (preset && preset.bio) || '';
+  setImagePreview('ob-photo', currentOnboardingPhoto);
   document.getElementById('ob-error').style.display = 'none';
+  if(preset && preset.promptMessage){
+    document.getElementById('ob-prompt-msg').textContent = preset.promptMessage;
+    document.getElementById('ob-prompt-msg').style.display = '';
+  } else {
+    document.getElementById('ob-prompt-msg').style.display = 'none';
+  }
   document.getElementById('onboardingOverlay').classList.add('open');
 }
 document.getElementById('onboardingSaveBtn').addEventListener('click', async ()=>{
@@ -11880,6 +11897,13 @@ document.getElementById('onboardingSaveBtn').addEventListener('click', async ()=
   }
   myProfile = { user_id: currentUserId, username, bio, photo: currentOnboardingPhoto };
   try{ await sb.auth.updateUser({ data: { display_name: username } }); }catch(e){}
+  try{
+    const stickers = (typeof loadStickers === 'function') ? null : null;
+    const { data: ud } = await sb.from('user_data').select('stickers').eq('user_id', currentUserId).maybeSingle();
+    const st = (ud && ud.stickers) || {};
+    st.usernameRedoDone = true;
+    await sb.from('user_data').upsert({ user_id: currentUserId, stickers: st, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
+  }catch(e){}
   showAnalyticsExport();
   renderMyAvatar();
   document.getElementById('onboardingOverlay').classList.remove('open');

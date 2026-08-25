@@ -286,12 +286,18 @@ document.getElementById('editProfileSaveBtn').addEventListener('click', async ()
   document.getElementById('editProfileOverlay').classList.remove('open');
 });
 
-function openOnboarding(){
-  currentOnboardingPhoto = null;
-  document.getElementById('ob-username').value = '';
-  document.getElementById('ob-bio').value = '';
-  setImagePreview('ob-photo', null);
+function openOnboarding(preset){
+  currentOnboardingPhoto = (preset && preset.photo) || null;
+  document.getElementById('ob-username').value = (preset && preset.username) || '';
+  document.getElementById('ob-bio').value = (preset && preset.bio) || '';
+  setImagePreview('ob-photo', currentOnboardingPhoto);
   document.getElementById('ob-error').style.display = 'none';
+  if(preset && preset.promptMessage){
+    document.getElementById('ob-prompt-msg').textContent = preset.promptMessage;
+    document.getElementById('ob-prompt-msg').style.display = '';
+  } else {
+    document.getElementById('ob-prompt-msg').style.display = 'none';
+  }
   document.getElementById('onboardingOverlay').classList.add('open');
 }
 document.getElementById('onboardingSaveBtn').addEventListener('click', async ()=>{
@@ -308,6 +314,13 @@ document.getElementById('onboardingSaveBtn').addEventListener('click', async ()=
   }
   myProfile = { user_id: currentUserId, username, bio, photo: currentOnboardingPhoto };
   try{ await sb.auth.updateUser({ data: { display_name: username } }); }catch(e){}
+  try{
+    const stickers = (typeof loadStickers === 'function') ? null : null;
+    const { data: ud } = await sb.from('user_data').select('stickers').eq('user_id', currentUserId).maybeSingle();
+    const st = (ud && ud.stickers) || {};
+    st.usernameRedoDone = true;
+    await sb.from('user_data').upsert({ user_id: currentUserId, stickers: st, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
+  }catch(e){}
   showAnalyticsExport();
   renderMyAvatar();
   document.getElementById('onboardingOverlay').classList.remove('open');
