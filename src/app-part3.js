@@ -625,6 +625,10 @@ function cbRemindsNames(s){
 function cardBackHtml(s){
   const st = s.stars || {};
   const score = (s.score === null || s.score === undefined || s.score === '') ? null : s.score;
+  const streamLinks = [];
+  if(s.spotifyUrl) streamLinks.push(`<a class="back-link" href="${escapeHtml(s.spotifyUrl)}" target="_blank" rel="noopener">Spotify</a>`);
+  if(s.appleMusicUrl) streamLinks.push(`<a class="back-link" href="${escapeHtml(s.appleMusicUrl)}" target="_blank" rel="noopener">Apple Music</a>`);
+  if(s.tidalUrl) streamLinks.push(`<a class="back-link" href="${escapeHtml(s.tidalUrl)}" target="_blank" rel="noopener">Tidal</a>`);
   return `
     <div class="card-back">
       <div class="cb-head">
@@ -635,9 +639,11 @@ function cardBackHtml(s){
         ${cbField('Year', escapeHtml(s.year||''))}
         ${cbField('Genres', s.genres && s.genres.length ? escapeHtml(s.genres.join(', ')) : '')}
         ${cbField('Record label', s.recordLabel ? escapeHtml(s.recordLabel) : '')}
-        ${cbField('Borrowed from / Where I heard it', s.credit ? escapeHtml(s.credit) : '')}
-        ${cbField('Reminds me of', cbRemindsNames(s))}
-        ${cbField('Added', s.createdAt ? escapeHtml(formatAddedDate(s.createdAt)) : '')}
+        ${cbField('Producer', s.producer ? escapeHtml(s.producer) : '')}
+        ${cbField('Songwriters', s.songwriters ? escapeHtml(s.songwriters) : '')}
+        ${cbField('BPM', s.bpm ? escapeHtml(String(s.bpm)) : '')}
+        ${cbField('Key', s.musicKey ? escapeHtml(s.musicKey) : '')}
+        ${streamLinks.length ? '<div class="cb-field"><span class="cb-flabel">Listen</span><span class="cb-fval">' + streamLinks.join(' · ') + '</span></div>' : ''}
       </div>
       <div class="cb-score-row">
         <span class="cb-flabel">Score</span>
@@ -655,7 +661,7 @@ function cardBackHtml(s){
         ${vibeBarHtml('🕰️ Nostalgia', s.vibeNostalgia, 'nostalgia', 'new ↔ familiar')}
       </div>
       <div class="cb-fields">
-        ${cbField('Quick thought', s.quickThought ? `“${escapeHtml(s.quickThought)}”` : '')}
+        ${cbField('Quick thought', s.quickThought ? `"${escapeHtml(s.quickThought)}"` : '')}
         ${cbField('Borrowed from / Where I heard it', s.credit ? escapeHtml(s.credit) : '')}
         ${cbField('Reminds me of', cbRemindsNames(s))}
         ${cbField('Added', s.createdAt ? escapeHtml(formatAddedDate(s.createdAt)) : '')}
@@ -2411,6 +2417,13 @@ function openModal(song){
   document.getElementById('f-quick').value = song?.quickThought || '';
   document.getElementById('f-credit').value = song?.credit || '';
   document.getElementById('f-label').value = song?.recordLabel || '';
+  document.getElementById('f-producer').value = song?.producer || '';
+  document.getElementById('f-songwriters').value = song?.songwriters || '';
+  document.getElementById('f-bpm').value = song?.bpm ?? '';
+  document.getElementById('f-key').value = song?.musicKey || '';
+  document.getElementById('f-spotify').value = song?.spotifyUrl || '';
+  document.getElementById('f-apple').value = song?.appleMusicUrl || '';
+  document.getElementById('f-tidal').value = song?.tidalUrl || '';
   document.getElementById('f-track').value = song?.trackNumber || '';
   document.getElementById('f-score').value = (song?.score === null || song?.score === undefined) ? '' : song.score;
   currentStars = { lyrics:(song?.stars&&song.stars.lyrics)||0, vocals:(song?.stars&&song.stars.vocals)||0, replay:(song?.stars&&song.stars.replay)||0 };
@@ -2553,6 +2566,13 @@ function handleSave(){
     quickThought: document.getElementById('f-quick').value.trim(),
     credit: document.getElementById('f-credit').value.trim(),
     recordLabel: document.getElementById('f-label').value.trim() || null,
+    producer: document.getElementById('f-producer').value.trim() || null,
+    songwriters: document.getElementById('f-songwriters').value.trim() || null,
+    bpm: (()=>{ const v = parseInt(document.getElementById('f-bpm').value, 10); return isNaN(v) ? null : v; })(),
+    musicKey: document.getElementById('f-key').value.trim() || null,
+    spotifyUrl: document.getElementById('f-spotify').value.trim() || null,
+    appleMusicUrl: document.getElementById('f-apple').value.trim() || null,
+    tidalUrl: document.getElementById('f-tidal').value.trim() || null,
     coverArt: currentCoverArt,
     remindsOf: getSelectedReminds('f'),
     tier: currentTier,
@@ -2678,6 +2698,13 @@ function openMultiModal(mode){
   document.getElementById('mf-why').value = '';
   document.getElementById('mf-credit').value = '';
   document.getElementById('mf-label').value = '';
+  document.getElementById('mf-producer').value = '';
+  document.getElementById('mf-songwriters').value = '';
+  document.getElementById('mf-bpm').value = '';
+  document.getElementById('mf-key').value = '';
+  document.getElementById('mf-spotify').value = '';
+  document.getElementById('mf-apple').value = '';
+  document.getElementById('mf-tidal').value = '';
   document.getElementById('multiCoverLabel').textContent = isAlbum ? 'Artwork (shared)' : 'Artwork (optional, shared)';
   currentMultiCoverArt = null;
   setImagePreview('mf-cover', null);
@@ -2789,6 +2816,14 @@ function handleMultiSave(){
     genres: document.getElementById('mf-genre').value.split(',').map(g=>g.trim()).filter(Boolean),
     why: document.getElementById('mf-why').value.trim(),
     credit: document.getElementById('mf-credit').value.trim(),
+    recordLabel: document.getElementById('mf-label').value.trim() || null,
+    producer: document.getElementById('mf-producer').value.trim() || null,
+    songwriters: document.getElementById('mf-songwriters').value.trim() || null,
+    bpm: (()=>{ const v = parseInt(document.getElementById('mf-bpm').value, 10); return isNaN(v) ? null : v; })(),
+    musicKey: document.getElementById('mf-key').value.trim() || null,
+    spotifyUrl: document.getElementById('mf-spotify').value.trim() || null,
+    appleMusicUrl: document.getElementById('mf-apple').value.trim() || null,
+    tidalUrl: document.getElementById('mf-tidal').value.trim() || null,
     coverArt: currentMultiCoverArt,
     remindsOf: getSelectedReminds('mf'),
     tier: currentMultiTier

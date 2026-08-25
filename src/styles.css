@@ -2767,4 +2767,10 @@
   .email-confirm.is-confirmed .email-confirm-resend{ display:none; }
   .email-confirm.is-confirmed .email-confirm-title{ color:var(--rose); }
 
+.editor-section{ margin-top:14px; padding-top:10px; border-top:1px solid var(--border); }
+.editor-section:first-child{ margin-top:0; padding-top:0; border-top:none; }
+.editor-section h4{ font-size:12px; font-weight:700; color:var(--text-dim,#888); text-transform:uppercase; letter-spacing:0.8px; margin:0 0 8px; }
+.back-link{ display:inline-block; font-size:12px; color:var(--teal); text-decoration:none; margin:2px 0; }
+.back-link:hover{ text-decoration:underline; }
+
 @media (max-width:620px){ .auth-logo-row .brand-logo{ height:56px; } .header-brand .brand-logo{ height:56px; } }

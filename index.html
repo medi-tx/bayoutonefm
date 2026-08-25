@@ -2818,6 +2818,12 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
   .email-confirm.is-confirmed .email-confirm-resend{ display:none; }
   .email-confirm.is-confirmed .email-confirm-title{ color:var(--rose); }
 
+.editor-section{ margin-top:14px; padding-top:10px; border-top:1px solid var(--border); }
+.editor-section:first-child{ margin-top:0; padding-top:0; border-top:none; }
+.editor-section h4{ font-size:12px; font-weight:700; color:var(--text-dim,#888); text-transform:uppercase; letter-spacing:0.8px; margin:0 0 8px; }
+.back-link{ display:inline-block; font-size:12px; color:var(--teal); text-decoration:none; margin:2px 0; }
+.back-link:hover{ text-decoration:underline; }
+
 @media (max-width:620px){ .auth-logo-row .brand-logo{ height:56px; } .header-brand .brand-logo{ height:56px; } }
 </style>
 </head>
@@ -3122,6 +3128,8 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
   <div class="modal">
     <h3 id="modalTitle">Add a song</h3>
     <button type="button" id="modalFavBtn" class="modal-fav-btn" title="Add to favorites">♡</button>
+    <div class="editor-section">
+    <h4>Front</h4>
     <div class="field">
       <label>Artwork</label>
       <div class="cover-upload">
@@ -3190,6 +3198,23 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
       <label>Reminds me of</label>
       <div class="reminds-picker" id="f-reminds-picker"></div>
       <p class="reminds-hint" id="f-reminds-hint" style="display:none;">Add people in the "Songs that remind me of…" section first.</p>
+    </div>
+    </div>
+    <div class="editor-section">
+    <h4>Back</h4>
+    <div class="two-col">
+      <div class="field"><label>Producer</label><input id="f-producer" type="text" placeholder="e.g. Rick Rubin, Max Martin"></div>
+      <div class="field"><label>Songwriters</label><input id="f-songwriters" type="text" placeholder="e.g. Lennon, McCartney"></div>
+    </div>
+    <div class="two-col">
+      <div class="field"><label>BPM</label><input id="f-bpm" type="number" min="0" max="999" placeholder="e.g. 120"></div>
+      <div class="field"><label>Key</label><input id="f-key" type="text" placeholder="e.g. C major, A minor"></div>
+    </div>
+    <div class="two-col">
+      <div class="field"><label>Spotify URL</label><input id="f-spotify" type="url" placeholder="https://open.spotify.com/track/…"></div>
+      <div class="field"><label>Apple Music URL</label><input id="f-apple" type="url" placeholder="https://music.apple.com/…"></div>
+    </div>
+    <div class="field"><label>Tidal URL</label><input id="f-tidal" type="url" placeholder="https://tidal.com/browse/track/…"></div>
     </div>
     <div class="modal-actions">
       <button class="btn-cancel" id="cancelBtn">Cancel</button>
@@ -3318,6 +3343,8 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
   <div class="modal">
     <h3 id="multiModalTitle">New Linked Stack</h3>
     <p class="multi-hint" id="multiHint">These fields apply to every song you add below.</p>
+    <div class="editor-section">
+    <h4>Front</h4>
     <div class="field">
       <label id="multiCoverLabel">Artwork (shared)</label>
       <div class="cover-upload">
@@ -3346,6 +3373,23 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
       <label>Reminds me of</label>
       <div class="reminds-picker" id="mf-reminds-picker"></div>
       <p class="reminds-hint" id="mf-reminds-hint" style="display:none;">Add people in the "Songs that remind me of…" section first.</p>
+    </div>
+    </div>
+    <div class="editor-section">
+    <h4>Back</h4>
+    <div class="two-col">
+      <div class="field"><label>Producer</label><input id="mf-producer" type="text" placeholder="e.g. Rick Rubin, Max Martin"></div>
+      <div class="field"><label>Songwriters</label><input id="mf-songwriters" type="text" placeholder="e.g. Lennon, McCartney"></div>
+    </div>
+    <div class="two-col">
+      <div class="field"><label>BPM</label><input id="mf-bpm" type="number" min="0" max="999" placeholder="e.g. 120"></div>
+      <div class="field"><label>Key</label><input id="mf-key" type="text" placeholder="e.g. C major, A minor"></div>
+    </div>
+    <div class="two-col">
+      <div class="field"><label>Spotify URL</label><input id="mf-spotify" type="url" placeholder="https://open.spotify.com/track/…"></div>
+      <div class="field"><label>Apple Music URL</label><input id="mf-apple" type="url" placeholder="https://music.apple.com/…"></div>
+    </div>
+    <div class="field"><label>Tidal URL</label><input id="mf-tidal" type="url" placeholder="https://tidal.com/browse/track/…"></div>
     </div>
     <div class="field">
       <label id="multiTitlesLabel">Titles</label>
@@ -4538,6 +4582,10 @@ function cbRemindsNames(s){
 function cardBackHtml(s){
   const st = s.stars || {};
   const score = (s.score === null || s.score === undefined || s.score === '') ? null : s.score;
+  const streamLinks = [];
+  if(s.spotifyUrl) streamLinks.push(`<a class="back-link" href="${escapeHtml(s.spotifyUrl)}" target="_blank" rel="noopener">Spotify</a>`);
+  if(s.appleMusicUrl) streamLinks.push(`<a class="back-link" href="${escapeHtml(s.appleMusicUrl)}" target="_blank" rel="noopener">Apple Music</a>`);
+  if(s.tidalUrl) streamLinks.push(`<a class="back-link" href="${escapeHtml(s.tidalUrl)}" target="_blank" rel="noopener">Tidal</a>`);
   return `
     <div class="card-back">
       <div class="cb-head">
@@ -4548,9 +4596,11 @@ function cardBackHtml(s){
         ${cbField('Year', escapeHtml(s.year||''))}
         ${cbField('Genres', s.genres && s.genres.length ? escapeHtml(s.genres.join(', ')) : '')}
         ${cbField('Record label', s.recordLabel ? escapeHtml(s.recordLabel) : '')}
-        ${cbField('Borrowed from / Where I heard it', s.credit ? escapeHtml(s.credit) : '')}
-        ${cbField('Reminds me of', cbRemindsNames(s))}
-        ${cbField('Added', s.createdAt ? escapeHtml(formatAddedDate(s.createdAt)) : '')}
+        ${cbField('Producer', s.producer ? escapeHtml(s.producer) : '')}
+        ${cbField('Songwriters', s.songwriters ? escapeHtml(s.songwriters) : '')}
+        ${cbField('BPM', s.bpm ? escapeHtml(String(s.bpm)) : '')}
+        ${cbField('Key', s.musicKey ? escapeHtml(s.musicKey) : '')}
+        ${streamLinks.length ? '<div class="cb-field"><span class="cb-flabel">Listen</span><span class="cb-fval">' + streamLinks.join(' · ') + '</span></div>' : ''}
       </div>
       <div class="cb-score-row">
         <span class="cb-flabel">Score</span>
@@ -4568,7 +4618,7 @@ function cardBackHtml(s){
         ${vibeBarHtml('🕰️ Nostalgia', s.vibeNostalgia, 'nostalgia', 'new ↔ familiar')}
       </div>
       <div class="cb-fields">
-        ${cbField('Quick thought', s.quickThought ? `“${escapeHtml(s.quickThought)}”` : '')}
+        ${cbField('Quick thought', s.quickThought ? `"${escapeHtml(s.quickThought)}"` : '')}
         ${cbField('Borrowed from / Where I heard it', s.credit ? escapeHtml(s.credit) : '')}
         ${cbField('Reminds me of', cbRemindsNames(s))}
         ${cbField('Added', s.createdAt ? escapeHtml(formatAddedDate(s.createdAt)) : '')}
@@ -6324,6 +6374,13 @@ function openModal(song){
   document.getElementById('f-quick').value = song?.quickThought || '';
   document.getElementById('f-credit').value = song?.credit || '';
   document.getElementById('f-label').value = song?.recordLabel || '';
+  document.getElementById('f-producer').value = song?.producer || '';
+  document.getElementById('f-songwriters').value = song?.songwriters || '';
+  document.getElementById('f-bpm').value = song?.bpm ?? '';
+  document.getElementById('f-key').value = song?.musicKey || '';
+  document.getElementById('f-spotify').value = song?.spotifyUrl || '';
+  document.getElementById('f-apple').value = song?.appleMusicUrl || '';
+  document.getElementById('f-tidal').value = song?.tidalUrl || '';
   document.getElementById('f-track').value = song?.trackNumber || '';
   document.getElementById('f-score').value = (song?.score === null || song?.score === undefined) ? '' : song.score;
   currentStars = { lyrics:(song?.stars&&song.stars.lyrics)||0, vocals:(song?.stars&&song.stars.vocals)||0, replay:(song?.stars&&song.stars.replay)||0 };
@@ -6466,6 +6523,13 @@ function handleSave(){
     quickThought: document.getElementById('f-quick').value.trim(),
     credit: document.getElementById('f-credit').value.trim(),
     recordLabel: document.getElementById('f-label').value.trim() || null,
+    producer: document.getElementById('f-producer').value.trim() || null,
+    songwriters: document.getElementById('f-songwriters').value.trim() || null,
+    bpm: (()=>{ const v = parseInt(document.getElementById('f-bpm').value, 10); return isNaN(v) ? null : v; })(),
+    musicKey: document.getElementById('f-key').value.trim() || null,
+    spotifyUrl: document.getElementById('f-spotify').value.trim() || null,
+    appleMusicUrl: document.getElementById('f-apple').value.trim() || null,
+    tidalUrl: document.getElementById('f-tidal').value.trim() || null,
     coverArt: currentCoverArt,
     remindsOf: getSelectedReminds('f'),
     tier: currentTier,
@@ -6591,6 +6655,13 @@ function openMultiModal(mode){
   document.getElementById('mf-why').value = '';
   document.getElementById('mf-credit').value = '';
   document.getElementById('mf-label').value = '';
+  document.getElementById('mf-producer').value = '';
+  document.getElementById('mf-songwriters').value = '';
+  document.getElementById('mf-bpm').value = '';
+  document.getElementById('mf-key').value = '';
+  document.getElementById('mf-spotify').value = '';
+  document.getElementById('mf-apple').value = '';
+  document.getElementById('mf-tidal').value = '';
   document.getElementById('multiCoverLabel').textContent = isAlbum ? 'Artwork (shared)' : 'Artwork (optional, shared)';
   currentMultiCoverArt = null;
   setImagePreview('mf-cover', null);
@@ -6702,6 +6773,14 @@ function handleMultiSave(){
     genres: document.getElementById('mf-genre').value.split(',').map(g=>g.trim()).filter(Boolean),
     why: document.getElementById('mf-why').value.trim(),
     credit: document.getElementById('mf-credit').value.trim(),
+    recordLabel: document.getElementById('mf-label').value.trim() || null,
+    producer: document.getElementById('mf-producer').value.trim() || null,
+    songwriters: document.getElementById('mf-songwriters').value.trim() || null,
+    bpm: (()=>{ const v = parseInt(document.getElementById('mf-bpm').value, 10); return isNaN(v) ? null : v; })(),
+    musicKey: document.getElementById('mf-key').value.trim() || null,
+    spotifyUrl: document.getElementById('mf-spotify').value.trim() || null,
+    appleMusicUrl: document.getElementById('mf-apple').value.trim() || null,
+    tidalUrl: document.getElementById('mf-tidal').value.trim() || null,
     coverArt: currentMultiCoverArt,
     remindsOf: getSelectedReminds('mf'),
     tier: currentMultiTier
