@@ -201,7 +201,7 @@ function feedCardHtml(entry){
   const feedPreviewId = 'feed:' + (s.id || Math.random().toString(36).slice(2));
   feedSongCache[feedPreviewId] = { id: feedPreviewId, title: s.title || 'Untitled', artists: s.artists || [], previewUrl: s.previewUrl || '' };
   const previewBtn = s.source === 'itunes' ? `${s.explicit ? '<span class="explicit-badge" title="Explicit content">E</span>' : ''}<button type="button" class="preview-btn" data-preview="${escapeAttr(feedPreviewId)}" title="Play a 30-second preview" aria-label="Play 30-second preview">▶</button>` : '';
-  const why = s.why ? `<div class="feed-card-why">"${escapeHtml(s.why)}"</div>` : '';
+  const why = s.quickThought ? `<div class="feed-card-why">"${escapeHtml(s.quickThought)}"</div>` : '';
   const reminds = (s.remindsOf && s.remindsOf.length)
     ? `<div class="feed-card-reminds">reminds me of <span>${s.remindsOf.map(id=>{
         const pp = people.find(x=>x.id===id);
@@ -358,7 +358,7 @@ document.getElementById('feedList').addEventListener('click', e=>{
       genres: (s.genres||[]).slice(),
       tags: (s.tags||[]).slice(),
       coverArt: s.coverArt || null,
-      why: s.why ? `${s.why} (from @${entry.who}'s feed)` : '',
+      why: s.quickThought ? `${s.quickThought} (from @${entry.who}'s feed)` : '',
       credit: `from @${entry.who}'s feed`,
       tier: s.tier || null
     });

@@ -656,7 +656,6 @@ function cardBackHtml(s){
       </div>
       <div class="cb-fields">
         ${cbField('Quick thought', s.quickThought ? `“${escapeHtml(s.quickThought)}”` : '')}
-        ${cbField('Opinions', s.why ? escapeHtml(s.why) : '')}
         ${cbField('Borrowed from / Where I heard it', s.credit ? escapeHtml(s.credit) : '')}
         ${cbField('Reminds me of', cbRemindsNames(s))}
         ${cbField('Added', s.createdAt ? escapeHtml(formatAddedDate(s.createdAt)) : '')}
@@ -2387,7 +2386,7 @@ function renderWishlistGrid(){
         </div>
         <div class="meta-row">${s.year ? `<span>${escapeHtml(s.year)}</span>`:''}</div>
         ${s.lyricSnippet ? `<p class="lyric-snippet">${escapeHtml(s.lyricSnippet)}</p>` : ''}
-        ${s.why ? `<p class="why">${escapeHtml(s.why)}</p>` : ''}
+        ${s.quickThought ? `<p class="why">${escapeHtml(s.quickThought)}</p>` : ''}
         <div class="card-actions">
           <button data-wish-action="edit">EDIT</button>
           <button data-wish-action="delete" class="del">DELETE</button>

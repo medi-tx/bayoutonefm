@@ -4567,7 +4567,6 @@ function cardBackHtml(s){
       </div>
       <div class="cb-fields">
         ${cbField('Quick thought', s.quickThought ? `“${escapeHtml(s.quickThought)}”` : '')}
-        ${cbField('Opinions', s.why ? escapeHtml(s.why) : '')}
         ${cbField('Borrowed from / Where I heard it', s.credit ? escapeHtml(s.credit) : '')}
         ${cbField('Reminds me of', cbRemindsNames(s))}
         ${cbField('Added', s.createdAt ? escapeHtml(formatAddedDate(s.createdAt)) : '')}
@@ -6298,7 +6297,7 @@ function renderWishlistGrid(){
         </div>
         <div class="meta-row">${s.year ? `<span>${escapeHtml(s.year)}</span>`:''}</div>
         ${s.lyricSnippet ? `<p class="lyric-snippet">${escapeHtml(s.lyricSnippet)}</p>` : ''}
-        ${s.why ? `<p class="why">${escapeHtml(s.why)}</p>` : ''}
+        ${s.quickThought ? `<p class="why">${escapeHtml(s.quickThought)}</p>` : ''}
         <div class="card-actions">
           <button data-wish-action="edit">EDIT</button>
           <button data-wish-action="delete" class="del">DELETE</button>
@@ -8479,7 +8478,7 @@ function linkedToMeCardHtml(entry){
     ? `<img loading="lazy" decoding="async" class="feed-card-cover" src="${escapeAttr(s.coverArt)}" loading="lazy" decoding="async" alt="Album cover">`
     : `<div class="feed-card-cover-fallback">${escapeHtml((s.title||'?').charAt(0).toUpperCase())}</div>`;
   const tierBadge = s.tier ? renderTierBadge(s.tier) : '';
-  const why = s.why ? `<div class="feed-card-why">"${escapeHtml(s.why)}"</div>` : '';
+  const why = s.quickThought ? `<div class="feed-card-why">"${escapeHtml(s.quickThought)}"</div>` : '';
   const when = s.createdAt ? `<div class="feed-card-when">${new Date(s.createdAt).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'})}</div>` : '';
   return `
     <div class="feed-card">
@@ -8728,7 +8727,7 @@ function renderFriendGrid(list){
         <span class="preview-hint">30-sec preview</span>
       </div>
       ${(s.tags&&s.tags.length) ? `<div class="tags">${s.tags.map(t=>`<span class="tag" style="background:color-mix(in srgb, ${tierColor('B')} 18%, transparent);color:${tierColor('B')};border-color:${tierColor('B')}">${escapeHtml(t)}</span>`).join('')}</div>` : ''}
-      ${s.why ? `<p class="why">${escapeHtml(s.why)}</p>` : ''}
+      ${s.quickThought ? `<p class="why">${escapeHtml(s.quickThought)}</p>` : ''}
       ${s.credit ? `<p class="credit-note"><b>Borrowed from / Where I Heard It:</b> ${escapeHtml(s.credit)}</p>` : ''}
       ${geniusLyricsUrl(s.title, s.artists) ? `<a class="lyrics-link" href="${escapeAttr(geniusLyricsUrl(s.title, s.artists))}" target="_blank" rel="noopener" title="Open lyrics on Genius">LYRICS ↗</a>` : ''}
       <button type="button" class="cb-flip-fab" data-action="flip" title="Ratings & vibes">i</button>
@@ -8843,7 +8842,7 @@ function renderCompareView(){
       </div>
       <div class="tier-row">${renderTierBadge(s.tier)}</div>
       ${(s.tags&&s.tags.length) ? `<div class="tags">${s.tags.map(t=>`<span class="tag" style="background:color-mix(in srgb, ${tierColor('B')} 18%, transparent);color:${tierColor('B')};border-color:${tierColor('B')}">${escapeHtml(t)}</span>`).join('')}</div>` : ''}
-      ${s.why ? `<p class="why">${escapeHtml(s.why)}</p>` : ''}
+      ${s.quickThought ? `<p class="why">${escapeHtml(s.quickThought)}</p>` : ''}
     </div>`;
 
   const detailHeaderHtml = (photo, name, initial) => `
@@ -12938,7 +12937,7 @@ function feedCardHtml(entry){
   const feedPreviewId = 'feed:' + (s.id || Math.random().toString(36).slice(2));
   feedSongCache[feedPreviewId] = { id: feedPreviewId, title: s.title || 'Untitled', artists: s.artists || [], previewUrl: s.previewUrl || '' };
   const previewBtn = s.source === 'itunes' ? `${s.explicit ? '<span class="explicit-badge" title="Explicit content">E</span>' : ''}<button type="button" class="preview-btn" data-preview="${escapeAttr(feedPreviewId)}" title="Play a 30-second preview" aria-label="Play 30-second preview">▶</button>` : '';
-  const why = s.why ? `<div class="feed-card-why">"${escapeHtml(s.why)}"</div>` : '';
+  const why = s.quickThought ? `<div class="feed-card-why">"${escapeHtml(s.quickThought)}"</div>` : '';
   const reminds = (s.remindsOf && s.remindsOf.length)
     ? `<div class="feed-card-reminds">reminds me of <span>${s.remindsOf.map(id=>{
         const pp = people.find(x=>x.id===id);
@@ -13095,7 +13094,7 @@ document.getElementById('feedList').addEventListener('click', e=>{
       genres: (s.genres||[]).slice(),
       tags: (s.tags||[]).slice(),
       coverArt: s.coverArt || null,
-      why: s.why ? `${s.why} (from @${entry.who}'s feed)` : '',
+      why: s.quickThought ? `${s.quickThought} (from @${entry.who}'s feed)` : '',
       credit: `from @${entry.who}'s feed`,
       tier: s.tier || null
     });

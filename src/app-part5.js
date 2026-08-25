@@ -345,7 +345,7 @@ function linkedToMeCardHtml(entry){
     ? `<img loading="lazy" decoding="async" class="feed-card-cover" src="${escapeAttr(s.coverArt)}" loading="lazy" decoding="async" alt="Album cover">`
     : `<div class="feed-card-cover-fallback">${escapeHtml((s.title||'?').charAt(0).toUpperCase())}</div>`;
   const tierBadge = s.tier ? renderTierBadge(s.tier) : '';
-  const why = s.why ? `<div class="feed-card-why">"${escapeHtml(s.why)}"</div>` : '';
+  const why = s.quickThought ? `<div class="feed-card-why">"${escapeHtml(s.quickThought)}"</div>` : '';
   const when = s.createdAt ? `<div class="feed-card-when">${new Date(s.createdAt).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'})}</div>` : '';
   return `
     <div class="feed-card">
@@ -594,7 +594,7 @@ function renderFriendGrid(list){
         <span class="preview-hint">30-sec preview</span>
       </div>
       ${(s.tags&&s.tags.length) ? `<div class="tags">${s.tags.map(t=>`<span class="tag" style="background:color-mix(in srgb, ${tierColor('B')} 18%, transparent);color:${tierColor('B')};border-color:${tierColor('B')}">${escapeHtml(t)}</span>`).join('')}</div>` : ''}
-      ${s.why ? `<p class="why">${escapeHtml(s.why)}</p>` : ''}
+      ${s.quickThought ? `<p class="why">${escapeHtml(s.quickThought)}</p>` : ''}
       ${s.credit ? `<p class="credit-note"><b>Borrowed from / Where I Heard It:</b> ${escapeHtml(s.credit)}</p>` : ''}
       ${geniusLyricsUrl(s.title, s.artists) ? `<a class="lyrics-link" href="${escapeAttr(geniusLyricsUrl(s.title, s.artists))}" target="_blank" rel="noopener" title="Open lyrics on Genius">LYRICS ↗</a>` : ''}
       <button type="button" class="cb-flip-fab" data-action="flip" title="Ratings & vibes">i</button>
@@ -709,7 +709,7 @@ function renderCompareView(){
       </div>
       <div class="tier-row">${renderTierBadge(s.tier)}</div>
       ${(s.tags&&s.tags.length) ? `<div class="tags">${s.tags.map(t=>`<span class="tag" style="background:color-mix(in srgb, ${tierColor('B')} 18%, transparent);color:${tierColor('B')};border-color:${tierColor('B')}">${escapeHtml(t)}</span>`).join('')}</div>` : ''}
-      ${s.why ? `<p class="why">${escapeHtml(s.why)}</p>` : ''}
+      ${s.quickThought ? `<p class="why">${escapeHtml(s.quickThought)}</p>` : ''}
     </div>`;
 
   const detailHeaderHtml = (photo, name, initial) => `
