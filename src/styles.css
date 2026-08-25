@@ -804,6 +804,13 @@
   }
   .pin-btn:hover{ transform:scale(1.2); }
 
+  .card-tier-badge{
+    position:absolute;
+    top:38px; right:24px;
+    z-index:2;
+    display:flex; align-items:center; gap:4px;
+  }
+
   .card-top{ padding-right:26px; }
   .track-title{
     font-family:'Fraunces', serif;
@@ -1478,6 +1485,14 @@
     font-size:16px; line-height:1; padding:2px 4px;
     color:rgba(var(--on-paper-rgb),0.6);
   }
+  .cb-head-flip{
+    width:26px; height:26px; border-radius:50%; flex-shrink:0;
+    border:1.5px solid rgba(var(--on-paper-rgb),0.35);
+    background:rgba(var(--on-paper-rgb),0.06);
+    color:rgba(var(--on-paper-rgb),0.75);
+    font-size:13px; line-height:1; cursor:pointer;
+  }
+  .cb-head-flip:hover{ background:color-mix(in srgb, var(--gold) 22%, transparent); border-color:var(--gold); }
   .cb-close:hover{ color:var(--rose); }
   .cb-score-row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
   .score-chip.big{ font-size:15px; padding:4px 11px; margin-left:0; }

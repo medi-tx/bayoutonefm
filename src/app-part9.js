@@ -442,37 +442,16 @@
   async function sotdAddToCataloguex(){
     if(!currentUserId || !sb || !sotdSong) return;
     trackEvent('sotd_add_to_cataloguex');
-    const newSong = {
-      id: uid(),
-      pinned: false,
-      createdAt: Date.now(),
-      title: sotdSong.title || 'Unknown song',
+    openAddFromData({
+      title: sotdSong.title || '',
       artists: sotdSong.artist ? [sotdSong.artist] : [],
       album: sotdSong.album || '',
       year: sotdSong.year ? String(sotdSong.year) : '',
       genres: sotdSong.genre ? [sotdSong.genre] : [],
-      tags: ['song of the day'],
       coverArt: sotdSong.cover || null,
       explicit: !!sotdSong.explicit,
-      source: 'sotd',
-      tier: null,
-      score: null,
-      stars: { lyrics:0, vocals:0, replay:0 },
-      trackNumber: null,
-      quickThought: '',
-      why: '',
-      credit: '',
-      vibeEnergy: 50,
-      vibeMood: 50,
-      vibeNostalgia: 50,
-      remindsOf: []
-    };
-    songs = [newSong, ...songs];
-    save();
-    upsertGlobalSongBatch([newSong], currentUserId);
-    render();
-    renderSotdDock();
-    showToast('Added "' + newSong.title + '" to your cataloguex.', 3500);
+      source: 'sotd'
+    });
   }
   async function sotdOpenProfile(userId){
     if(!userId) return;

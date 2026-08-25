@@ -855,6 +855,13 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
   }
   .pin-btn:hover{ transform:scale(1.2); }
 
+  .card-tier-badge{
+    position:absolute;
+    top:38px; right:24px;
+    z-index:2;
+    display:flex; align-items:center; gap:4px;
+  }
+
   .card-top{ padding-right:26px; }
   .track-title{
     font-family:'Fraunces', serif;
@@ -1529,6 +1536,14 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
     font-size:16px; line-height:1; padding:2px 4px;
     color:rgba(var(--on-paper-rgb),0.6);
   }
+  .cb-head-flip{
+    width:26px; height:26px; border-radius:50%; flex-shrink:0;
+    border:1.5px solid rgba(var(--on-paper-rgb),0.35);
+    background:rgba(var(--on-paper-rgb),0.06);
+    color:rgba(var(--on-paper-rgb),0.75);
+    font-size:13px; line-height:1; cursor:pointer;
+  }
+  .cb-head-flip:hover{ background:color-mix(in srgb, var(--gold) 22%, transparent); border-color:var(--gold); }
   .cb-close:hover{ color:var(--rose); }
   .cb-score-row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
   .score-chip.big{ font-size:15px; padding:4px 11px; margin-left:0; }
@@ -3885,6 +3900,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
     </div>
     <div id="spotifyImportResults" style="display:none; margin-top:12px;">
       <div id="spotifyPlaylistInfo" style="display:flex; gap:12px; align-items:center; margin-bottom:12px;"></div>
+      <p style="font-size:11.5px; color:var(--text-dim,#888); line-height:1.5; margin:0 0 8px;">Cover art loads in the background after import — larger playlists may take a few minutes to fully populate.</p>
       <div id="spotifyTrackList" class="discover-list" style="max-height:300px; overflow-y:auto;"></div>
     </div>
     <div id="spotifyImportError" style="display:none; margin-top:8px;"></div>
@@ -4603,7 +4619,7 @@ function cardBackHtml(s){
     <div class="card-back">
       <div class="cb-head">
         <span class="cb-title">${escapeHtml(s.title||'Untitled')}${s.explicit ? ' <span class="explicit-badge" title="Explicit content">E</span>' : ''}</span>
-        <button type="button" class="cb-close" data-action="flip" title="Flip back" aria-label="Flip back">✕</button>
+        <button type="button" class="cb-flip-fab cb-head-flip" data-action="flip" title="Flip back" aria-label="Flip back">↻</button>
       </div>
       <div class="cb-fields">
         ${cbField('Track #', trackNoDisplay(s))}
@@ -4769,13 +4785,13 @@ function songCardHtml(s, clusterCounts){
       <div class="card ${s.archived?'archived':''}${showEx?' example-card':''}" data-id="${s.id}">
         ${showEx ? '<span class="example-badge">EXAMPLE</span>' : ''}
         <button class="pin-btn ${s.favorited?'pinned':''}" data-action="pin" data-help="Add to or remove from your personal favourites list." aria-pressed="${s.favorited?'true':'false'}" aria-label="${s.favorited?'Remove from favorites':'Add to favorites'}" title="${s.favorited?'Remove from favorites':'Add to favorites'}">${s.favorited?'♥':'♡'}</button>
+        ${(s.tier) ? `<div class="card-tier-badge">${renderTierBadge(s.tier)}${(s.score !== null && s.score !== undefined && s.score !== '') ? `<span class="score-chip">${escapeHtml(String(s.score))}</span>` : ''}</div>` : ''}
         <div class="card-top">
           ${coverThumbHtml(s)}
           <div class="title-stack">
             ${s.archived ? '<span class="archived-badge">ARCHIVED</span>' : ''}
             <p class="track-title" style="${s.tier ? 'color:'+tierColor(s.tier) : ''}">${escapeHtml(s.title||'Untitled')}${s.explicit ? ' <span class="explicit-badge" title="Explicit content">E</span>' : ''}</p>
             <p class="track-artist">${escapeHtml(formatArtists(s.artists))}${s.album ? ' · '+escapeHtml(s.album) : ''}</p>
-            ${(s.tier) ? `<div class="cover-score">${renderTierBadge(s.tier)}${(s.score !== null && s.score !== undefined && s.score !== '') ? `<span class="score-chip">${escapeHtml(String(s.score))}</span>` : ''}</div>` : ''}
           </div>
         </div>
         <div class="meta-row">
@@ -12427,37 +12443,16 @@ document.getElementById('passwordSaveBtn').addEventListener('click', async ()=>{
   async function sotdAddToCataloguex(){
     if(!currentUserId || !sb || !sotdSong) return;
     trackEvent('sotd_add_to_cataloguex');
-    const newSong = {
-      id: uid(),
-      pinned: false,
-      createdAt: Date.now(),
-      title: sotdSong.title || 'Unknown song',
+    openAddFromData({
+      title: sotdSong.title || '',
       artists: sotdSong.artist ? [sotdSong.artist] : [],
       album: sotdSong.album || '',
       year: sotdSong.year ? String(sotdSong.year) : '',
       genres: sotdSong.genre ? [sotdSong.genre] : [],
-      tags: ['song of the day'],
       coverArt: sotdSong.cover || null,
       explicit: !!sotdSong.explicit,
-      source: 'sotd',
-      tier: null,
-      score: null,
-      stars: { lyrics:0, vocals:0, replay:0 },
-      trackNumber: null,
-      quickThought: '',
-      why: '',
-      credit: '',
-      vibeEnergy: 50,
-      vibeMood: 50,
-      vibeNostalgia: 50,
-      remindsOf: []
-    };
-    songs = [newSong, ...songs];
-    save();
-    upsertGlobalSongBatch([newSong], currentUserId);
-    render();
-    renderSotdDock();
-    showToast('Added "' + newSong.title + '" to your cataloguex.', 3500);
+      source: 'sotd'
+    });
   }
   async function sotdOpenProfile(userId){
     if(!userId) return;

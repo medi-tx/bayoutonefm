@@ -631,7 +631,7 @@ function cardBackHtml(s){
     <div class="card-back">
       <div class="cb-head">
         <span class="cb-title">${escapeHtml(s.title||'Untitled')}${s.explicit ? ' <span class="explicit-badge" title="Explicit content">E</span>' : ''}</span>
-        <button type="button" class="cb-close" data-action="flip" title="Flip back" aria-label="Flip back">✕</button>
+        <button type="button" class="cb-flip-fab cb-head-flip" data-action="flip" title="Flip back" aria-label="Flip back">↻</button>
       </div>
       <div class="cb-fields">
         ${cbField('Track #', trackNoDisplay(s))}
@@ -797,13 +797,13 @@ function songCardHtml(s, clusterCounts){
       <div class="card ${s.archived?'archived':''}${showEx?' example-card':''}" data-id="${s.id}">
         ${showEx ? '<span class="example-badge">EXAMPLE</span>' : ''}
         <button class="pin-btn ${s.favorited?'pinned':''}" data-action="pin" data-help="Add to or remove from your personal favourites list." aria-pressed="${s.favorited?'true':'false'}" aria-label="${s.favorited?'Remove from favorites':'Add to favorites'}" title="${s.favorited?'Remove from favorites':'Add to favorites'}">${s.favorited?'♥':'♡'}</button>
+        ${(s.tier) ? `<div class="card-tier-badge">${renderTierBadge(s.tier)}${(s.score !== null && s.score !== undefined && s.score !== '') ? `<span class="score-chip">${escapeHtml(String(s.score))}</span>` : ''}</div>` : ''}
         <div class="card-top">
           ${coverThumbHtml(s)}
           <div class="title-stack">
             ${s.archived ? '<span class="archived-badge">ARCHIVED</span>' : ''}
             <p class="track-title" style="${s.tier ? 'color:'+tierColor(s.tier) : ''}">${escapeHtml(s.title||'Untitled')}${s.explicit ? ' <span class="explicit-badge" title="Explicit content">E</span>' : ''}</p>
             <p class="track-artist">${escapeHtml(formatArtists(s.artists))}${s.album ? ' · '+escapeHtml(s.album) : ''}</p>
-            ${(s.tier) ? `<div class="cover-score">${renderTierBadge(s.tier)}${(s.score !== null && s.score !== undefined && s.score !== '') ? `<span class="score-chip">${escapeHtml(String(s.score))}</span>` : ''}</div>` : ''}
           </div>
         </div>
         <div class="meta-row">
