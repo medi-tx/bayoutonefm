@@ -2281,6 +2281,24 @@
   .sotd-artist{ font-size:12px; opacity:0.8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .sotd-link{ color:var(--rose); text-decoration:none; font-size:12px; flex:0 0 auto; }
   .sotd-link:hover{ text-decoration:underline; }
+  .sotd-add-btn{
+    flex:0 0 auto;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10.5px; letter-spacing:.4px; font-weight:700;
+    color:#7ec8a9;
+    background:rgba(126,200,169,0.12);
+    border:1px solid rgba(126,200,169,0.45);
+    border-radius:5px;
+    padding:3px 8px;
+    cursor:pointer;
+  }
+  .sotd-add-btn:hover{ background:rgba(126,200,169,0.25); }
+  .sotd-added-tag{
+    flex:0 0 auto;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10.5px; letter-spacing:.4px;
+    color:rgba(var(--on-ink-rgb,18,20,28),0.55);
+  }
   .sotd-emojis{ display:flex; gap:6px; margin-top:10px; flex-wrap:wrap; }
   .sotd-emoji-btn{
     font-size:18px; width:34px; height:34px; border-radius:50%;

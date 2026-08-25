@@ -396,6 +396,10 @@
       ? `<img loading="lazy" decoding="async" class="sotd-cover" src="${escapeAttr(sotdSong.cover)}" alt="Album cover">`
       : `<span class="sotd-cover" style="display:flex;align-items:center;justify-content:center;font-size:20px;">🎵</span>`;
     const link = sotdSong.url ? `<a class="sotd-link" href="${escapeAttr(sotdSong.url)}" target="_blank" rel="noopener">Open ↗</a>` : '';
+    const alreadyAdded = songs.some(s=>(s.title||'').toLowerCase() === (sotdSong.title||'').toLowerCase());
+    const addHtml = alreadyAdded
+      ? '<span class="sotd-added-tag" title="Already in your cataloguex">✓ In Cataloguex</span>'
+      : '<button type="button" class="sotd-add-btn" data-sotd-add title="Add this song to your cataloguex">+ Add to Cataloguex</button>';
     const streakHtml = (sotdCurrentStreak > 0 || sotdBestStreak > 0)
       ? `<div class="sotd-streak${mine ? '' : ' at-risk'}" title="${mine ? 'Streak for reacting to the song of the day' : 'React today to keep your ' + sotdCurrentStreak + '-day streak going'}">🔥 <b>${sotdCurrentStreak}</b>-day streak${sotdBestStreak > sotdCurrentStreak ? ` <span class="sotd-streak-best">best ${sotdBestStreak}</span>` : ''}</div>`
       : '';
@@ -413,6 +417,7 @@
           <span class="preview-hint">30-sec preview</span>
         </div>
         ${link}
+        ${addHtml}
       </div>
       ${streakHtml}
       <div class="sotd-emojis">${emojiHtml}</div>
@@ -433,6 +438,41 @@
       if(!sotdSong){ sotdPick(); }
       else { renderSotdDock(); }
     }
+  }
+  async function sotdAddToCataloguex(){
+    if(!currentUserId || !sb || !sotdSong) return;
+    trackEvent('sotd_add_to_cataloguex');
+    const newSong = {
+      id: uid(),
+      pinned: false,
+      createdAt: Date.now(),
+      title: sotdSong.title || 'Unknown song',
+      artists: sotdSong.artist ? [sotdSong.artist] : [],
+      album: sotdSong.album || '',
+      year: sotdSong.year ? String(sotdSong.year) : '',
+      genres: sotdSong.genre ? [sotdSong.genre] : [],
+      tags: ['song of the day'],
+      coverArt: sotdSong.cover || null,
+      explicit: !!sotdSong.explicit,
+      source: 'sotd',
+      tier: null,
+      score: null,
+      stars: { lyrics:0, vocals:0, replay:0 },
+      trackNumber: null,
+      quickThought: '',
+      why: '',
+      credit: '',
+      vibeEnergy: 50,
+      vibeMood: 50,
+      vibeNostalgia: 50,
+      remindsOf: []
+    };
+    songs = [newSong, ...songs];
+    save();
+    upsertGlobalSongBatch([newSong], currentUserId);
+    render();
+    renderSotdDock();
+    showToast('Added "' + newSong.title + '" to your cataloguex.', 3500);
   }
   async function sotdOpenProfile(userId){
     if(!userId) return;
@@ -627,8 +667,10 @@
    function initSotdEvents(){
      document.getElementById('sotdBtn').addEventListener('click', ()=>{ trackEvent('open_sotd'); sotdToggle(); });
      document.getElementById('sotdDock').addEventListener('click', e=>{
-       const btn = e.target.closest('[data-sotd-emoji]');
-       if(btn){ sotdReact(btn.dataset.sotdEmoji); return; }
+        const btn = e.target.closest('[data-sotd-emoji]');
+        if(btn){ sotdReact(btn.dataset.sotdEmoji); return; }
+        const addBtn = e.target.closest('[data-sotd-add]');
+        if(addBtn){ sotdAddToCataloguex(); return; }
        const reactor = e.target.closest('[data-sotd-reactor]');
        if(reactor){ sotdOpenProfile(reactor.dataset.sotdReactor); return; }
        const historyBtn = e.target.closest('[data-sotd-history]');
