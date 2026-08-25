@@ -3241,7 +3241,10 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
       <div class="field"><label>Spotify URL</label><input id="f-spotify" type="url" placeholder="https://open.spotify.com/track/…"></div>
       <div class="field"><label>Apple Music URL</label><input id="f-apple" type="url" placeholder="https://music.apple.com/…"></div>
     </div>
-    <div class="field"><label>Tidal URL</label><input id="f-tidal" type="url" placeholder="https://tidal.com/browse/track/…"></div>
+    <div class="two-col">
+      <div class="field"><label>YouTube Music URL</label><input id="f-youtube" type="url" placeholder="https://music.youtube.com/watch?…"></div>
+      <div class="field"><label>Tidal URL</label><input id="f-tidal" type="url" placeholder="https://tidal.com/browse/track/…"></div>
+    </div>
     </div>
     <div class="modal-actions">
       <button class="btn-cancel" id="cancelBtn">Cancel</button>
@@ -3419,7 +3422,10 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
       <div class="field"><label>Spotify URL</label><input id="mf-spotify" type="url" placeholder="https://open.spotify.com/track/…"></div>
       <div class="field"><label>Apple Music URL</label><input id="mf-apple" type="url" placeholder="https://music.apple.com/…"></div>
     </div>
-    <div class="field"><label>Tidal URL</label><input id="mf-tidal" type="url" placeholder="https://tidal.com/browse/track/…"></div>
+    <div class="two-col">
+      <div class="field"><label>YouTube Music URL</label><input id="mf-youtube" type="url" placeholder="https://music.youtube.com/watch?…"></div>
+      <div class="field"><label>Tidal URL</label><input id="mf-tidal" type="url" placeholder="https://tidal.com/browse/track/…"></div>
+    </div>
     </div>
     <div class="field">
       <label id="multiTitlesLabel">Titles</label>
@@ -4614,6 +4620,7 @@ function cardBackHtml(s){
   const streamLinks = [];
   if(s.spotifyUrl) streamLinks.push(`<a class="back-link" href="${escapeHtml(s.spotifyUrl)}" target="_blank" rel="noopener">Spotify</a>`);
   if(s.appleMusicUrl) streamLinks.push(`<a class="back-link" href="${escapeHtml(s.appleMusicUrl)}" target="_blank" rel="noopener">Apple Music</a>`);
+  if(s.youtubeMusicUrl) streamLinks.push(`<a class="back-link" href="${escapeHtml(s.youtubeMusicUrl)}" target="_blank" rel="noopener">YouTube Music</a>`);
   if(s.tidalUrl) streamLinks.push(`<a class="back-link" href="${escapeHtml(s.tidalUrl)}" target="_blank" rel="noopener">Tidal</a>`);
   return `
     <div class="card-back">
@@ -4634,7 +4641,6 @@ function cardBackHtml(s){
       <div class="cb-fields">
         ${cbField('Opinions', s.why ? escapeHtml(s.why) : '')}
         ${cbField('Borrowed from / Where I heard it', s.credit ? escapeHtml(s.credit) : '')}
-        ${cbField('Reminds me of', cbRemindsNames(s))}
       </div>
     </div>`;
 }
@@ -6388,6 +6394,7 @@ function openModal(song){
   document.getElementById('f-key').value = song?.musicKey || '';
   document.getElementById('f-spotify').value = song?.spotifyUrl || '';
   document.getElementById('f-apple').value = song?.appleMusicUrl || '';
+  document.getElementById('f-youtube').value = song?.youtubeMusicUrl || '';
   document.getElementById('f-tidal').value = song?.tidalUrl || '';
   document.getElementById('f-track').value = song?.trackNumber || '';
   document.getElementById('f-score').value = (song?.score === null || song?.score === undefined) ? '' : song.score;
@@ -6560,6 +6567,7 @@ function handleSave(){
     musicKey: document.getElementById('f-key').value.trim() || null,
     spotifyUrl: document.getElementById('f-spotify').value.trim() || null,
     appleMusicUrl: document.getElementById('f-apple').value.trim() || null,
+    youtubeMusicUrl: document.getElementById('f-youtube').value.trim() || null,
     tidalUrl: document.getElementById('f-tidal').value.trim() || null,
     coverArt: currentCoverArt,
     remindsOf: getSelectedReminds('f'),
@@ -6691,6 +6699,7 @@ function openMultiModal(mode){
   document.getElementById('mf-key').value = '';
   document.getElementById('mf-spotify').value = '';
   document.getElementById('mf-apple').value = '';
+  document.getElementById('mf-youtube').value = '';
   document.getElementById('mf-tidal').value = '';
   document.getElementById('multiCoverLabel').textContent = isAlbum ? 'Artwork (shared)' : 'Artwork (optional, shared)';
   currentMultiCoverArt = null;
@@ -6807,6 +6816,7 @@ function handleMultiSave(){
     musicKey: document.getElementById('mf-key').value.trim() || null,
     spotifyUrl: document.getElementById('mf-spotify').value.trim() || null,
     appleMusicUrl: document.getElementById('mf-apple').value.trim() || null,
+    youtubeMusicUrl: document.getElementById('mf-youtube').value.trim() || null,
     tidalUrl: document.getElementById('mf-tidal').value.trim() || null,
     coverArt: currentMultiCoverArt,
     remindsOf: getSelectedReminds('mf'),
@@ -7246,6 +7256,7 @@ async function handleSingleUrl(url){
   const isSpotifyAlbum = /open\.spotify\.com\/album\//.test(url);
   const appleMatch = url.match(/music\.apple\.com\/.*\/album\/.*\/(\d+)(?:\?i=(\d+))?/);
   const isTidalTrack = /tidal\.com\/.*\/track\/(\d+)/.test(url);
+  const ytMatch = url.match(/(?:music\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]+)|youtu\.be\/([a-zA-Z0-9_-]+)/);
   try{
     if(isSpotifyTrack){
       const trackId = url.match(/open\.spotify\.com\/track\/([a-zA-Z0-9]+)/)[1];
@@ -7314,6 +7325,19 @@ async function handleSingleUrl(url){
           }
         }catch(e){}
       }
+    }
+    if(ytMatch){
+      const videoId = ytMatch[1] || ytMatch[2];
+      let title = '';
+      try{
+        const resp = await fetch('https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v='+videoId+'&format=json');
+        if(resp.ok){ const d = await resp.json(); title = d.title || ''; }
+      }catch(e){}
+      const trackData = { title:title, artists:[], youtubeMusicUrl:url };
+      document.getElementById('spotifyImportOverlay').classList.remove('open');
+      openAddFromData(trackData);
+      document.getElementById('f-youtube').value = url;
+      return;
     }
     errEl.style.display = 'block';
     errEl.innerHTML = '<p class="profile-empty-note">Could not look up this URL. Please check the link and try again.</p>';
@@ -11186,7 +11210,8 @@ async function renderSongSearchResults(query){
   const trackUrlMatch = q.match(/open\.spotify\.com\/track\/([a-zA-Z0-9]+)/);
   const albumUrlMatch = q.match(/open\.spotify\.com\/album\/([a-zA-Z0-9]+)/);
   const appleTrackMatch = q.match(/music\.apple\.com\/.*\/album\/.*\/(\d+)(?:\?i=(\d+))?/);
-  if(trackUrlMatch || (appleTrackMatch && appleTrackMatch[2])){
+  const ytMatch = q.match(/(?:music\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]+)|youtu\.be\/([a-zA-Z0-9_-]+)/);
+  if(trackUrlMatch || (appleTrackMatch && appleTrackMatch[2]) || ytMatch){
     try{
       let trackData = null;
       if(trackUrlMatch){
@@ -11209,9 +11234,23 @@ async function renderSongSearchResults(query){
         openAddFromData(trackData);
         if(trackData.spotifyUrl) document.getElementById('f-spotify').value=trackData.spotifyUrl;
         if(trackData.appleMusicUrl) document.getElementById('f-apple').value=trackData.appleMusicUrl;
+        if(trackData.youtubeMusicUrl) document.getElementById('f-youtube').value=trackData.youtubeMusicUrl;
         return;
       }
     }catch(e){ console.warn('URL lookup failed:', e); }
+  }
+  if(ytMatch && !trackUrlMatch && !(appleTrackMatch && appleTrackMatch[2])){
+    const videoId = ytMatch[1] || ytMatch[2];
+    let title = '';
+    try{
+      const resp = await fetch('https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v='+videoId+'&format=json');
+      if(resp.ok){ const d = await resp.json(); title = d.title || ''; }
+    }catch(e){}
+    document.getElementById('songSearchResults').style.display='none';
+    document.getElementById('songSearchResults').innerHTML='';
+    openAddFromData({ title:title, artists:[], youtubeMusicUrl:q });
+    document.getElementById('f-youtube').value = q;
+    return;
   }
   const playlistUrl = q.match(/(open\.spotify\.com\/playlist|music\.apple\.com\/.*\/playlist|tidal\.com\/.*\/playlist|music\.youtube\.com\/playlist|youtube\.com\/playlist)/);
   if(playlistUrl){

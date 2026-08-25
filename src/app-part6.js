@@ -983,7 +983,8 @@ async function renderSongSearchResults(query){
   const trackUrlMatch = q.match(/open\.spotify\.com\/track\/([a-zA-Z0-9]+)/);
   const albumUrlMatch = q.match(/open\.spotify\.com\/album\/([a-zA-Z0-9]+)/);
   const appleTrackMatch = q.match(/music\.apple\.com\/.*\/album\/.*\/(\d+)(?:\?i=(\d+))?/);
-  if(trackUrlMatch || (appleTrackMatch && appleTrackMatch[2])){
+  const ytMatch = q.match(/(?:music\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]+)|youtu\.be\/([a-zA-Z0-9_-]+)/);
+  if(trackUrlMatch || (appleTrackMatch && appleTrackMatch[2]) || ytMatch){
     try{
       let trackData = null;
       if(trackUrlMatch){
@@ -1006,9 +1007,23 @@ async function renderSongSearchResults(query){
         openAddFromData(trackData);
         if(trackData.spotifyUrl) document.getElementById('f-spotify').value=trackData.spotifyUrl;
         if(trackData.appleMusicUrl) document.getElementById('f-apple').value=trackData.appleMusicUrl;
+        if(trackData.youtubeMusicUrl) document.getElementById('f-youtube').value=trackData.youtubeMusicUrl;
         return;
       }
     }catch(e){ console.warn('URL lookup failed:', e); }
+  }
+  if(ytMatch && !trackUrlMatch && !(appleTrackMatch && appleTrackMatch[2])){
+    const videoId = ytMatch[1] || ytMatch[2];
+    let title = '';
+    try{
+      const resp = await fetch('https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v='+videoId+'&format=json');
+      if(resp.ok){ const d = await resp.json(); title = d.title || ''; }
+    }catch(e){}
+    document.getElementById('songSearchResults').style.display='none';
+    document.getElementById('songSearchResults').innerHTML='';
+    openAddFromData({ title:title, artists:[], youtubeMusicUrl:q });
+    document.getElementById('f-youtube').value = q;
+    return;
   }
   const playlistUrl = q.match(/(open\.spotify\.com\/playlist|music\.apple\.com\/.*\/playlist|tidal\.com\/.*\/playlist|music\.youtube\.com\/playlist|youtube\.com\/playlist)/);
   if(playlistUrl){

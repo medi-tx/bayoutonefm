@@ -626,6 +626,7 @@ function cardBackHtml(s){
   const streamLinks = [];
   if(s.spotifyUrl) streamLinks.push(`<a class="back-link" href="${escapeHtml(s.spotifyUrl)}" target="_blank" rel="noopener">Spotify</a>`);
   if(s.appleMusicUrl) streamLinks.push(`<a class="back-link" href="${escapeHtml(s.appleMusicUrl)}" target="_blank" rel="noopener">Apple Music</a>`);
+  if(s.youtubeMusicUrl) streamLinks.push(`<a class="back-link" href="${escapeHtml(s.youtubeMusicUrl)}" target="_blank" rel="noopener">YouTube Music</a>`);
   if(s.tidalUrl) streamLinks.push(`<a class="back-link" href="${escapeHtml(s.tidalUrl)}" target="_blank" rel="noopener">Tidal</a>`);
   return `
     <div class="card-back">
@@ -646,7 +647,6 @@ function cardBackHtml(s){
       <div class="cb-fields">
         ${cbField('Opinions', s.why ? escapeHtml(s.why) : '')}
         ${cbField('Borrowed from / Where I heard it', s.credit ? escapeHtml(s.credit) : '')}
-        ${cbField('Reminds me of', cbRemindsNames(s))}
       </div>
     </div>`;
 }
@@ -2400,6 +2400,7 @@ function openModal(song){
   document.getElementById('f-key').value = song?.musicKey || '';
   document.getElementById('f-spotify').value = song?.spotifyUrl || '';
   document.getElementById('f-apple').value = song?.appleMusicUrl || '';
+  document.getElementById('f-youtube').value = song?.youtubeMusicUrl || '';
   document.getElementById('f-tidal').value = song?.tidalUrl || '';
   document.getElementById('f-track').value = song?.trackNumber || '';
   document.getElementById('f-score').value = (song?.score === null || song?.score === undefined) ? '' : song.score;
@@ -2572,6 +2573,7 @@ function handleSave(){
     musicKey: document.getElementById('f-key').value.trim() || null,
     spotifyUrl: document.getElementById('f-spotify').value.trim() || null,
     appleMusicUrl: document.getElementById('f-apple').value.trim() || null,
+    youtubeMusicUrl: document.getElementById('f-youtube').value.trim() || null,
     tidalUrl: document.getElementById('f-tidal').value.trim() || null,
     coverArt: currentCoverArt,
     remindsOf: getSelectedReminds('f'),
@@ -2703,6 +2705,7 @@ function openMultiModal(mode){
   document.getElementById('mf-key').value = '';
   document.getElementById('mf-spotify').value = '';
   document.getElementById('mf-apple').value = '';
+  document.getElementById('mf-youtube').value = '';
   document.getElementById('mf-tidal').value = '';
   document.getElementById('multiCoverLabel').textContent = isAlbum ? 'Artwork (shared)' : 'Artwork (optional, shared)';
   currentMultiCoverArt = null;
@@ -2819,6 +2822,7 @@ function handleMultiSave(){
     musicKey: document.getElementById('mf-key').value.trim() || null,
     spotifyUrl: document.getElementById('mf-spotify').value.trim() || null,
     appleMusicUrl: document.getElementById('mf-apple').value.trim() || null,
+    youtubeMusicUrl: document.getElementById('mf-youtube').value.trim() || null,
     tidalUrl: document.getElementById('mf-tidal').value.trim() || null,
     coverArt: currentMultiCoverArt,
     remindsOf: getSelectedReminds('mf'),
@@ -3258,6 +3262,7 @@ async function handleSingleUrl(url){
   const isSpotifyAlbum = /open\.spotify\.com\/album\//.test(url);
   const appleMatch = url.match(/music\.apple\.com\/.*\/album\/.*\/(\d+)(?:\?i=(\d+))?/);
   const isTidalTrack = /tidal\.com\/.*\/track\/(\d+)/.test(url);
+  const ytMatch = url.match(/(?:music\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]+)|youtu\.be\/([a-zA-Z0-9_-]+)/);
   try{
     if(isSpotifyTrack){
       const trackId = url.match(/open\.spotify\.com\/track\/([a-zA-Z0-9]+)/)[1];
@@ -3326,6 +3331,19 @@ async function handleSingleUrl(url){
           }
         }catch(e){}
       }
+    }
+    if(ytMatch){
+      const videoId = ytMatch[1] || ytMatch[2];
+      let title = '';
+      try{
+        const resp = await fetch('https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v='+videoId+'&format=json');
+        if(resp.ok){ const d = await resp.json(); title = d.title || ''; }
+      }catch(e){}
+      const trackData = { title:title, artists:[], youtubeMusicUrl:url };
+      document.getElementById('spotifyImportOverlay').classList.remove('open');
+      openAddFromData(trackData);
+      document.getElementById('f-youtube').value = url;
+      return;
     }
     errEl.style.display = 'block';
     errEl.innerHTML = '<p class="profile-empty-note">Could not look up this URL. Please check the link and try again.</p>';
