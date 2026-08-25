@@ -7035,15 +7035,42 @@ document.querySelectorAll('.empty-state-add-btn').forEach(btn=>{
     document.getElementById('addMusicOverlay').classList.add('open');
   });
 });
+let addMusicMode = null;
+function openImportUrlScreen(mode){
+  addMusicMode = mode || 'playlist';
+  const ov = document.getElementById('spotifyImportOverlay');
+  ov.classList.add('open');
+  const titleEl = document.getElementById('importModalTitle');
+  const labelEl = ov.querySelector('label');
+  if(addMusicMode === 'song'){ titleEl.textContent = 'Add a song'; labelEl.textContent = 'Paste a Spotify, Apple Music, or Tidal song URL'; }
+  else if(addMusicMode === 'album'){ titleEl.textContent = 'Add an album'; labelEl.textContent = 'Paste a Spotify, Apple Music, or Tidal album URL'; }
+  else { titleEl.textContent = 'Import Playlist'; labelEl.textContent = 'Playlist URL (Spotify, Apple Music, or Tidal)'; }
+  document.getElementById('spotify-url-input').value = '';
+  document.getElementById('spotifyImportResults').style.display = 'none';
+  document.getElementById('spotifyImportError').style.display = 'none';
+  document.getElementById('spotifyImportConfirmBtn').disabled = true;
+  document.getElementById('spotifyImportCancelBtn').textContent = 'Close';
+  document.getElementById('spotifyImportStopBtn').style.display = 'none';
+  document.getElementById('spotifyImportPauseBtn').style.display = 'none';
+  playlistImportedTracks = [];
+  playlistImportService = 'spotify';
+  playlistImportUrl = null;
+  playlistImportLoadedUrl = null;
+  playlistImportInProgress = false;
+  stopImportProgressTimer();
+  document.getElementById('spotify-url-input').focus();
+}
 document.getElementById('addMusicSongBtn').addEventListener('click', ()=>{
   trackEvent('add_song_single');
+  addMusicMode = 'song';
   document.getElementById('addMusicOverlay').classList.remove('open');
-  openModal(null);
+  openImportUrlScreen('song');
 });
 document.getElementById('addMusicAlbumBtn').addEventListener('click', ()=>{
   trackEvent('add_song_album');
+  addMusicMode = 'album';
   document.getElementById('addMusicOverlay').classList.remove('open');
-  openMultiModal('album');
+  openImportUrlScreen('album');
 });
 document.getElementById('addMusicCancelBtn').addEventListener('click', ()=>{
   document.getElementById('addMusicOverlay').classList.remove('open');
@@ -7162,27 +7189,7 @@ function stopImportProgressTimer(){
 document.getElementById('addMusicSpotifyBtn').addEventListener('click', ()=>{
   trackEvent('open_playlist_import');
   document.getElementById('addMusicOverlay').classList.remove('open');
-  document.getElementById('spotifyImportOverlay').classList.add('open');
-  if(playlistImportInProgress || (playlistImportedTracks.length > 0)){
-    if(playlistImportUrl) document.getElementById('spotify-url-input').value = playlistImportUrl;
-    if(playlistImportedTracks.length > 0){
-      document.getElementById('spotifyImportResults').style.display = 'block';
-      document.getElementById('spotifyImportConfirmBtn').disabled = false;
-    }
-    document.getElementById('spotify-url-input').focus();
-    return;
-  }
-  document.getElementById('spotify-url-input').value = '';
-  document.getElementById('spotifyImportResults').style.display = 'none';
-  document.getElementById('spotifyImportError').style.display = 'none';
-  document.getElementById('spotifyImportConfirmBtn').disabled = true;
-  document.getElementById('spotifyImportCancelBtn').textContent = 'Close';
-  document.getElementById('importModalTitle').textContent = 'Import Playlist';
-  playlistImportedTracks = [];
-  playlistImportService = 'spotify';
-  playlistImportUrl = null;
-  playlistImportLoadedUrl = null;
-  document.getElementById('spotify-url-input').focus();
+  openImportUrlScreen('playlist');
 });
 document.getElementById('spotifyImportCancelBtn').addEventListener('click', function(){
   if(playlistImportedTracks && playlistImportedTracks.length){
@@ -7197,6 +7204,7 @@ document.getElementById('spotifyImportCancelBtn').addEventListener('click', func
     return;
   }
   document.getElementById('spotifyImportOverlay').classList.remove('open');
+  addMusicMode = null;
 });
 document.getElementById('spotifyImportStopBtn').addEventListener('click', ()=>{
   playlistImportedTracks = [];
@@ -7227,6 +7235,92 @@ async function fetchSpotifyToken(){
   if(!resp.ok) throw new Error('Could not authenticate with Spotify');
   const data = await resp.json();
   return data.access_token;
+}
+
+async function handleSingleUrl(url){
+  const errEl = document.getElementById('spotifyImportError');
+  const resultsEl = document.getElementById('spotifyImportResults');
+  errEl.style.display = 'none';
+  resultsEl.style.display = 'none';
+  const isSpotifyTrack = /open\.spotify\.com\/track\//.test(url);
+  const isSpotifyAlbum = /open\.spotify\.com\/album\//.test(url);
+  const appleMatch = url.match(/music\.apple\.com\/.*\/album\/.*\/(\d+)(?:\?i=(\d+))?/);
+  const isTidalTrack = /tidal\.com\/.*\/track\/(\d+)/.test(url);
+  try{
+    if(isSpotifyTrack){
+      const trackId = url.match(/open\.spotify\.com\/track\/([a-zA-Z0-9]+)/)[1];
+      const token = await fetchSpotifyToken();
+      const resp = await fetch('https://api.spotify.com/v1/tracks/' + trackId, { headers:{ Authorization:'Bearer '+token } });
+      if(!resp.ok) throw new Error('Track not found');
+      const t = await resp.json();
+      const trackData = { title:t.name, artists:(t.artists||[]).map(a=>a.name), album:(t.album&&t.album.name)||'', year:(t.album&&t.album.release_date)||'', coverArt:(t.album&&t.album.images&&t.album.images[0]&&t.album.images[0].url)||null, explicit:!!t.explicit, spotifyUrl:t.external_urls&&t.external_urls.spotify||'' };
+      document.getElementById('spotifyImportOverlay').classList.remove('open');
+      openAddFromData(trackData);
+      if(trackData.spotifyUrl) document.getElementById('f-spotify').value = trackData.spotifyUrl;
+      return;
+    }
+    if(isSpotifyAlbum){
+      const albumId = url.match(/open\.spotify\.com\/album\/([a-zA-Z0-9]+)/)[1];
+      const token = await fetchSpotifyToken();
+      const resp = await fetch('https://api.spotify.com/v1/albums/' + albumId, { headers:{ Authorization:'Bearer '+token } });
+      if(!resp.ok) throw new Error('Album not found');
+      const a = await resp.json();
+      const albumData = { artists:(a.artists||[]).map(x=>x.name), album:a.name||'', year:a.release_date||'', coverArt:(a.images&&a.images[0]&&a.images[0].url)||null, tracks:(a.tracks&&a.tracks.items||[]).map(t=>({ title:t.name, artists:(t.artists||[]).map(x=>x.name), trackNumber:t.track_number })) };
+      document.getElementById('spotifyImportOverlay').classList.remove('open');
+      openMultiModal('album');
+      document.getElementById('mf-artist').value = albumData.artists.join(', ');
+      document.getElementById('mf-album').value = albumData.album;
+      document.getElementById('mf-year').value = albumData.year;
+      if(albumData.coverArt){ currentMultiCoverArt = albumData.coverArt; setImagePreview('mf-cover', currentMultiCoverArt); }
+      const boxes = document.getElementById('titleBoxes');
+      boxes.innerHTML = '';
+      albumData.tracks.forEach((t,i)=> addTitleBoxRow(i===0, t.title));
+      return;
+    }
+    if(appleMatch && appleMatch[2]){
+      const resp = await fetch('https://itunes.apple.com/lookup?id=' + appleMatch[2] + '&entity=song');
+      if(resp.ok){
+        const d = await resp.json();
+        if(d.results && d.results.length){
+          const t = d.results[0];
+          const trackData = { title:t.trackName, artists:[t.artistName], album:t.collectionName||'', year:t.releaseDate||'', coverArt:t.artworkUrl100||null, explicit:!!t.trackExplicitness, appleMusicUrl:t.trackViewUrl||'' };
+          document.getElementById('spotifyImportOverlay').classList.remove('open');
+          openAddFromData(trackData);
+          if(trackData.appleMusicUrl) document.getElementById('f-apple').value = trackData.appleMusicUrl;
+          return;
+        }
+      }
+    }
+    if(isTidalTrack){
+      const trackId = url.match(/tidal\.com\/.*\/track\/(\d+)/)[1];
+      const proxies = [ u=>'https://api.allorigins.win/raw?url='+encodeURIComponent(u), u=>'https://corsproxy.io/?'+encodeURIComponent(u) ];
+      for(const proxy of proxies){
+        try{
+          const resp = await fetch(proxy('https://tidal.com/browse/track/' + trackId), { redirect:'follow' });
+          if(resp.ok){
+            const html = await resp.text();
+            const doc = new DOMParser().parseFromString(html, 'text/html');
+            const ldScript = doc.querySelector('script[type="application/ld+json"]');
+            if(ldScript){
+              const ld = JSON.parse(ldScript.textContent);
+              if(ld){
+                const trackData = { title:ld.name||'', artists:ld.artist?[ld.artist]:[], album:ld.album&&ld.album.name||'', year:ld.dateCreated||'', coverArt:ld.image||null, tidalUrl:url };
+                document.getElementById('spotifyImportOverlay').classList.remove('open');
+                openAddFromData(trackData);
+                if(trackData.tidalUrl) document.getElementById('f-tidal').value = trackData.tidalUrl;
+                return;
+              }
+            }
+          }
+        }catch(e){}
+      }
+    }
+    errEl.style.display = 'block';
+    errEl.innerHTML = '<p class="profile-empty-note">Could not look up this URL. Please check the link and try again.</p>';
+  }catch(e){
+    errEl.style.display = 'block';
+    errEl.innerHTML = '<p class="profile-empty-note">' + escapeHtml(e.message||'Could not look up this URL.') + '</p>';
+  }
 }
 
 function parseSpotifyPlaylistId(url){
@@ -7788,7 +7882,11 @@ document.getElementById('spotify-url-input').addEventListener('input', e=>{
   if(playlistImportInProgress && val === playlistImportUrl){
     return;
   }
-  spotifyUrlDebounce = setTimeout(()=>loadPlaylist(val), 600);
+  if(addMusicMode === 'song' || addMusicMode === 'album'){
+    spotifyUrlDebounce = setTimeout(()=>handleSingleUrl(val), 600);
+  } else {
+    spotifyUrlDebounce = setTimeout(()=>loadPlaylist(val), 600);
+  }
 });
 
 document.getElementById('spotifyImportConfirmBtn').addEventListener('click', ()=>{
