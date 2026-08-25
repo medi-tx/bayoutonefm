@@ -7365,77 +7365,65 @@ async function handleSingleUrl(url){
     }
     if(isTidalTrack){
       const trackId = url.match(/tidal\.com\/(?:browse\/)?track\/(\d+)/)[1];
-      let found = false;
-      const proxies = [ u=>'https://api.allorigins.win/raw?url='+encodeURIComponent(u), u=>'https://corsproxy.io/?'+encodeURIComponent(u) ];
-      for(const proxy of proxies){
-        try{
-          const ac = new AbortController();
-          const timer = setTimeout(()=>ac.abort(), 6000);
-          const resp = await fetch(proxy('https://tidal.com/browse/track/' + trackId), { redirect:'follow', signal:ac.signal });
-          clearTimeout(timer);
-          if(resp.ok){
-            const html = await resp.text();
-            const doc = new DOMParser().parseFromString(html, 'text/html');
-            const ldScript = doc.querySelector('script[type="application/ld+json"]');
-            if(ldScript){
-              const ld = JSON.parse(ldScript.textContent);
-              if(ld){
-                const trackData = { title:ld.name||'', artists:ld.artist?[ld.artist]:[], album:ld.album&&ld.album.name||'', year:ld.dateCreated||'', coverArt:ld.image||null, tidalUrl:url };
-                document.getElementById('spotifyImportOverlay').classList.remove('open');
-                openAddFromData(trackData);
-                if(trackData.tidalUrl) document.getElementById('f-tidal').value = trackData.tidalUrl;
-                found = true;
-                return;
-              }
-            }
-          }
-        }catch(e){}
-      }
-      if(!found){
-        document.getElementById('spotifyImportOverlay').classList.remove('open');
-        openAddFromData({ title:'', artists:[], tidalUrl:url });
-        document.getElementById('f-tidal').value = url;
-      }
+      try{
+        const token = await getTidalToken();
+        const resp = await fetch('https://openapi.tidal.com/v2/tracks/'+trackId+'?countryCode=US&include=albums,artists', {
+          headers:{ Authorization:'Bearer '+token, 'Content-Type':'application/vnd.tidal.v2+json' }
+        });
+        if(resp.ok){
+          const d = await resp.json();
+          const t = d.data || d;
+          const artists = t.artists ? (Array.isArray(t.artists) ? t.artists : [t.artists]).map(a=>a.name||'').filter(Boolean) : [];
+          const albumName = t.album ? (t.album.title || t.album.name || '') : '';
+          const year = t.album && t.album.releaseDate ? t.album.releaseDate.substring(0,4) : '';
+          const coverArt = t.album && t.album.cover ? 'https://resources.tidal.com/images/'+t.album.cover.replace('/','-')+'/640x640.jpg' : null;
+          const trackData = { title:t.title||'', artists, album:albumName, year, coverArt, tidalUrl:url, explicit:!!t.explicit };
+          document.getElementById('spotifyImportOverlay').classList.remove('open');
+          openAddFromData(trackData);
+          if(trackData.tidalUrl) document.getElementById('f-tidal').value = trackData.tidalUrl;
+          return;
+        }
+      }catch(e){}
+      document.getElementById('spotifyImportOverlay').classList.remove('open');
+      openAddFromData({ title:'', artists:[], tidalUrl:url });
+      document.getElementById('f-tidal').value = url;
       return;
     }
     if(isTidalAlbum){
       const albumId = url.match(/tidal\.com\/(?:browse\/)?album\/(\d+)/)[1];
-      let found = false;
-      const proxies = [ u=>'https://api.allorigins.win/raw?url='+encodeURIComponent(u), u=>'https://corsproxy.io/?'+encodeURIComponent(u) ];
-      for(const proxy of proxies){
-        try{
-          const ac = new AbortController();
-          const timer = setTimeout(()=>ac.abort(), 6000);
-          const resp = await fetch(proxy('https://tidal.com/browse/album/' + albumId), { redirect:'follow', signal:ac.signal });
-          clearTimeout(timer);
-          if(resp.ok){
-            const html = await resp.text();
-            const doc = new DOMParser().parseFromString(html, 'text/html');
-            const ldScript = doc.querySelector('script[type="application/ld+json"]');
-            if(ldScript){
-              const ld = JSON.parse(ldScript.textContent);
-              if(ld && ld.name){
-                const tracks = (ld.track||[]).map((t,i)=>({ title:t.name||'', artists:t.artist?[t.artist]:[], trackNumber:t.position||(i+1) }));
-                document.getElementById('spotifyImportOverlay').classList.remove('open');
-                openMultiModal('album');
-                document.getElementById('mf-artist').value = ld.artist || '';
-                document.getElementById('mf-album').value = ld.name || '';
-                document.getElementById('mf-year').value = ld.dateCreated || '';
-                if(ld.image){ currentMultiCoverArt = ld.image; setImagePreview('mf-cover', currentMultiCoverArt); }
-                const boxes = document.getElementById('titleBoxes');
-                boxes.innerHTML = '';
-                tracks.forEach((t,i)=> addTitleBoxRow(i===0, t.title));
-                found = true;
-                return;
-              }
-            }
+      try{
+        const token = await getTidalToken();
+        const resp = await fetch('https://openapi.tidal.com/v2/albums/'+albumId+'?countryCode=US&include=artists', {
+          headers:{ Authorization:'Bearer '+token, 'Content-Type':'application/vnd.tidal.v2+json' }
+        });
+        if(resp.ok){
+          const d = await resp.json();
+          const a = d.data || d;
+          const artists = a.artists ? (Array.isArray(a.artists) ? a.artists : [a.artists]).map(x=>x.name||'').filter(Boolean) : [];
+          const coverArt = a.cover ? 'https://resources.tidal.com/images/'+a.cover.replace('/','-')+'/640x640.jpg' : null;
+          const trResp = await fetch('https://openapi.tidal.com/v2/albums/'+albumId+'/tracks?countryCode=US&limit=300', {
+            headers:{ Authorization:'Bearer '+token, 'Content-Type':'application/vnd.tidal.v2+json' }
+          });
+          let tracks = [];
+          if(trResp.ok){
+            const td = await trResp.json();
+            const items = td.items || td.data || [];
+            tracks = items.map((t,i)=>({ title:t.title||'', artists:t.artists?(Array.isArray(t.artists)?t.artists:[t.artists]).map(x=>x.name||'').filter(Boolean):[], trackNumber:t.trackNumber||(i+1) }));
           }
-        }catch(e){}
-      }
-      if(!found){
-        document.getElementById('spotifyImportOverlay').classList.remove('open');
-        openMultiModal('album');
-      }
+          document.getElementById('spotifyImportOverlay').classList.remove('open');
+          openMultiModal('album');
+          document.getElementById('mf-artist').value = artists.join(', ');
+          document.getElementById('mf-album').value = a.title || '';
+          document.getElementById('mf-year').value = a.releaseDate ? a.releaseDate.substring(0,4) : '';
+          if(coverArt){ currentMultiCoverArt = coverArt; setImagePreview('mf-cover', currentMultiCoverArt); }
+          const boxes = document.getElementById('titleBoxes');
+          boxes.innerHTML = '';
+          tracks.forEach((t,i)=> addTitleBoxRow(i===0, t.title));
+          return;
+        }
+      }catch(e){}
+      document.getElementById('spotifyImportOverlay').classList.remove('open');
+      openMultiModal('album');
       return;
     }
     if(ytMatch){
