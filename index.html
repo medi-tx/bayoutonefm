@@ -7396,8 +7396,10 @@ async function handleSingleUrl(url){
             if(trackData.tidalUrl) document.getElementById('f-tidal').value = trackData.tidalUrl;
             return;
           }
+        } else {
+          console.error('Tidal track API', resp.status, await resp.text().catch(()=>{}));
         }
-      }catch(e){}
+      }catch(e){ console.error('Tidal track lookup error:', e); }
       document.getElementById('spotifyImportOverlay').classList.remove('open');
       openAddFromData({ title:'', artists:[], tidalUrl:url });
       document.getElementById('f-tidal').value = url;
