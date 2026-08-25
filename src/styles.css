@@ -816,7 +816,7 @@
     display:flex; align-items:center; gap:4px;
   }
 
-  .card-top{ padding-right:80px; }
+  .card-top{ padding-right:90px; }
   .track-title{
     font-family:'Fraunces', serif;
     font-weight:700;
