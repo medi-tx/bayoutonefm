@@ -623,26 +623,28 @@ function renderFriendGrid(list){
   empty.style.display = 'none';
   grid.innerHTML = active.map(s=>`
     <div class="card" data-song-id="${escapeAttr(s.id)}">
-      <div class="card-top">
-        ${s.coverArt ? `<img loading="lazy" decoding="async" class="cover-thumb" src="${escapeAttr(s.coverArt)}" alt="Album cover">` : ''}
-        <div class="title-stack">
-          <p class="track-title" style="${s.tier ? 'color:'+tierColor(s.tier) : ''}">${escapeHtml(s.title||'Untitled')}</p>
-          <p class="track-artist">${escapeHtml(formatArtists(s.artists))}${s.album ? ' · '+escapeHtml(s.album) : ''}${trackNoDisplay(s)}</p>
+      <div class="card-front">
+        <div class="card-top">
+          ${s.coverArt ? `<img loading="lazy" decoding="async" class="cover-thumb" src="${escapeAttr(s.coverArt)}" alt="Album cover">` : ''}
+          <div class="title-stack">
+            <p class="track-title" style="${s.tier ? 'color:'+tierColor(s.tier) : ''}">${escapeHtml(s.title||'Untitled')}</p>
+            <p class="track-artist">${escapeHtml(formatArtists(s.artists))}${s.album ? ' · '+escapeHtml(s.album) : ''}${trackNoDisplay(s)}</p>
+          </div>
         </div>
+        <div class="meta-row">
+          ${s.year ? `<span>${escapeHtml(s.year)}</span>` : ''}
+          ${(s.genres&&s.genres.length) ? `<span class="meta-genres">· ${s.genres.map(g=>escapeHtml(g)).join(', ')}</span>` : ''}
+        </div>
+        <div class="tier-row">${renderTierBadge(s.tier)}</div>
+        <div class="preview-row">
+          ${s.explicit ? '<span class="explicit-badge" title="Explicit content">E</span>' : ''}
+          <button type="button" class="preview-btn" data-preview="${escapeAttr(s.id)}" title="Play a 30-second preview" aria-label="Play 30-second preview">▶</button>
+          <span class="preview-hint">30-sec preview</span>
+        </div>
+        ${s.quickThought ? `<p class="why">${escapeHtml(s.quickThought)}</p>` : ''}
+        ${s.credit ? `<p class="credit-note"><b>Borrowed from / Where I Heard It:</b> ${escapeHtml(s.credit)}</p>` : ''}
+        ${geniusLyricsUrl(s.title, s.artists) ? `<a class="lyrics-link" href="${escapeAttr(geniusLyricsUrl(s.title, s.artists))}" target="_blank" rel="noopener" title="Open lyrics on Genius">LYRICS ↗</a>` : ''}
       </div>
-      <div class="meta-row">
-        ${s.year ? `<span>${escapeHtml(s.year)}</span>` : ''}
-        ${(s.genres&&s.genres.length) ? `<span class="meta-genres">· ${s.genres.map(g=>escapeHtml(g)).join(', ')}</span>` : ''}
-      </div>
-      <div class="tier-row">${renderTierBadge(s.tier)}</div>
-      <div class="preview-row">
-        ${s.explicit ? '<span class="explicit-badge" title="Explicit content">E</span>' : ''}
-        <button type="button" class="preview-btn" data-preview="${escapeAttr(s.id)}" title="Play a 30-second preview" aria-label="Play 30-second preview">▶</button>
-        <span class="preview-hint">30-sec preview</span>
-      </div>
-      ${s.quickThought ? `<p class="why">${escapeHtml(s.quickThought)}</p>` : ''}
-      ${s.credit ? `<p class="credit-note"><b>Borrowed from / Where I Heard It:</b> ${escapeHtml(s.credit)}</p>` : ''}
-      ${geniusLyricsUrl(s.title, s.artists) ? `<a class="lyrics-link" href="${escapeAttr(geniusLyricsUrl(s.title, s.artists))}" target="_blank" rel="noopener" title="Open lyrics on Genius">LYRICS ↗</a>` : ''}
       <button type="button" class="cb-flip-fab" data-action="flip" title="Ratings & vibes">i</button>
       ${cardBackHtml(s)}
     </div>

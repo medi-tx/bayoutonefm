@@ -727,9 +727,9 @@
     color:var(--on-paper);
     border-radius:10px;
     padding:15px 15px 13px;
-    display:flex;
-    flex-direction:column;
-    gap:7px;
+    display:grid;
+    grid-template-areas:"stack";
+    gap:0;
     border-top:3px solid var(--lilac);
     box-shadow:0 8px 20px rgba(0,0,0,0.25);
     transition: transform .18s ease, box-shadow .18s ease;
@@ -737,6 +737,8 @@
     word-wrap:break-word;
     overflow-wrap:break-word;
   }
+  .card > .card-front, .card > .card-back{ grid-area:stack; }
+  .card-front{ display:flex; flex-direction:column; gap:7px; position:relative; }
   .card:hover{ transform:translateY(-3px); box-shadow:0 14px 28px rgba(201,160,220,0.18), 0 14px 28px rgba(122,139,106,0.14), 0 14px 28px rgba(0,0,0,0.25); }
   .card.archived{ opacity:0.6; }
   .card.archived:hover{ opacity:0.85; }
@@ -1463,14 +1465,14 @@
   .card:has(> .sticker-drag){ overflow:visible; }
   /* DUAL-FACE CARD (details flip) */
   .card-back{
-    display:none; flex-direction:column; gap:8px;
+    display:flex; flex-direction:column; gap:8px;
     background:var(--paper); color:var(--on-paper);
-    border-radius:10px; border-top:3px solid var(--gold);
-    padding:13px 15px; text-align:left;
+    text-align:left;
+    visibility:hidden; position:relative;
   }
-  .card.flipped{ overflow:visible; }
-  .card.flipped > :not(.card-back):not(.cb-flip-fab){ display:none; }
-  .card.flipped .card-back{ display:flex; }
+  .card.flipped{ overflow:visible; border-top-color:var(--gold); }
+  .card.flipped > .card-front{ visibility:hidden; }
+  .card.flipped > .card-back{ visibility:visible; }
   .card.flipped .sticker-drag{ visibility:hidden; }
   .cb-fields{ display:flex; flex-direction:column; gap:4px; }
   .cb-field{ display:flex; gap:8px; font-size:12px; line-height:1.45; }
