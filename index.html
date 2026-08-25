@@ -3185,9 +3185,9 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
     </div>
     <div class="two-col">
       <div class="field"><label>Year</label><input id="f-year" type="text" inputmode="numeric"></div>
-      <div class="field"><label>Genres (comma-separated)</label><input id="f-genre" type="text" placeholder="e.g. Rock, Funk/Soul"></div>
+      <div class="field"><label>Score (set by tier)</label><input id="f-score" type="number" min="0" max="100" placeholder="85-100 ★ · 70-84 S…"></div>
     </div>
-    <div class="field"><label>Score (set by tier)</label><input id="f-score" type="number" min="0" max="100" placeholder="85-100 ★ · 70-84 S…"></div>
+    <div class="field"><label>Genres (comma-separated)</label><input id="f-genre" type="text" placeholder="e.g. Rock, Funk/Soul"></div>
     <div class="field explicit-tag-field">
       <label>Explicit Tag</label>
       <button type="button" id="f-explicit-btn" class="explicit-modal-btn">E</button>
@@ -8033,6 +8033,9 @@ document.getElementById('spotifyImportConfirmBtn').addEventListener('click', ()=
   }
 });
 document.getElementById('cancelBtn').addEventListener('click', closeModal);
+document.getElementById('overlay').addEventListener('click', e=>{
+  if(e.target.id === 'overlay' && editingId) closeModal();
+});
 document.getElementById('saveBtn').addEventListener('click', handleSave);
 document.getElementById('modalFavBtn').addEventListener('click', ()=>{
   currentFav = !currentFav;

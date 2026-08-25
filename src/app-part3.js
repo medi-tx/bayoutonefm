@@ -4034,6 +4034,9 @@ document.getElementById('spotifyImportConfirmBtn').addEventListener('click', ()=
   }
 });
 document.getElementById('cancelBtn').addEventListener('click', closeModal);
+document.getElementById('overlay').addEventListener('click', e=>{
+  if(e.target.id === 'overlay' && editingId) closeModal();
+});
 document.getElementById('saveBtn').addEventListener('click', handleSave);
 document.getElementById('modalFavBtn').addEventListener('click', ()=>{
   currentFav = !currentFav;
