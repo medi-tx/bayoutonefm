@@ -3365,6 +3365,7 @@ async function handleSingleUrl(url){
     }
     if(isTidalTrack){
       const trackId = url.match(/tidal\.com\/(?:browse\/)?track\/(\d+)/)[1];
+      let found = false;
       const proxies = [ u=>'https://api.allorigins.win/raw?url='+encodeURIComponent(u), u=>'https://corsproxy.io/?'+encodeURIComponent(u) ];
       for(const proxy of proxies){
         try{
@@ -3380,15 +3381,23 @@ async function handleSingleUrl(url){
                 document.getElementById('spotifyImportOverlay').classList.remove('open');
                 openAddFromData(trackData);
                 if(trackData.tidalUrl) document.getElementById('f-tidal').value = trackData.tidalUrl;
+                found = true;
                 return;
               }
             }
           }
         }catch(e){}
       }
+      if(!found){
+        document.getElementById('spotifyImportOverlay').classList.remove('open');
+        openAddFromData({ title:'', artists:[], tidalUrl:url });
+        document.getElementById('f-tidal').value = url;
+      }
+      return;
     }
     if(isTidalAlbum){
       const albumId = url.match(/tidal\.com\/(?:browse\/)?album\/(\d+)/)[1];
+      let found = false;
       const proxies = [ u=>'https://api.allorigins.win/raw?url='+encodeURIComponent(u), u=>'https://corsproxy.io/?'+encodeURIComponent(u) ];
       for(const proxy of proxies){
         try{
@@ -3410,12 +3419,18 @@ async function handleSingleUrl(url){
                 const boxes = document.getElementById('titleBoxes');
                 boxes.innerHTML = '';
                 tracks.forEach((t,i)=> addTitleBoxRow(i===0, t.title));
+                found = true;
                 return;
               }
             }
           }
         }catch(e){}
       }
+      if(!found){
+        document.getElementById('spotifyImportOverlay').classList.remove('open');
+        openMultiModal('album');
+      }
+      return;
     }
     if(ytMatch){
       const videoId = ytMatch[1] || ytMatch[2];
