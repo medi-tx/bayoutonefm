@@ -3183,10 +3183,6 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
       <div class="field"><label>Year</label><input id="f-year" type="text" inputmode="numeric"></div>
       <div class="field"><label>Genres (comma-separated)</label><input id="f-genre" type="text" placeholder="e.g. Rock, Funk/Soul"></div>
     </div>
-    <div class="two-col">
-      <div class="field"><label>Track # <span class="track-hint">(S = Single)</span></label><input id="f-track" type="text" inputmode="numeric" placeholder="e.g. 7 or S"></div>
-      <div class="field"><label>Duration</label><input id="f-duration" type="text" placeholder="e.g. 3:45"></div>
-    </div>
     <div class="field"><label>Score (set by tier)</label><input id="f-score" type="number" min="0" max="100" placeholder="85-100 ★ · 70-84 S…"></div>
     <div class="field explicit-tag-field">
       <label>Explicit Tag</label>
@@ -3229,6 +3225,10 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
     </div>
     <div class="editor-section" data-editor-panel="back-single">
     <div class="field"><label>Record label</label><input id="f-label" type="text" placeholder="e.g. Motown, Ghostly…"></div>
+    <div class="two-col">
+      <div class="field"><label>Track # <span class="track-hint">(S = Single)</span></label><input id="f-track" type="text" inputmode="numeric" placeholder="e.g. 7 or S"></div>
+      <div class="field"><label>Duration</label><input id="f-duration" type="text" placeholder="e.g. 3:45"></div>
+    </div>
     <div class="two-col">
       <div class="field"><label>Producers</label><input id="f-producer" type="text" placeholder="e.g. Rick Rubin, Max Martin"></div>
       <div class="field"><label>Songwriters</label><input id="f-songwriters" type="text" placeholder="e.g. Lennon, McCartney"></div>
@@ -3395,7 +3395,6 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
       <div class="field"><label>Year</label><input id="mf-year" type="text" inputmode="numeric"></div>
       <div class="field"><label>Genres (comma-separated)</label><input id="mf-genre" type="text" placeholder="e.g. Rock, Funk/Soul"></div>
     </div>
-    <div class="field"><label>Duration</label><input id="mf-duration" type="text" placeholder="e.g. 3:45"></div>
     <div class="field" id="mf-tags-field" style="display:none;"></div>
       <div class="field"><label>Borrowed from / Where I Heard It</label><input id="mf-credit" type="text" placeholder="who showed you this, where you first heard it…"></div>
     <div class="field"><label id="multiWhyLabel">What connects these</label><textarea id="mf-why"></textarea></div>
@@ -3407,6 +3406,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
     </div>
     <div class="editor-section" data-editor-panel="back-multi">
     <div class="field"><label>Record label</label><input id="mf-label" type="text" placeholder="e.g. Motown, Ghostly…"></div>
+    <div class="field"><label>Duration</label><input id="mf-duration" type="text" placeholder="e.g. 3:45"></div>
     <div class="two-col">
       <div class="field"><label>Producers</label><input id="mf-producer" type="text" placeholder="e.g. Rick Rubin, Max Martin"></div>
       <div class="field"><label>Songwriters</label><input id="mf-songwriters" type="text" placeholder="e.g. Lennon, McCartney"></div>
@@ -3740,7 +3740,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
       <div class="obsessed-strip" id="myObsessedStrip"></div>
     </div>
     <p class="profile-sotd-count" id="myProfileSotdCount" style="display:none;"></p>
-    <p class="bug-contact-note" style="font-size:12.5px; color:rgba(var(--on-paper-rgb),0.72); line-height:1.5; margin:10px 0;">Please contact <a href="mailto:bayoutonefm@outlook.com" style="color:var(--teal);">bayoutonefm@outlook.com</a> if you run into any bugs/issues. We are so sorry about the issue, and would like to fix it. Thanks! :)</p>
+    <p class="bug-contact-note" style="font-size:12.5px; color:rgba(var(--on-paper-rgb),0.72); line-height:1.5; margin:16px 0; padding:12px; background:rgba(var(--on-paper-rgb),0.06); border-radius:8px; word-break:break-word;">Please contact <a href="mailto:bayoutonefm@outlook.com" style="color:var(--teal);">bayoutonefm@outlook.com</a> if you run into any bugs/issues. We are so sorry about the issue, and would like to fix it. Thanks! :)</p>
     <div class="profile-actions">
       <button type="button" id="myShareCardBtn">🃏 Share card</button>
       <button type="button" id="shareProfileBtn">🔗 Share profile link</button>
@@ -3798,7 +3798,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
   <div class="modal">
     <h3>Set up your profile</h3>
     <p class="multi-hint">Pick a username so other listeners can find and view your cataloguex.</p>
-    <p class="bug-contact-note" style="font-size:12.5px; color:rgba(var(--on-paper-rgb),0.72); line-height:1.5; margin:-4px 0 10px;">Please contact <a href="mailto:bayoutonefm@outlook.com" style="color:var(--teal);">bayoutonefm@outlook.com</a> if you run into any bugs/issues. We are so sorry about the issue, and would like to fix it. Thanks! :)</p>
+    <p class="bug-contact-note" style="font-size:12.5px; color:rgba(var(--on-paper-rgb),0.72); line-height:1.5; margin:8px 0 14px; padding:12px; background:rgba(var(--on-paper-rgb),0.06); border-radius:8px; word-break:break-word;">Please contact <a href="mailto:bayoutonefm@outlook.com" style="color:var(--teal);">bayoutonefm@outlook.com</a> if you run into any bugs/issues. We are so sorry about the issue, and would like to fix it. Thanks! :)</p>
     <div class="field">
       <label>Photo (optional)</label>
       <div class="cover-upload">
@@ -10668,7 +10668,7 @@ function showLoginBanner(){
   if(old) old.remove();
   var d = document.createElement('div');
   d.id = 'loginBanner';
-  d.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9998;background:var(--paper);color:var(--on-paper);border-bottom:1px solid var(--border);padding:12px 44px 12px 16px;font-family:"Space Grotesk",sans-serif;font-size:13px;line-height:1.5;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.15);';
+  d.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9998;background:var(--paper);color:var(--on-paper);border-bottom:1px solid var(--border);padding:14px 44px 14px 14px;font-family:"Space Grotesk",sans-serif;font-size:13px;line-height:1.5;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.15);word-break:break-word;';
   d.innerHTML = 'Please contact <a href="mailto:bayoutonefm@outlook.com" style="color:var(--teal);">bayoutonefm@outlook.com</a> if you run into any bugs/issues. We are so sorry about the issue, and would like to fix it. Thanks! :)';
   var x = document.createElement('button');
   x.textContent = '\u00d7';
