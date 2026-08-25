@@ -4679,9 +4679,6 @@ function cardBackHtml(s){
         ${streamLinks.length ? '<div class="cb-field"><span class="cb-flabel">Listen</span><span class="cb-fval">' + streamLinks.join(' · ') + '</span></div>' : ''}
         ${s.artistWebsite ? '<div class="cb-field"><span class="cb-flabel">Artist</span><span class="cb-fval"><a class="back-link" href="'+escapeHtml(s.artistWebsite)+'" target="_blank" rel="noopener">'+escapeHtml(formatArtists(s.artists)||'Artist website')+' ↗</a></span></div>' : ''}
       </div>
-      <div class="cb-fields">
-        ${cbField('Borrowed from / Where I heard it', s.credit ? escapeHtml(s.credit) : '')}
-      </div>
     </div>`;
 }
 function tierColor(tier){
