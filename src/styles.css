@@ -2290,17 +2290,18 @@
     box-shadow:0 8px 28px rgba(0,0,0,0.45);
     padding:10px 14px; box-sizing:border-box;
   }
-  .sotd-dock-head{ display:flex; align-items:center; gap:10px; }
+  .sotd-dock-head{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
   .sotd-cover{
     width:44px; height:44px; border-radius:8px; object-fit:cover; flex:0 0 auto;
     border:1px solid rgba(238,221,149,0.35); background:var(--paper-2); color:var(--on-paper);
   }
-  .sotd-meta{ min-width:0; flex:1; }
+  .sotd-meta{ min-width:0; flex:1 1 120px; }
   .sotd-label{ font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--rose); }
   .sotd-title{ font-weight:700; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .sotd-artist{ font-size:12px; opacity:0.8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .sotd-link{ color:var(--rose); text-decoration:none; font-size:12px; flex:0 0 auto; }
   .sotd-link:hover{ text-decoration:underline; }
+  .sotd-preview{ display:flex; align-items:center; gap:8px; flex:0 0 auto; }
   .sotd-add-btn{
     flex:0 0 auto;
     font-family:'IBM Plex Mono', monospace;
@@ -2651,6 +2652,7 @@
     display:inline-flex; align-items:center; justify-content:center;
     cursor:pointer; padding:0;
     font-family:inherit;
+    font-variant-emoji:text;
     transition:background 0.12s ease, border-color 0.12s ease;
   }
   .preview-btn:hover{ background:var(--sage); color:var(--ink); border-color:var(--sage); }
@@ -2808,3 +2810,4 @@
 @media (max-width:620px){ .auth-logo-row .brand-logo{ height:56px; } .header-brand .brand-logo{ height:56px; } }
 @media (max-width:620px){ #loginBanner{ top: 16px; } }
 @media (max-width:620px){ .stats-modal{ max-width:100%; } .stats-modal canvas{ max-width:100%; height:auto; } .stat-total span{ font-size:16px; } .stat-section{ margin:6px 0; } .stats-totals{ gap:6px; margin:2px 0 8px; } }
+@media (max-width:620px){ .sotd-dock-head{ flex-wrap:wrap; } .sotd-meta{ flex:1 1 100%; order:-1; } .sotd-preview{ order:0; } .sotd-link{ order:1; } .sotd-add-btn, .sotd-added-tag{ order:2; } }

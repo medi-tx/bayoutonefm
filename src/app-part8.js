@@ -174,7 +174,7 @@
         <span class="msg-song-album">${escapeHtml(song.album || '')}</span>
       </span>
       ${song.explicit ? '<span class="explicit-badge" title="Explicit content">E</span>' : ''}
-      <span class="preview-btn" data-preview="msg:${escapeAttr(msgId)}" title="Play a 30-second preview" aria-label="Play 30-second preview">▶</span>
+      <span class="preview-btn" data-preview="msg:${escapeAttr(msgId)}" title="Play a 30-second preview" aria-label="Play 30-second preview">▶︎</span>
     </a>`;
   }
   async function loadMsgThread(friendId){
@@ -269,7 +269,7 @@
           <span class="msg-song-result-artist">${artist}</span>
         </span>
         ${r.explicit ? '<span class="explicit-badge" title="Explicit content">E</span>' : ''}
-        <span class="preview-btn" data-preview="msgrec:${i}" title="Play a 30-second preview" aria-label="Play 30-second preview">▶</span>
+        <span class="preview-btn" data-preview="msgrec:${i}" title="Play a 30-second preview" aria-label="Play 30-second preview">▶︎</span>
       </button>`;
     }).join('');
   }

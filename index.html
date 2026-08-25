@@ -2341,17 +2341,18 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
     box-shadow:0 8px 28px rgba(0,0,0,0.45);
     padding:10px 14px; box-sizing:border-box;
   }
-  .sotd-dock-head{ display:flex; align-items:center; gap:10px; }
+  .sotd-dock-head{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
   .sotd-cover{
     width:44px; height:44px; border-radius:8px; object-fit:cover; flex:0 0 auto;
     border:1px solid rgba(238,221,149,0.35); background:var(--paper-2); color:var(--on-paper);
   }
-  .sotd-meta{ min-width:0; flex:1; }
+  .sotd-meta{ min-width:0; flex:1 1 120px; }
   .sotd-label{ font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--rose); }
   .sotd-title{ font-weight:700; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .sotd-artist{ font-size:12px; opacity:0.8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .sotd-link{ color:var(--rose); text-decoration:none; font-size:12px; flex:0 0 auto; }
   .sotd-link:hover{ text-decoration:underline; }
+  .sotd-preview{ display:flex; align-items:center; gap:8px; flex:0 0 auto; }
   .sotd-add-btn{
     flex:0 0 auto;
     font-family:'IBM Plex Mono', monospace;
@@ -2702,6 +2703,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
     display:inline-flex; align-items:center; justify-content:center;
     cursor:pointer; padding:0;
     font-family:inherit;
+    font-variant-emoji:text;
     transition:background 0.12s ease, border-color 0.12s ease;
   }
   .preview-btn:hover{ background:var(--sage); color:var(--ink); border-color:var(--sage); }
@@ -2859,6 +2861,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
 @media (max-width:620px){ .auth-logo-row .brand-logo{ height:56px; } .header-brand .brand-logo{ height:56px; } }
 @media (max-width:620px){ #loginBanner{ top: 16px; } }
 @media (max-width:620px){ .stats-modal{ max-width:100%; } .stats-modal canvas{ max-width:100%; height:auto; } .stat-total span{ font-size:16px; } .stat-section{ margin:6px 0; } .stats-totals{ gap:6px; margin:2px 0 8px; } }
+@media (max-width:620px){ .sotd-dock-head{ flex-wrap:wrap; } .sotd-meta{ flex:1 1 100%; order:-1; } .sotd-preview{ order:0; } .sotd-link{ order:1; } .sotd-add-btn, .sotd-added-tag{ order:2; } }
 </style>
 </head>
 <body>
@@ -4840,7 +4843,7 @@ function songCardHtml(s, clusterCounts){
           </div>
           ${cardRatingsStripHtml(s)}
           <div class="preview-row">
-            <button type="button" class="preview-btn" data-preview="${escapeAttr(s.id)}" data-help="Play a 30-second preview of this song." title="Play a 30-second preview" aria-label="Play 30-second preview">▶</button>
+            <button type="button" class="preview-btn" data-preview="${escapeAttr(s.id)}" data-help="Play a 30-second preview of this song." title="Play a 30-second preview" aria-label="Play 30-second preview">▶︎</button>
             <span class="preview-hint">30-sec preview</span>
           </div>
           ${songStackBadgesHtml(s, clusterCounts)}
@@ -6057,7 +6060,7 @@ function setPreviewBtnState(id, state){
       btn.textContent = '—';
       btn.title = 'No preview available';
     } else {
-      btn.textContent = '▶';
+      btn.textContent = '▶︎';
       btn.title = 'Play a 30-second preview';
     }
   });
@@ -9272,7 +9275,7 @@ function renderFriendGrid(list){
         <div class="tier-row">${renderTierBadge(s.tier)}</div>
         <div class="preview-row">
           ${s.explicit ? '<span class="explicit-badge" title="Explicit content">E</span>' : ''}
-          <button type="button" class="preview-btn" data-preview="${escapeAttr(s.id)}" title="Play a 30-second preview" aria-label="Play 30-second preview">▶</button>
+          <button type="button" class="preview-btn" data-preview="${escapeAttr(s.id)}" title="Play a 30-second preview" aria-label="Play 30-second preview">▶︎</button>
           <span class="preview-hint">30-sec preview</span>
         </div>
         ${s.quickThought ? `<p class="why">${escapeHtml(s.quickThought)}</p>` : ''}
@@ -11405,7 +11408,7 @@ async function renderAlbumSearchResults(query){
           <span class="drow-name">${escapeHtml(a.collectionName||'Untitled')}</span><br>
           <span class="drow-bio">${escapeHtml(a.artistName||'')}${a.releaseDate ? ' · '+a.releaseDate.slice(0,4) : ''}</span>
         </span>
-        ${String(a.collectionId).indexOf('mbg-') !== 0 ? `<span class="preview-btn" data-preview="albs:${escapeAttr(a.collectionId)}" title="Play the first track as a 30-second preview" aria-label="Play a 30-second preview">▶</span>` : ''}
+        ${String(a.collectionId).indexOf('mbg-') !== 0 ? `<span class="preview-btn" data-preview="albs:${escapeAttr(a.collectionId)}" title="Play the first track as a 30-second preview" aria-label="Play a 30-second preview">▶︎</span>` : ''}
       </button>
     `).join('');
 }
@@ -11596,7 +11599,7 @@ async function renderSongSearchResults(query){
         <span class="drow-bio">${escapeHtml(t.artistName||'')}${t.collectionName ? ' · '+escapeHtml(t.collectionName) : ''}</span>
       </span>
       ${t.explicit ? '<span class="explicit-badge" title="Explicit content">E</span>' : ''}
-      <span class="preview-btn" data-preview="songsearch:${i}" title="Play a 30-second preview" aria-label="Play 30-second preview">▶</span>
+      <span class="preview-btn" data-preview="songsearch:${i}" title="Play a 30-second preview" aria-label="Play 30-second preview">▶︎</span>
     </button>
   `).join('');
 }
@@ -12281,7 +12284,7 @@ document.getElementById('passwordSaveBtn').addEventListener('click', async ()=>{
         <span class="msg-song-album">${escapeHtml(song.album || '')}</span>
       </span>
       ${song.explicit ? '<span class="explicit-badge" title="Explicit content">E</span>' : ''}
-      <span class="preview-btn" data-preview="msg:${escapeAttr(msgId)}" title="Play a 30-second preview" aria-label="Play 30-second preview">▶</span>
+      <span class="preview-btn" data-preview="msg:${escapeAttr(msgId)}" title="Play a 30-second preview" aria-label="Play 30-second preview">▶︎</span>
     </a>`;
   }
   async function loadMsgThread(friendId){
@@ -12376,7 +12379,7 @@ document.getElementById('passwordSaveBtn').addEventListener('click', async ()=>{
           <span class="msg-song-result-artist">${artist}</span>
         </span>
         ${r.explicit ? '<span class="explicit-badge" title="Explicit content">E</span>' : ''}
-        <span class="preview-btn" data-preview="msgrec:${i}" title="Play a 30-second preview" aria-label="Play 30-second preview">▶</span>
+        <span class="preview-btn" data-preview="msgrec:${i}" title="Play a 30-second preview" aria-label="Play 30-second preview">▶︎</span>
       </button>`;
     }).join('');
   }
@@ -12864,7 +12867,7 @@ document.getElementById('passwordSaveBtn').addEventListener('click', async ()=>{
         </div>
         <div class="sotd-preview">
           ${sotdSong.explicit ? '<span class="explicit-badge" title="Explicit content">E</span>' : ''}
-          <button type="button" class="preview-btn" data-preview="sotd" title="Play a 30-second preview" aria-label="Play 30-second preview">▶</button>
+          <button type="button" class="preview-btn" data-preview="sotd" title="Play a 30-second preview" aria-label="Play 30-second preview">▶︎</button>
           <span class="preview-hint">30-sec preview</span>
         </div>
         ${link}
@@ -13554,7 +13557,7 @@ function feedCardHtml(entry){
   const tierBadge = s.tier ? renderTierBadge(s.tier) : '';
   const feedPreviewId = 'feed:' + (s.id || Math.random().toString(36).slice(2));
   feedSongCache[feedPreviewId] = { id: feedPreviewId, title: s.title || 'Untitled', artists: s.artists || [], previewUrl: s.previewUrl || '' };
-  const previewBtn = s.source === 'itunes' ? `${s.explicit ? '<span class="explicit-badge" title="Explicit content">E</span>' : ''}<button type="button" class="preview-btn" data-preview="${escapeAttr(feedPreviewId)}" title="Play a 30-second preview" aria-label="Play 30-second preview">▶</button>` : '';
+  const previewBtn = s.source === 'itunes' ? `${s.explicit ? '<span class="explicit-badge" title="Explicit content">E</span>' : ''}<button type="button" class="preview-btn" data-preview="${escapeAttr(feedPreviewId)}" title="Play a 30-second preview" aria-label="Play 30-second preview">▶︎</button>` : '';
   const why = s.quickThought ? `<div class="feed-card-why">"${escapeHtml(s.quickThought)}"</div>` : '';
   const reminds = (s.remindsOf && s.remindsOf.length)
     ? `<div class="feed-card-reminds">reminds me of <span>${s.remindsOf.map(id=>{

@@ -829,7 +829,7 @@ function songCardHtml(s, clusterCounts){
           </div>
           ${cardRatingsStripHtml(s)}
           <div class="preview-row">
-            <button type="button" class="preview-btn" data-preview="${escapeAttr(s.id)}" data-help="Play a 30-second preview of this song." title="Play a 30-second preview" aria-label="Play 30-second preview">▶</button>
+            <button type="button" class="preview-btn" data-preview="${escapeAttr(s.id)}" data-help="Play a 30-second preview of this song." title="Play a 30-second preview" aria-label="Play 30-second preview">▶︎</button>
             <span class="preview-hint">30-sec preview</span>
           </div>
           ${songStackBadgesHtml(s, clusterCounts)}
@@ -2046,7 +2046,7 @@ function setPreviewBtnState(id, state){
       btn.textContent = '—';
       btn.title = 'No preview available';
     } else {
-      btn.textContent = '▶';
+      btn.textContent = '▶︎';
       btn.title = 'Play a 30-second preview';
     }
   });

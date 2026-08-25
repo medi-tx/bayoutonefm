@@ -413,7 +413,7 @@
         </div>
         <div class="sotd-preview">
           ${sotdSong.explicit ? '<span class="explicit-badge" title="Explicit content">E</span>' : ''}
-          <button type="button" class="preview-btn" data-preview="sotd" title="Play a 30-second preview" aria-label="Play 30-second preview">▶</button>
+          <button type="button" class="preview-btn" data-preview="sotd" title="Play a 30-second preview" aria-label="Play 30-second preview">▶︎</button>
           <span class="preview-hint">30-sec preview</span>
         </div>
         ${link}

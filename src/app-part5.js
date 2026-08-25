@@ -638,7 +638,7 @@ function renderFriendGrid(list){
         <div class="tier-row">${renderTierBadge(s.tier)}</div>
         <div class="preview-row">
           ${s.explicit ? '<span class="explicit-badge" title="Explicit content">E</span>' : ''}
-          <button type="button" class="preview-btn" data-preview="${escapeAttr(s.id)}" title="Play a 30-second preview" aria-label="Play 30-second preview">▶</button>
+          <button type="button" class="preview-btn" data-preview="${escapeAttr(s.id)}" title="Play a 30-second preview" aria-label="Play 30-second preview">▶︎</button>
           <span class="preview-hint">30-sec preview</span>
         </div>
         ${s.quickThought ? `<p class="why">${escapeHtml(s.quickThought)}</p>` : ''}

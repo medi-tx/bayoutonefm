@@ -960,7 +960,7 @@ async function renderAlbumSearchResults(query){
           <span class="drow-name">${escapeHtml(a.collectionName||'Untitled')}</span><br>
           <span class="drow-bio">${escapeHtml(a.artistName||'')}${a.releaseDate ? ' · '+a.releaseDate.slice(0,4) : ''}</span>
         </span>
-        ${String(a.collectionId).indexOf('mbg-') !== 0 ? `<span class="preview-btn" data-preview="albs:${escapeAttr(a.collectionId)}" title="Play the first track as a 30-second preview" aria-label="Play a 30-second preview">▶</span>` : ''}
+        ${String(a.collectionId).indexOf('mbg-') !== 0 ? `<span class="preview-btn" data-preview="albs:${escapeAttr(a.collectionId)}" title="Play the first track as a 30-second preview" aria-label="Play a 30-second preview">▶︎</span>` : ''}
       </button>
     `).join('');
 }
@@ -1151,7 +1151,7 @@ async function renderSongSearchResults(query){
         <span class="drow-bio">${escapeHtml(t.artistName||'')}${t.collectionName ? ' · '+escapeHtml(t.collectionName) : ''}</span>
       </span>
       ${t.explicit ? '<span class="explicit-badge" title="Explicit content">E</span>' : ''}
-      <span class="preview-btn" data-preview="songsearch:${i}" title="Play a 30-second preview" aria-label="Play 30-second preview">▶</span>
+      <span class="preview-btn" data-preview="songsearch:${i}" title="Play a 30-second preview" aria-label="Play 30-second preview">▶︎</span>
     </button>
   `).join('');
 }
