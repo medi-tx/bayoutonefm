@@ -2823,6 +2823,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
 .editor-section h4{ font-size:12px; font-weight:700; color:var(--text-dim,#888); text-transform:uppercase; letter-spacing:0.8px; margin:0 0 8px; }
 .back-link{ display:inline-block; font-size:12px; color:var(--teal); text-decoration:none; margin:2px 0; }
 .back-link:hover{ text-decoration:underline; }
+.card-opinions{ font-size:12.5px; line-height:1.45; color:var(--text-dim,#888); margin:4px 0 0; font-style:italic; }
 
 @media (max-width:620px){ .auth-logo-row .brand-logo{ height:56px; } .header-brand .brand-logo{ height:56px; } }
 </style>
@@ -4776,7 +4777,7 @@ function songCardHtml(s, clusterCounts){
           ${coverThumbHtml(s)}
           <div class="title-stack">
             ${s.archived ? '<span class="archived-badge">ARCHIVED</span>' : ''}
-            <p class="track-title" style="${s.tier ? 'color:'+tierColor(s.tier) : ''}">${escapeHtml(s.title||'Untitled')}</p>
+            <p class="track-title" style="${s.tier ? 'color:'+tierColor(s.tier) : ''}">${escapeHtml(s.title||'Untitled')}${s.explicit ? ' <span class="explicit-badge" title="Explicit content">E</span>' : ''}</p>
             <p class="track-artist">${escapeHtml(formatArtists(s.artists))}${s.album ? ' · '+escapeHtml(s.album) : ''}${trackNoDisplay(s)}</p>
             ${(s.score !== null && s.score !== undefined && s.score !== '' && s.tier) ? `<div class="cover-score">${renderTierBadge(s.tier)}<span class="score-chip">${escapeHtml(String(s.score))}</span><span class="cs-band">→ ${escapeHtml(tierBandLabel(s.tier))}</span></div>` : ''}
           </div>
@@ -4793,6 +4794,7 @@ function songCardHtml(s, clusterCounts){
         ${songStackBadgesHtml(s, clusterCounts)}
         ${(s.tags&&s.tags.length) ? `<div class="tags">${s.tags.map(t=>`<span class="tag" style="background:color-mix(in srgb, ${tierColor('B')} 18%, transparent);color:${tierColor('B')};border-color:${tierColor('B')}">${escapeHtml(t)}</span>`).join('')}</div>` : (showEx ? `<div class="tags">${['nostalgic','road trip','late night'].map(t=>`<span class="tag ex-tag">e.g. ${t}</span>`).join('')}</div>` : '')}
         ${s.quickThought ? `<p class="card-thought">“${escapeHtml(s.quickThought)}”</p>` : (showEx ? `<p class="why ex">e.g. the bassline just doesn't let go</p>` : '')}
+        ${s.why ? `<p class="card-opinions">${escapeHtml(s.why)}</p>` : ''}
         ${s.credit ? `<p class="credit-note"><b>Borrowed from / Where I Heard It:</b> ${escapeHtml(s.credit)}</p>` : ''}
         ${(s.remindsOf && s.remindsOf.length) ? `<div class="reminds-badges">${s.remindsOf.map(pid=>{
           const p = people.find(pp=>pp.id===pid);

@@ -2772,5 +2772,6 @@
 .editor-section h4{ font-size:12px; font-weight:700; color:var(--text-dim,#888); text-transform:uppercase; letter-spacing:0.8px; margin:0 0 8px; }
 .back-link{ display:inline-block; font-size:12px; color:var(--teal); text-decoration:none; margin:2px 0; }
 .back-link:hover{ text-decoration:underline; }
+.card-opinions{ font-size:12.5px; line-height:1.45; color:var(--text-dim,#888); margin:4px 0 0; font-style:italic; }
 
 @media (max-width:620px){ .auth-logo-row .brand-logo{ height:56px; } .header-brand .brand-logo{ height:56px; } }
