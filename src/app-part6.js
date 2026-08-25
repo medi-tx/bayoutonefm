@@ -910,13 +910,14 @@ async function selectItunesAlbum(collectionId){
       const items = await lookupItunesAlbum(collectionId);
       albumInfo = items.find(x=>x.wrapperType==='collection') || items[0] || {};
       const trackItems = items.filter(x=>x.wrapperType==='track').sort((a,b)=>(a.trackNumber||0)-(b.trackNumber||0));
-      tracks = trackItems.map(t=>({ title: t.trackName, artist: t.artistName || albumInfo.artistName || '', no: t.trackNumber || null }));
+      tracks = trackItems.map(t=>({ title: t.trackName, artist: t.artistName || albumInfo.artistName || '', no: t.trackNumber || null, label: albumInfo.recordLabel || '' }));
     }
     const cover = albumInfo.artworkUrl100 ? upscaleArtwork(albumInfo.artworkUrl100) : null;
     document.getElementById('mf-album').value = albumInfo.collectionName || '';
     document.getElementById('mf-year').value = albumInfo.releaseDate ? albumInfo.releaseDate.slice(0,4) : '';
     document.getElementById('mf-genre').value = albumInfo.primaryGenreName || '';
     document.getElementById('mf-artist').value = albumInfo.artistName || '';
+    document.getElementById('mf-label').value = albumInfo.recordLabel || '';
     currentMultiCoverArt = cover;
     setImagePreview('mf-cover', cover);
     resetTitleBoxes(tracks);
@@ -1034,6 +1035,7 @@ function selectItunesSong(trackId){
   document.getElementById('f-year').value = t.releaseDate ? t.releaseDate.slice(0,4) : '';
   document.getElementById('f-track').value = t.trackNumber || '';
   document.getElementById('f-genre').value = t.primaryGenreName || '';
+  document.getElementById('f-label').value = t.recordLabel || '';
   const cover = t.artworkUrl100 ? upscaleArtwork(t.artworkUrl100) : null;
   currentCoverArt = cover;
   setImagePreview('f-cover', cover);

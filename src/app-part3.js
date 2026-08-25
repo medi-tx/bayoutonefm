@@ -632,12 +632,12 @@ function cardBackHtml(s){
         <button type="button" class="cb-close" data-action="flip" title="Flip back" aria-label="Flip back">✕</button>
       </div>
       <div class="cb-fields">
-        ${cbField('Artist(s)', s.artists && s.artists.length ? escapeHtml(formatArtists(s.artists)) : '')}
-        ${cbField('Album', escapeHtml(s.album||''))}
-        ${cbField('Track #', s.trackNumber ? escapeHtml(String(s.trackNumber)) : '')}
         ${cbField('Year', escapeHtml(s.year||''))}
         ${cbField('Genres', s.genres && s.genres.length ? escapeHtml(s.genres.join(', ')) : '')}
-        ${cbField('Mood / tags', s.tags && s.tags.length ? s.tags.map(t=>`<span class="tag">${escapeHtml(t)}</span>`).join(' ') : '')}
+        ${cbField('Record label', s.recordLabel ? escapeHtml(s.recordLabel) : '')}
+        ${cbField('Borrowed from / Where I heard it', s.credit ? escapeHtml(s.credit) : '')}
+        ${cbField('Reminds me of', cbRemindsNames(s))}
+        ${cbField('Added', s.createdAt ? escapeHtml(formatAddedDate(s.createdAt)) : '')}
       </div>
       <div class="cb-score-row">
         <span class="cb-flabel">Score</span>
@@ -1464,6 +1464,7 @@ function openAddFromData(data){
   document.getElementById('f-why').value = data.why || '';
   document.getElementById('f-quick').value = data.quickThought || '';
   document.getElementById('f-credit').value = data.credit || '';
+  document.getElementById('f-label').value = data.recordLabel || '';
   currentCoverArt = data.coverArt || null;
   setImagePreview('f-cover', currentCoverArt);
   currentTier = data.tier || null;
@@ -2409,6 +2410,7 @@ function openModal(song){
   document.getElementById('f-why').value = song?.why || '';
   document.getElementById('f-quick').value = song?.quickThought || '';
   document.getElementById('f-credit').value = song?.credit || '';
+  document.getElementById('f-label').value = song?.recordLabel || '';
   document.getElementById('f-track').value = song?.trackNumber || '';
   document.getElementById('f-score').value = (song?.score === null || song?.score === undefined) ? '' : song.score;
   currentStars = { lyrics:(song?.stars&&song.stars.lyrics)||0, vocals:(song?.stars&&song.stars.vocals)||0, replay:(song?.stars&&song.stars.replay)||0 };
@@ -2550,6 +2552,7 @@ function handleSave(){
     why: document.getElementById('f-why').value.trim(),
     quickThought: document.getElementById('f-quick').value.trim(),
     credit: document.getElementById('f-credit').value.trim(),
+    recordLabel: document.getElementById('f-label').value.trim() || null,
     coverArt: currentCoverArt,
     remindsOf: getSelectedReminds('f'),
     tier: currentTier,
@@ -2674,6 +2677,7 @@ function openMultiModal(mode){
   document.getElementById('mf-tags').value = '';
   document.getElementById('mf-why').value = '';
   document.getElementById('mf-credit').value = '';
+  document.getElementById('mf-label').value = '';
   document.getElementById('multiCoverLabel').textContent = isAlbum ? 'Artwork (shared)' : 'Artwork (optional, shared)';
   currentMultiCoverArt = null;
   setImagePreview('mf-cover', null);
@@ -2696,6 +2700,7 @@ function addTitleBoxRow(focus, prefill){
   input.placeholder = isAlbum ? `Track ${container.children.length+1} title` : `Song ${container.children.length+1} title`;
   if(prefill && prefill.title) input.value = prefill.title;
   if(prefill && prefill.no) row._trackNo = prefill.no;
+  if(prefill && prefill.label) row._label = prefill.label;
 
   const removeBtn = document.createElement('button');
   removeBtn.type = 'button';
@@ -2807,6 +2812,7 @@ function handleMultiSave(){
         artists: artistVal ? artistVal.split(',').map(a=>a.trim()).filter(Boolean) : sharedArtists,
         tags: tagsVal.split(',').map(t=>t.trim()).filter(Boolean),
         trackNumber: row._trackNo || null,
+        recordLabel: row._label || null,
         ...shared,
         tier: trackTier || shared.tier
       };
