@@ -788,7 +788,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
     word-wrap:break-word;
     overflow-wrap:break-word;
   }
-  .card > .card-front, .card > .card-back{ grid-area:stack; }
+  .card > .card-front, .card > .card-back{ grid-area:stack; min-height:100%; }
   .card-front{ display:flex; flex-direction:column; gap:7px; position:relative; }
   .card:hover{ transform:translateY(-3px); box-shadow:0 14px 28px rgba(201,160,220,0.18), 0 14px 28px rgba(122,139,106,0.14), 0 14px 28px rgba(0,0,0,0.25); }
   .card.archived{ opacity:0.6; }
@@ -1519,11 +1519,11 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
     display:flex; flex-direction:column; gap:8px;
     background:var(--paper); color:var(--on-paper);
     text-align:left;
-    visibility:hidden; position:relative;
+    opacity:0; pointer-events:none; position:relative;
   }
   .card.flipped{ overflow:visible; border-top-color:var(--gold); }
-  .card.flipped > .card-front{ visibility:hidden; }
-  .card.flipped > .card-back{ visibility:visible; }
+  .card.flipped > .card-front{ opacity:0; pointer-events:none; }
+  .card.flipped > .card-back{ opacity:1; pointer-events:auto; }
   .card.flipped .sticker-drag{ visibility:hidden; }
   .cb-fields{ display:flex; flex-direction:column; gap:4px; }
   .cb-field{ display:flex; gap:8px; font-size:12px; line-height:1.45; }
