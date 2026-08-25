@@ -5468,8 +5468,8 @@ function openAddFromData(data){
   document.getElementById('f-artist').value = (data.artists||[]).join(', ');
   document.getElementById('f-album').value = data.album || '';
   document.getElementById('f-year').value = data.year || '';
-  document.getElementById('f-genre').value = (data.genres||[]).join(', ');
-  document.getElementById('f-tags').value = (data.tags||[]).join(', ');
+  const genreEl = document.getElementById('f-genre');
+  if(genreEl) genreEl.value = (data.genres||[]).join(', ');
   document.getElementById('f-why').value = data.why || '';
   document.getElementById('f-quick').value = data.quickThought || '';
   document.getElementById('f-credit').value = data.credit || '';
