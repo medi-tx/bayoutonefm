@@ -639,6 +639,7 @@ function cardBackHtml(s){
         ${cbField('Songwriters', s.songwriters ? escapeHtml(s.songwriters) : '')}
         ${cbField('BPM', s.bpm ? escapeHtml(String(s.bpm)) : '')}
         ${cbField('Key', s.musicKey ? escapeHtml(s.musicKey) : '')}
+        ${cbField('Duration', s.duration ? escapeHtml(s.duration) : '')}
         ${streamLinks.length ? '<div class="cb-field"><span class="cb-flabel">Listen</span><span class="cb-fval">' + streamLinks.join(' · ') + '</span></div>' : ''}
       </div>
       <div class="cb-fields">
@@ -801,7 +802,7 @@ function songCardHtml(s, clusterCounts){
             ${s.archived ? '<span class="archived-badge">ARCHIVED</span>' : ''}
             <p class="track-title" style="${s.tier ? 'color:'+tierColor(s.tier) : ''}">${escapeHtml(s.title||'Untitled')}${s.explicit ? ' <span class="explicit-badge" title="Explicit content">E</span>' : ''}</p>
             <p class="track-artist">${escapeHtml(formatArtists(s.artists))}${s.album ? ' · '+escapeHtml(s.album) : ''}${trackNoDisplay(s)}</p>
-            ${(s.score !== null && s.score !== undefined && s.score !== '' && s.tier) ? `<div class="cover-score">${renderTierBadge(s.tier)}<span class="score-chip">${escapeHtml(String(s.score))}</span><span class="cs-band">→ ${escapeHtml(tierBandLabel(s.tier))}</span></div>` : ''}
+            ${(s.tier) ? `<div class="cover-score">${renderTierBadge(s.tier)}${(s.score !== null && s.score !== undefined && s.score !== '') ? `<span class="score-chip">${escapeHtml(String(s.score))}</span><span class="cs-band">→ ${escapeHtml(tierBandLabel(s.tier))}</span>` : ''}</div>` : ''}
           </div>
         </div>
         <div class="meta-row">
@@ -814,7 +815,7 @@ function songCardHtml(s, clusterCounts){
           <span class="preview-hint">30-sec preview</span>
         </div>
         ${songStackBadgesHtml(s, clusterCounts)}
-        ${(s.tags&&s.tags.length) ? `<div class="tags">${s.tags.map(t=>`<span class="tag" style="background:color-mix(in srgb, ${tierColor('B')} 18%, transparent);color:${tierColor('B')};border-color:${tierColor('B')}">${escapeHtml(t)}</span>`).join('')}</div>` : (showEx ? `<div class="tags">${['nostalgic','road trip','late night'].map(t=>`<span class="tag ex-tag">e.g. ${t}</span>`).join('')}</div>` : '')}
+
         ${s.quickThought ? `<p class="card-thought">“${escapeHtml(s.quickThought)}”</p>` : (showEx ? `<p class="why ex">e.g. the bassline just doesn't let go</p>` : '')}
         ${s.why ? `<p class="card-opinions">${escapeHtml(s.why)}</p>` : ''}
         ${s.credit ? `<p class="credit-note"><b>Borrowed from / Where I Heard It:</b> ${escapeHtml(s.credit)}</p>` : ''}
@@ -839,7 +840,7 @@ function songCardHtml(s, clusterCounts){
           return `<div class="edits-entry"><div class="edits-entry-time">${ts}</div>${e.changes.map(c=>`<div class="edits-entry-change"><span class="edits-entry-field">${escapeHtml(c.field)}</span><span class="edits-entry-old">${escapeHtml(valStr(c.old))}</span><span class="edits-entry-arrow">→</span><span class="edits-entry-new">${escapeHtml(valStr(c.now))}</span></div>`).join('')}</div>`;
         }).join('')}</div>` : ''}
         ${!showEx ? cardBackHtml(s) : ''}
-        ${!showEx ? `<button type="button" class="cb-flip-fab" data-action="flip" title="Ratings & vibes" aria-label="Ratings and vibes">i</button>` : ''}
+        ${!showEx ? `<button type="button" class="cb-flip-fab" data-action="flip" title="Flip card" aria-label="Flip card">↻</button>` : ''}
       </div>
     `;
 }
@@ -2392,11 +2393,11 @@ function openModal(song){
   document.getElementById('f-album').value = song?.album || '';
   document.getElementById('f-year').value = song?.year || '';
   document.getElementById('f-genre').value = (song?.genres||[]).join(', ');
-  document.getElementById('f-tags').value = (song?.tags||[]).join(', ');
   document.getElementById('f-why').value = song?.why || '';
   document.getElementById('f-quick').value = song?.quickThought || '';
   document.getElementById('f-credit').value = song?.credit || '';
   document.getElementById('f-label').value = song?.recordLabel || '';
+  document.getElementById('f-duration').value = song?.duration || '';
   document.getElementById('f-producer').value = song?.producer || '';
   document.getElementById('f-songwriters').value = song?.songwriters || '';
   document.getElementById('f-bpm').value = song?.bpm ?? '';
@@ -2541,11 +2542,11 @@ function handleSave(){
     album: document.getElementById('f-album').value.trim(),
     year: document.getElementById('f-year').value.trim(),
     genres: document.getElementById('f-genre').value.split(',').map(g=>g.trim()).filter(Boolean),
-    tags: document.getElementById('f-tags').value.split(',').map(t=>t.trim()).filter(Boolean),
     why: document.getElementById('f-why').value.trim(),
     quickThought: document.getElementById('f-quick').value.trim(),
     credit: document.getElementById('f-credit').value.trim(),
     recordLabel: document.getElementById('f-label').value.trim() || null,
+    duration: document.getElementById('f-duration').value.trim() || null,
     producer: document.getElementById('f-producer').value.trim() || null,
     songwriters: document.getElementById('f-songwriters').value.trim() || null,
     bpm: (()=>{ const v = parseInt(document.getElementById('f-bpm').value, 10); return isNaN(v) ? null : v; })(),
@@ -2666,7 +2667,6 @@ function openMultiModal(mode){
   document.getElementById('multiWhyLabel').textContent = isAlbum ? 'Thoughts on the album' : 'What connects these';
   document.getElementById('multiTitlesLabel').textContent = isAlbum ? 'Tracks' : 'Song titles';
   document.getElementById('mf-spotify-search-field').style.display = isAlbum ? '' : 'none';
-  document.getElementById('mf-tags-field').style.display = isAlbum ? 'none' : '';
   document.getElementById('mf-album-search').value = '';
   document.getElementById('albumSearchResults').style.display = 'none';
   document.getElementById('albumSearchResults').innerHTML = '';
@@ -2674,10 +2674,10 @@ function openMultiModal(mode){
   document.getElementById('mf-album').value = '';
   document.getElementById('mf-year').value = '';
   document.getElementById('mf-genre').value = '';
-  document.getElementById('mf-tags').value = '';
   document.getElementById('mf-why').value = '';
   document.getElementById('mf-credit').value = '';
   document.getElementById('mf-label').value = '';
+  document.getElementById('mf-duration').value = '';
   document.getElementById('mf-producer').value = '';
   document.getElementById('mf-songwriters').value = '';
   document.getElementById('mf-bpm').value = '';
@@ -2736,12 +2736,7 @@ function addTitleBoxRow(focus, prefill){
     artistInput.className = 'track-box-artist';
     artistInput.placeholder = 'Artist(s) for this track — e.g. Artist One, Artist Two (feat. …)';
     if(prefill && prefill.artist) artistInput.value = prefill.artist;
-    const tagsInput = document.createElement('input');
-    tagsInput.type = 'text';
-    tagsInput.className = 'track-box-tags';
-    tagsInput.placeholder = 'Mood / tags for this track (comma-separated)';
     sub.appendChild(artistInput);
-    sub.appendChild(tagsInput);
     row.appendChild(sub);
 
     const tierRow = document.createElement('div');
@@ -2797,6 +2792,7 @@ function handleMultiSave(){
     why: document.getElementById('mf-why').value.trim(),
     credit: document.getElementById('mf-credit').value.trim(),
     recordLabel: document.getElementById('mf-label').value.trim() || null,
+    duration: document.getElementById('mf-duration').value.trim() || null,
     producer: document.getElementById('mf-producer').value.trim() || null,
     songwriters: document.getElementById('mf-songwriters').value.trim() || null,
     bpm: (()=>{ const v = parseInt(document.getElementById('mf-bpm').value, 10); return isNaN(v) ? null : v; })(),
@@ -2820,12 +2816,10 @@ function handleMultiSave(){
       const title = row.querySelector('.title-box-input').value.trim();
       if(!title) return null;
       const artistVal = row.querySelector('.track-box-artist').value.trim();
-      const tagsVal = row.querySelector('.track-box-tags').value.trim();
       const trackTier = row._trackTier ? row._trackTier() : null;
       return {
         id: uid(), pinned:false, createdAt: now, clusterId, clusterName: albumName, title,
         artists: artistVal ? artistVal.split(',').map(a=>a.trim()).filter(Boolean) : sharedArtists,
-        tags: tagsVal.split(',').map(t=>t.trim()).filter(Boolean),
         trackNumber: row._trackNo || null,
         recordLabel: row._label || null,
         ...shared,
@@ -2837,7 +2831,6 @@ function handleMultiSave(){
     newSongs = titles.map(title=>({
       id: uid(), pinned:false, createdAt: now, clusterId,
       artists: sharedArtists,
-      tags: document.getElementById('mf-tags').value.split(',').map(t=>t.trim()).filter(Boolean),
       ...shared
     }));
   }

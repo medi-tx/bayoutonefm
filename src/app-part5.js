@@ -593,7 +593,6 @@ function renderFriendGrid(list){
         <button type="button" class="preview-btn" data-preview="${escapeAttr(s.id)}" title="Play a 30-second preview" aria-label="Play 30-second preview">▶</button>
         <span class="preview-hint">30-sec preview</span>
       </div>
-      ${(s.tags&&s.tags.length) ? `<div class="tags">${s.tags.map(t=>`<span class="tag" style="background:color-mix(in srgb, ${tierColor('B')} 18%, transparent);color:${tierColor('B')};border-color:${tierColor('B')}">${escapeHtml(t)}</span>`).join('')}</div>` : ''}
       ${s.quickThought ? `<p class="why">${escapeHtml(s.quickThought)}</p>` : ''}
       ${s.credit ? `<p class="credit-note"><b>Borrowed from / Where I Heard It:</b> ${escapeHtml(s.credit)}</p>` : ''}
       ${geniusLyricsUrl(s.title, s.artists) ? `<a class="lyrics-link" href="${escapeAttr(geniusLyricsUrl(s.title, s.artists))}" target="_blank" rel="noopener" title="Open lyrics on Genius">LYRICS ↗</a>` : ''}
@@ -708,7 +707,6 @@ function renderCompareView(){
         ${(s.genres&&s.genres.length) ? `<span> · ${s.genres.map(g=>escapeHtml(g)).join(', ')}</span>` : ''}
       </div>
       <div class="tier-row">${renderTierBadge(s.tier)}</div>
-      ${(s.tags&&s.tags.length) ? `<div class="tags">${s.tags.map(t=>`<span class="tag" style="background:color-mix(in srgb, ${tierColor('B')} 18%, transparent);color:${tierColor('B')};border-color:${tierColor('B')}">${escapeHtml(t)}</span>`).join('')}</div>` : ''}
       ${s.quickThought ? `<p class="why">${escapeHtml(s.quickThought)}</p>` : ''}
     </div>`;
 

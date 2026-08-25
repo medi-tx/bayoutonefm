@@ -1510,7 +1510,7 @@
     background:rgba(var(--on-paper-rgb),0.14);
     overflow:hidden; display:block; position:relative;
   }
-  .vb i{ position:absolute; left:0; top:0; bottom:0; display:block; border-radius:4px; }
+  .vb i{ position:absolute; left:0; top:0; bottom:0; display:block; border-radius:4px; min-width:2px; }
   .vb.energy i{ background:linear-gradient(90deg,#7ec8e3,#ff4d6d); }
   .vb.mood i{ background:linear-gradient(90deg,#5b4b8a,#ffe08a); }
   .vb.nostalgia i{ background:linear-gradient(90deg,#5eead4,#b45309); }
