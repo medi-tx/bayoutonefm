@@ -279,6 +279,9 @@
     color:var(--text-dim);
     text-align:right;
     line-height:1.6;
+    word-wrap:break-word;
+    overflow-wrap:break-word;
+    overflow:hidden;
   }
   .stats b{ color:var(--on-ink); font-weight:500;}
 
@@ -811,7 +814,7 @@
     display:flex; align-items:center; gap:4px;
   }
 
-  .card-top{ padding-right:26px; }
+  .card-top{ padding-right:80px; }
   .track-title{
     font-family:'Fraunces', serif;
     font-weight:700;

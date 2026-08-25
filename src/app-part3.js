@@ -892,7 +892,7 @@ function renderTimeline(){
   const empty = document.getElementById('timelineEmptyState');
   const list = songs.filter(s=>{ if(showArchived){ if(!s.archived) return false; } else { if(s.archived) return false; }     return true;
   });
-  unique.forEach(t=>{
+  list.forEach(t=>{
     if(typeof t.explicit !== 'boolean') t.explicit = t.trackExplicitness === 'explicit';
   });
   list.sort((a,b)=> (b.createdAt||0) - (a.createdAt||0));
@@ -939,6 +939,29 @@ document.getElementById('timeline').addEventListener('click', e=>{
   const song = songs.find(s=>s.id === item.dataset.id);
   if(song) openModal(song);
 });
+
+/* ---- score-sorted view ---- */
+function renderScoreSort(){
+  const grid = document.getElementById('grid');
+  const empty = document.getElementById('emptyState');
+  grid.style.display = '';
+  grid.classList.remove('clusters-view');
+  const active = songs.filter(s=>!s.archived);
+  const scored = active.filter(s=> s.score !== null && s.score !== undefined && s.score !== '');
+  scored.sort((a,b)=> (Number(b.score)||0) - (Number(a.score)||0));
+  if(!scored.length){
+    grid.innerHTML = '';
+    empty.querySelector('p').textContent = 'No scored songs yet — rate your songs to see them ranked here.';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  grid.innerHTML = scored.map(s=> songCardHtml(s)).join('');
+  document.querySelectorAll('.card', grid).forEach(card => {
+    const id = card.dataset.id;
+    if(pinnedIds.has(id)) card.querySelector('.pin-btn')?.classList.add('pinned');
+  });
+}
 
 /* ---- stats page ---- */
 const TIER_CHART_COLORS = { '★':'#d5873f', S:'#E63946', A:'#2A9D8F', B:'#8E44AD', C:'#264653' };
@@ -2221,8 +2244,23 @@ function render(){
     document.getElementById('tierBoard').style.display = 'none';
     document.getElementById('tierBoardToolbar').style.display = 'none';
     document.getElementById('tierBoardEmptyState').style.display = 'none';
+    document.getElementById('timeline').style.display = 'none';
+    document.getElementById('timelineEmptyState').style.display = 'none';
     renderLastAdded();
     renderTimeline();
+    return;
+  }
+  if(viewingScoreSort){
+    document.getElementById('grid').style.display = 'none';
+    document.getElementById('gridSentinel').style.display = 'none';
+    document.getElementById('emptyState').style.display = 'none';
+    document.getElementById('tierBoard').style.display = 'none';
+    document.getElementById('tierBoardToolbar').style.display = 'none';
+    document.getElementById('tierBoardEmptyState').style.display = 'none';
+    document.getElementById('timeline').style.display = 'none';
+    document.getElementById('timelineEmptyState').style.display = 'none';
+    renderLastAdded();
+    renderScoreSort();
     return;
   }
   if(viewingWishlist){
@@ -2428,8 +2466,9 @@ function openModal(song){
   favBtn.textContent = currentFav ? '♥' : '♡';
   favBtn.classList.toggle('on', currentFav);
   document.getElementById('overlay').classList.add('open');
+  document.getElementById('f-search-field').style.display = song ? 'none' : '';
   resetEditorTabs('single');
-  document.getElementById('f-song-search').focus();
+  if(!song){ document.getElementById('f-song-search').focus(); }
 }
 function closeModal(){
   document.getElementById('overlay').classList.remove('open');
@@ -2982,6 +3021,7 @@ function updateViewUI(){
   const wishBtn = document.getElementById('toggleWishlist');
   const tierBtn = document.getElementById('toggleTierBoard');
   const timeBtn = document.getElementById('toggleTimeline');
+  const scoreBtn = document.getElementById('toggleScoreSort');
   archBtn.textContent = showArchived ? '← Back to cataloguex' : 'View archive';
   archBtn.classList.toggle('active', showArchived);
   archBtn.setAttribute('aria-pressed', showArchived ? 'true' : 'false');
@@ -2994,6 +3034,9 @@ function updateViewUI(){
   timeBtn.textContent = viewingTimeline ? '← Back to cataloguex' : '🕰 Timeline';
   timeBtn.classList.toggle('active', viewingTimeline);
   timeBtn.setAttribute('aria-pressed', viewingTimeline ? 'true' : 'false');
+  scoreBtn.textContent = viewingScoreSort ? '← Back to cataloguex' : '📊 By score';
+  scoreBtn.classList.toggle('active', viewingScoreSort);
+  scoreBtn.setAttribute('aria-pressed', viewingScoreSort ? 'true' : 'false');
 
   const otherMode = showArchived || viewingWishlist;
   document.getElementById('openAddMusic').style.display = otherMode ? 'none' : '';
@@ -3003,10 +3046,10 @@ function updateViewUI(){
   document.getElementById('resetCataloguexBtn').style.display = otherMode ? 'none' : '';
   document.getElementById('openWish').style.display = viewingWishlist ? '' : 'none';
   document.getElementById('peopleSection').style.display = viewingWishlist ? 'none' : '';
-  document.getElementById('filterGenre').style.display = (viewingWishlist || viewingTierBoard || viewingTimeline) ? 'none' : '';
-  document.getElementById('filterMood').style.display = (viewingWishlist || viewingTierBoard || viewingTimeline) ? 'none' : '';
-  document.getElementById('sortBy').style.display = (viewingWishlist || viewingTierBoard || viewingTimeline) ? 'none' : '';
-  document.getElementById('search').style.display = (viewingTierBoard || viewingTimeline) ? 'none' : '';
+  document.getElementById('filterGenre').style.display = (viewingWishlist || viewingTierBoard || viewingTimeline || viewingScoreSort) ? 'none' : '';
+  document.getElementById('filterMood').style.display = (viewingWishlist || viewingTierBoard || viewingTimeline || viewingScoreSort) ? 'none' : '';
+  document.getElementById('sortBy').style.display = (viewingWishlist || viewingTierBoard || viewingTimeline || viewingScoreSort) ? 'none' : '';
+  document.getElementById('search').style.display = (viewingTierBoard || viewingTimeline || viewingScoreSort) ? 'none' : '';
   archBtn.style.display = (viewingWishlist || viewingTierBoard || viewingTimeline) ? 'none' : '';
   wishBtn.style.display = (showArchived || viewingTierBoard || viewingTimeline) ? 'none' : '';
   tierBtn.style.display = (showArchived || viewingWishlist || viewingTimeline) ? 'none' : '';
@@ -3016,28 +3059,35 @@ function updateViewUI(){
 document.getElementById('toggleArchive').addEventListener('click', ()=>{
   trackEvent('toggle_archive');
   showArchived = !showArchived;
-  if(showArchived){ viewingWishlist = false; viewingTierBoard = false; viewingTimeline = false; }
+  if(showArchived){ viewingWishlist = false; viewingTierBoard = false; viewingTimeline = false; viewingScoreSort = false; }
   updateViewUI();
   render();
 });
 document.getElementById('toggleWishlist').addEventListener('click', ()=>{
   trackEvent('toggle_wishlist');
   viewingWishlist = !viewingWishlist;
-  if(viewingWishlist){ showArchived = false; viewingTierBoard = false; viewingTimeline = false; }
+  if(viewingWishlist){ showArchived = false; viewingTierBoard = false; viewingTimeline = false; viewingScoreSort = false; }
   updateViewUI();
   render();
 });
 document.getElementById('toggleTierBoard').addEventListener('click', ()=>{
   trackEvent('toggle_tier_board');
   viewingTierBoard = !viewingTierBoard;
-  if(viewingTierBoard){ showArchived = false; viewingWishlist = false; viewingTimeline = false; }
+  if(viewingTierBoard){ showArchived = false; viewingWishlist = false; viewingTimeline = false; viewingScoreSort = false; }
   updateViewUI();
   render();
 });
 document.getElementById('toggleTimeline').addEventListener('click', ()=>{
   trackEvent('toggle_timeline');
   viewingTimeline = !viewingTimeline;
-  if(viewingTimeline){ showArchived = false; viewingWishlist = false; viewingTierBoard = false; }
+  if(viewingTimeline){ showArchived = false; viewingWishlist = false; viewingTierBoard = false; viewingScoreSort = false; }
+  updateViewUI();
+  render();
+});
+document.getElementById('toggleScoreSort').addEventListener('click', ()=>{
+  trackEvent('toggle_score_sort');
+  viewingScoreSort = !viewingScoreSort;
+  if(viewingScoreSort){ showArchived = false; viewingWishlist = false; viewingTierBoard = false; viewingTimeline = false; }
   updateViewUI();
   render();
 });
