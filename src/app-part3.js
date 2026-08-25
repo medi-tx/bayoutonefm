@@ -3026,7 +3026,7 @@ function updateViewUI(){
   document.getElementById('openAddMusic').style.display = otherMode ? 'none' : '';
   document.getElementById('openCluster').style.display = otherMode ? 'none' : '';
   document.getElementById('viewClustersBtn').style.display = otherMode ? 'none' : '';
-  updateRemoveExamplesBtn();
+
   document.getElementById('resetCataloguexBtn').style.display = otherMode ? 'none' : '';
   document.getElementById('openWish').style.display = viewingWishlist ? '' : 'none';
   document.getElementById('peopleSection').style.display = viewingWishlist ? 'none' : '';

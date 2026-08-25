@@ -682,7 +682,7 @@ async function loadAppForUser(user){
       openOnboarding({ username: myProfile.username, bio: myProfile.bio || '', photo: myProfile.photo || null, promptMessage: 'Welcome back! Take a moment to review your username. You can keep it or pick a new one.' });
     }, 800);
   }
-  updateRemoveExamplesBtn();
+
   subscribeNotifications();
 }
 
@@ -1171,7 +1171,7 @@ document.getElementById('resetCataloguexBtn').addEventListener('click', ()=>{
   savePeople();
   render();
   renderPeople();
-  updateRemoveExamplesBtn();
+
 });
 
 function updateEmailConfirmBanner(user){

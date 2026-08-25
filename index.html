@@ -3002,7 +3002,6 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
     <button class="add-btn secondary" id="openCluster">+ Create Stack</button>
     <button class="add-btn secondary" id="viewClustersBtn">View Stacks</button>
     <button class="add-btn" id="openAddMusic">+ Add Music</button>
-    <button class="add-btn secondary" id="removeExamplesBtn">✕ Remove examples</button>
     <button class="add-btn secondary danger" id="resetCataloguexBtn" title="Reset your cataloguex back to the built-in examples">⚠ Reset cataloguex</button>
     <button class="add-btn" id="openWish" style="display:none;">+ Add song</button>
   </div>
@@ -7026,7 +7025,7 @@ function updateViewUI(){
   document.getElementById('openAddMusic').style.display = otherMode ? 'none' : '';
   document.getElementById('openCluster').style.display = otherMode ? 'none' : '';
   document.getElementById('viewClustersBtn').style.display = otherMode ? 'none' : '';
-  updateRemoveExamplesBtn();
+
   document.getElementById('resetCataloguexBtn').style.display = otherMode ? 'none' : '';
   document.getElementById('openWish').style.display = viewingWishlist ? '' : 'none';
   document.getElementById('peopleSection').style.display = viewingWishlist ? 'none' : '';
@@ -10353,38 +10352,8 @@ function seedIfEmpty(){
 }
 
 function hasExampleContent(){
-  return songs.some(s=>s.isSeedExample) || people.some(p=>String(p.id||'').startsWith('ex-'));
+  return false;
 }
-function updateRemoveExamplesBtn(){
-  const btn = document.getElementById('removeExamplesBtn');
-  if(!btn) return;
-  const gone = examplesRemoved();
-  const hasAny = hasExampleContent();
-  btn.style.display = (!gone && hasAny && !showArchived && !viewingWishlist) ? '' : 'none';
-}
-function removeExamples(){
-  if(!hasExampleContent()){
-    alert('No examples to remove!');
-    return;
-  }
-  if(!confirm('Remove all example songs and people?')) return;
-  trackEvent('remove_examples');
-  const removedSongs = songs.filter(s=>s.isSeedExample).length;
-  const removedPeople = people.filter(p=>String(p.id||'').startsWith('ex-')).length;
-  songs = songs.filter(s=>!s.isSeedExample);
-  people = people.filter(p=>!String(p.id||'').startsWith('ex-'));
-  songs.forEach(s=>{
-    if(Array.isArray(s.remindsOf)) s.remindsOf = s.remindsOf.filter(id=>!String(id||'').startsWith('ex-'));
-  });
-  setExamplesRemoved(true);
-  save();
-  savePeople();
-  render();
-  renderPeople();
-  updateRemoveExamplesBtn();
-  alert('Removed ' + removedSongs + ' example song' + (removedSongs !== 1 ? 's' : '') + ' and ' + removedPeople + ' example people');
-}
-document.getElementById('removeExamplesBtn').addEventListener('click', removeExamples);
 </script>
 <script>
 /* =========================================================
@@ -11070,7 +11039,7 @@ async function loadAppForUser(user){
       openOnboarding({ username: myProfile.username, bio: myProfile.bio || '', photo: myProfile.photo || null, promptMessage: 'Welcome back! Take a moment to review your username. You can keep it or pick a new one.' });
     }, 800);
   }
-  updateRemoveExamplesBtn();
+
   subscribeNotifications();
 }
 
@@ -11559,7 +11528,7 @@ document.getElementById('resetCataloguexBtn').addEventListener('click', ()=>{
   savePeople();
   render();
   renderPeople();
-  updateRemoveExamplesBtn();
+
 });
 
 function updateEmailConfirmBanner(user){

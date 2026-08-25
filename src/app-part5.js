@@ -1757,35 +1757,5 @@ function seedIfEmpty(){
 }
 
 function hasExampleContent(){
-  return songs.some(s=>s.isSeedExample) || people.some(p=>String(p.id||'').startsWith('ex-'));
+  return false;
 }
-function updateRemoveExamplesBtn(){
-  const btn = document.getElementById('removeExamplesBtn');
-  if(!btn) return;
-  const gone = examplesRemoved();
-  const hasAny = hasExampleContent();
-  btn.style.display = (!gone && hasAny && !showArchived && !viewingWishlist) ? '' : 'none';
-}
-function removeExamples(){
-  if(!hasExampleContent()){
-    alert('No examples to remove!');
-    return;
-  }
-  if(!confirm('Remove all example songs and people?')) return;
-  trackEvent('remove_examples');
-  const removedSongs = songs.filter(s=>s.isSeedExample).length;
-  const removedPeople = people.filter(p=>String(p.id||'').startsWith('ex-')).length;
-  songs = songs.filter(s=>!s.isSeedExample);
-  people = people.filter(p=>!String(p.id||'').startsWith('ex-'));
-  songs.forEach(s=>{
-    if(Array.isArray(s.remindsOf)) s.remindsOf = s.remindsOf.filter(id=>!String(id||'').startsWith('ex-'));
-  });
-  setExamplesRemoved(true);
-  save();
-  savePeople();
-  render();
-  renderPeople();
-  updateRemoveExamplesBtn();
-  alert('Removed ' + removedSongs + ' example song' + (removedSongs !== 1 ? 's' : '') + ' and ' + removedPeople + ' example people');
-}
-document.getElementById('removeExamplesBtn').addEventListener('click', removeExamples);
