@@ -2447,6 +2447,7 @@ function openModal(song){
   document.getElementById('f-songwriters').value = song?.songwriters || '';
   document.getElementById('f-bpm').value = song?.bpm ?? '';
   document.getElementById('f-key').value = song?.musicKey || '';
+  updateCamelotPreview('f-key','f-key-camelot');
   document.getElementById('f-spotify').value = song?.spotifyUrl || '';
   document.getElementById('f-apple').value = song?.appleMusicUrl || '';
   document.getElementById('f-youtube').value = song?.youtubeMusicUrl || '';
@@ -2751,6 +2752,7 @@ function openMultiModal(mode){
   document.getElementById('mf-songwriters').value = '';
   document.getElementById('mf-bpm').value = '';
   document.getElementById('mf-key').value = '';
+  updateCamelotPreview('mf-key','mf-key-camelot');
   document.getElementById('mf-spotify').value = '';
   document.getElementById('mf-apple').value = '';
   document.getElementById('mf-youtube').value = '';
@@ -4197,3 +4199,14 @@ document.getElementById('f-explicit-btn').addEventListener('click', ()=>{
   btn.classList.toggle('on', currentExplicit);
   label.textContent = currentExplicit ? 'Explicit' : 'Not explicit';
 });
+
+function updateCamelotPreview(inputId, chipId){
+  const chip = document.getElementById(chipId);
+  if(!chip) return;
+  const val = document.getElementById(inputId).value.trim();
+  const cam = musicKeyToCamelot(val);
+  if(cam){ chip.textContent = cam; chip.style.display = ''; }
+  else { chip.style.display = 'none'; }
+}
+document.getElementById('f-key').addEventListener('input', ()=> updateCamelotPreview('f-key','f-key-camelot'));
+document.getElementById('mf-key').addEventListener('input', ()=> updateCamelotPreview('mf-key','mf-key-camelot'));

@@ -3242,7 +3242,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
     </div>
     <div class="two-col">
       <div class="field"><label>BPM</label><input id="f-bpm" type="number" min="0" max="999" placeholder="e.g. 120"></div>
-      <div class="field"><label>Key</label><input id="f-key" type="text" placeholder="e.g. C major, A minor"></div>
+      <div class="field"><label>Key</label><div style="display:flex;gap:8px;align-items:center;"><input id="f-key" type="text" placeholder="e.g. C major, A minor" style="flex:1;"><span id="f-key-camelot" class="camelot-chip" style="display:none;"></span></div></div>
     </div>
     <div class="two-col">
       <div class="field"><label>Spotify URL</label><input id="f-spotify" type="url" placeholder="https://open.spotify.com/track/…"></div>
@@ -3423,7 +3423,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
     </div>
     <div class="two-col">
       <div class="field"><label>BPM</label><input id="mf-bpm" type="number" min="0" max="999" placeholder="e.g. 120"></div>
-      <div class="field"><label>Key</label><input id="mf-key" type="text" placeholder="e.g. C major, A minor"></div>
+      <div class="field"><label>Key</label><div style="display:flex;gap:8px;align-items:center;"><input id="mf-key" type="text" placeholder="e.g. C major, A minor" style="flex:1;"><span id="mf-key-camelot" class="camelot-chip" style="display:none;"></span></div></div>
     </div>
     <div class="two-col">
       <div class="field"><label>Spotify URL</label><input id="mf-spotify" type="url" placeholder="https://open.spotify.com/track/…"></div>
@@ -6449,6 +6449,7 @@ function openModal(song){
   document.getElementById('f-songwriters').value = song?.songwriters || '';
   document.getElementById('f-bpm').value = song?.bpm ?? '';
   document.getElementById('f-key').value = song?.musicKey || '';
+  updateCamelotPreview('f-key','f-key-camelot');
   document.getElementById('f-spotify').value = song?.spotifyUrl || '';
   document.getElementById('f-apple').value = song?.appleMusicUrl || '';
   document.getElementById('f-youtube').value = song?.youtubeMusicUrl || '';
@@ -6753,6 +6754,7 @@ function openMultiModal(mode){
   document.getElementById('mf-songwriters').value = '';
   document.getElementById('mf-bpm').value = '';
   document.getElementById('mf-key').value = '';
+  updateCamelotPreview('mf-key','mf-key-camelot');
   document.getElementById('mf-spotify').value = '';
   document.getElementById('mf-apple').value = '';
   document.getElementById('mf-youtube').value = '';
@@ -8199,6 +8201,17 @@ document.getElementById('f-explicit-btn').addEventListener('click', ()=>{
   btn.classList.toggle('on', currentExplicit);
   label.textContent = currentExplicit ? 'Explicit' : 'Not explicit';
 });
+
+function updateCamelotPreview(inputId, chipId){
+  const chip = document.getElementById(chipId);
+  if(!chip) return;
+  const val = document.getElementById(inputId).value.trim();
+  const cam = musicKeyToCamelot(val);
+  if(cam){ chip.textContent = cam; chip.style.display = ''; }
+  else { chip.style.display = 'none'; }
+}
+document.getElementById('f-key').addEventListener('input', ()=> updateCamelotPreview('f-key','f-key-camelot'));
+document.getElementById('mf-key').addEventListener('input', ()=> updateCamelotPreview('mf-key','mf-key-camelot'));
 </script>
 <script>
 /* =========================================================
