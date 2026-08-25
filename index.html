@@ -7312,16 +7312,32 @@ async function handleSingleUrl(url){
       const resp = await fetch('https://api.spotify.com/v1/albums/' + albumId, { headers:{ Authorization:'Bearer '+token } });
       if(!resp.ok) throw new Error('Album not found');
       const a = await resp.json();
-      const albumData = { artists:(a.artists||[]).map(x=>x.name), album:a.name||'', year:a.release_date||'', coverArt:(a.images&&a.images[0]&&a.images[0].url)||null, tracks:(a.tracks&&a.tracks.items||[]).map(t=>({ title:t.name, artists:(t.artists||[]).map(x=>x.name), trackNumber:t.track_number })) };
+      const albumArtists = (a.artists||[]).map(x=>x.name);
+      const albumName = a.name||'';
+      const albumYear = a.release_date||'';
+      const coverArt = (a.images&&a.images[0]&&a.images[0].url)||null;
+      const albumTracks = (a.tracks&&a.tracks.items||[]).map(t=>({ title:t.name, artists:(t.artists||[]).map(x=>x.name), trackNumber:t.track_number, spotifyUrl:t.external_urls&&t.external_urls.spotify||'' }));
+      const clusterId = uid();
+      const now = Date.now();
+      const allImported = albumTracks.map((t,i)=>({
+        id: uid(), pinned:false, createdAt:now, clusterId, clusterName:albumName||'Album Import',
+        title:t.title, artists:t.artists.length?t.artists:albumArtists, album:albumName,
+        genres:[], why:'', credit:'', coverArt, tier:null, remindsOf:[], year:albumYear||null,
+        trackNumber:t.trackNumber||(i+1), spotifyUrl:t.spotifyUrl||'',
+      }));
+      const dupes = findDuplicates(allImported);
+      const dupeKeys = new Set(dupes.map(d=>songKey(d)));
+      const newSongs = allImported.filter(s=>!dupeKeys.has(songKey(s)));
+      dupes.forEach(d=>{ const ex=songs.find(s=>songKey(s)===songKey(d)); if(ex && !ex.coverArt && d.coverArt) ex.coverArt=d.coverArt; });
+      songs = [...newSongs, ...songs];
+      save();
+      upsertGlobalSongBatch(newSongs, currentUserId);
+      syncToSongDbBatch(newSongs, currentUserId);
       document.getElementById('spotifyImportOverlay').classList.remove('open');
-      openMultiModal('album');
-      document.getElementById('mf-artist').value = albumData.artists.join(', ');
-      document.getElementById('mf-album').value = albumData.album;
-      document.getElementById('mf-year').value = albumData.year;
-      if(albumData.coverArt){ currentMultiCoverArt = albumData.coverArt; setImagePreview('mf-cover', currentMultiCoverArt); }
-      const boxes = document.getElementById('titleBoxes');
-      boxes.innerHTML = '';
-      albumData.tracks.forEach((t,i)=> addTitleBoxRow(i===0, t.title));
+      render();
+      enrichImportedSongs(clusterId, 'Spotify');
+      if(dupes.length>0) showToast('Imported '+newSongs.length+' songs. Skipped '+dupes.length+' duplicates.');
+      else showToast('Imported '+newSongs.length+' songs from "'+albumName+'".');
       return;
     }
     if(appleMatch && appleMatch[2]){
@@ -7348,16 +7364,32 @@ async function handleSingleUrl(url){
           const trackResp = await fetch('https://itunes.apple.com/lookup?id=' + albumId + '&entity=song&limit=200');
           if(trackResp.ok){
             const td = await trackResp.json();
-            const tracks = (td.results||[]).filter(r=> r.wrapperType === 'track' && r.collectionId == albumId).map((t,i)=>({ title:t.trackName, artists:[t.artistName], trackNumber:t.trackNumber }));
+            const tracks = (td.results||[]).filter(r=> r.wrapperType === 'track' && r.collectionId == albumId).map((t,i)=>({ title:t.trackName, artists:[t.artistName], trackNumber:t.trackNumber, coverArt:t.artworkUrl100||null, appleMusicUrl:t.trackViewUrl||'' }));
+            const albumName = albumInfo.collectionName || '';
+            const albumArtist = albumInfo.artistName || '';
+            const albumYear = albumInfo.releaseDate || '';
+            const coverArt = albumInfo.artworkUrl100 ? albumInfo.artworkUrl100.replace('100x100','600x600') : null;
+            const clusterId = uid();
+            const now = Date.now();
+            const allImported = tracks.map((t,i)=>({
+              id: uid(), pinned:false, createdAt:now, clusterId, clusterName:albumName||'Album Import',
+              title:t.title, artists:(t.artists&&t.artists.length)?t.artists:[albumArtist], album:albumName,
+              genres:[], why:'', credit:'', coverArt:t.coverArt||coverArt, tier:null, remindsOf:[], year:albumYear||null,
+              trackNumber:t.trackNumber||(i+1), appleMusicUrl:t.appleMusicUrl||'',
+            }));
+            const dupes = findDuplicates(allImported);
+            const dupeKeys = new Set(dupes.map(d=>songKey(d)));
+            const newSongs = allImported.filter(s=>!dupeKeys.has(songKey(s)));
+            dupes.forEach(d=>{ const ex=songs.find(s=>songKey(s)===songKey(d)); if(ex && !ex.coverArt && d.coverArt) ex.coverArt=d.coverArt; });
+            songs = [...newSongs, ...songs];
+            save();
+            upsertGlobalSongBatch(newSongs, currentUserId);
+            syncToSongDbBatch(newSongs, currentUserId);
             document.getElementById('spotifyImportOverlay').classList.remove('open');
-            openMultiModal('album');
-            document.getElementById('mf-artist').value = albumInfo.artistName || '';
-            document.getElementById('mf-album').value = albumInfo.collectionName || '';
-            document.getElementById('mf-year').value = albumInfo.releaseDate || '';
-            if(albumInfo.artworkUrl100){ currentMultiCoverArt = albumInfo.artworkUrl100.replace('100x100','600x600'); setImagePreview('mf-cover', currentMultiCoverArt); }
-            const boxes = document.getElementById('titleBoxes');
-            boxes.innerHTML = '';
-            tracks.forEach((t,i)=> addTitleBoxRow(i===0, t.title));
+            render();
+            enrichImportedSongs(clusterId, 'Apple Music');
+            if(dupes.length>0) showToast('Imported '+newSongs.length+' songs. Skipped '+dupes.length+' duplicates.');
+            else showToast('Imported '+newSongs.length+' songs from "'+albumName+'".');
             return;
           }
         }
@@ -7423,9 +7455,11 @@ async function handleSingleUrl(url){
           if(d.data && d.data[0]){
             const a = d.data[0];
             const attrs = a.attributes || {};
-            const artists = (a.relationships && a.relationships.artists && a.relationships.artists.data || [])
+            const albumArtists = (a.relationships && a.relationships.artists && a.relationships.artists.data || [])
               .map(x => artistMap[x.id]).filter(Boolean);
             const coverArt = attrs.cover ? 'https://resources.tidal.com/images/'+attrs.cover.replace('/','-')+'/640x640.jpg' : null;
+            const albumName = attrs.title || '';
+            const albumYear = attrs.releaseDate ? attrs.releaseDate.substring(0,4) : '';
             const trResp = await fetch('https://openapi.tidal.com/v2/albums/'+albumId+'/tracks?countryCode=US&limit=300', {
               headers:{ Authorization:'Bearer '+token, 'Content-Type':'application/vnd.tidal.v2+json' }
             });
@@ -7435,24 +7469,37 @@ async function handleSingleUrl(url){
               const items = td.items || td.data || [];
               tracks = items.map((t,i)=>{
                 const trAttrs = t.attributes || {};
-                return { title:trAttrs.title||'', artists:[], trackNumber:trAttrs.trackNumber||(i+1) };
+                return { title:trAttrs.title||'', trackNumber:trAttrs.trackNumber||(i+1) };
               });
             }
+            const clusterId = uid();
+            const now = Date.now();
+            const allImported = tracks.map((t,i)=>({
+              id: uid(), pinned:false, createdAt:now, clusterId, clusterName:albumName||'Album Import',
+              title:t.title, artists:albumArtists.length?albumArtists:[], album:albumName,
+              genres:[], why:'', credit:'', coverArt, tier:null, remindsOf:[], year:albumYear||null,
+              trackNumber:t.trackNumber||(i+1), tidalUrl:url,
+            }));
+            const dupes = findDuplicates(allImported);
+            const dupeKeys = new Set(dupes.map(d=>songKey(d)));
+            const newSongs = allImported.filter(s=>!dupeKeys.has(songKey(s)));
+            dupes.forEach(d=>{ const ex=songs.find(s=>songKey(s)===songKey(d)); if(ex && !ex.coverArt && d.coverArt) ex.coverArt=d.coverArt; });
+            songs = [...newSongs, ...songs];
+            save();
+            upsertGlobalSongBatch(newSongs, currentUserId);
+            syncToSongDbBatch(newSongs, currentUserId);
             document.getElementById('spotifyImportOverlay').classList.remove('open');
-            openMultiModal('album');
-            document.getElementById('mf-artist').value = artists.join(', ');
-            document.getElementById('mf-album').value = attrs.title || '';
-            document.getElementById('mf-year').value = attrs.releaseDate ? attrs.releaseDate.substring(0,4) : '';
-            if(coverArt){ currentMultiCoverArt = coverArt; setImagePreview('mf-cover', currentMultiCoverArt); }
-            const boxes = document.getElementById('titleBoxes');
-            boxes.innerHTML = '';
-            tracks.forEach((t,i)=> addTitleBoxRow(i===0, t.title));
+            render();
+            enrichImportedSongs(clusterId, 'Tidal');
+            if(dupes.length>0) showToast('Imported '+newSongs.length+' songs. Skipped '+dupes.length+' duplicates.');
+            else showToast('Imported '+newSongs.length+' songs from "'+albumName+'".');
             return;
           }
         }
       }catch(e){}
       document.getElementById('spotifyImportOverlay').classList.remove('open');
-      openMultiModal('album');
+      openAddFromData({ title:'', artists:[], tidalUrl:url });
+      document.getElementById('f-tidal').value = url;
       return;
     }
     if(ytMatch){
