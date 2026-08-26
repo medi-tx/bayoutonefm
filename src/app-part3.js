@@ -3053,10 +3053,15 @@ function updateViewUI(){
   clusterFilterId = null;
   remindsFilterId = null;
 }
+function saveViewMode(){
+  const mode = showArchived ? 'archive' : viewingWishlist ? 'wishlist' : viewingTierBoard ? 'tierboard' : viewingTimeline ? 'timeline' : 'cataloguex';
+  localStorage.setItem('bayoutonefm-view-mode', mode);
+}
 document.getElementById('toggleArchive').addEventListener('click', ()=>{
   trackEvent('toggle_archive');
   showArchived = !showArchived;
   if(showArchived){ viewingWishlist = false; viewingTierBoard = false; viewingTimeline = false; }
+  saveViewMode();
   updateViewUI();
   render();
 });
@@ -3064,6 +3069,7 @@ document.getElementById('toggleWishlist').addEventListener('click', ()=>{
   trackEvent('toggle_wishlist');
   viewingWishlist = !viewingWishlist;
   if(viewingWishlist){ showArchived = false; viewingTierBoard = false; viewingTimeline = false; }
+  saveViewMode();
   updateViewUI();
   render();
 });
@@ -3071,6 +3077,7 @@ document.getElementById('toggleTierBoard').addEventListener('click', ()=>{
   trackEvent('toggle_tier_board');
   viewingTierBoard = !viewingTierBoard;
   if(viewingTierBoard){ showArchived = false; viewingWishlist = false; viewingTimeline = false; }
+  saveViewMode();
   updateViewUI();
   render();
 });
@@ -3078,6 +3085,7 @@ document.getElementById('toggleTimeline').addEventListener('click', ()=>{
   trackEvent('toggle_timeline');
   viewingTimeline = !viewingTimeline;
   if(viewingTimeline){ showArchived = false; viewingWishlist = false; viewingTierBoard = false; }
+  saveViewMode();
   updateViewUI();
   render();
 });

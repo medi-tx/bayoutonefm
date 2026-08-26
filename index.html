@@ -7067,10 +7067,15 @@ function updateViewUI(){
   clusterFilterId = null;
   remindsFilterId = null;
 }
+function saveViewMode(){
+  const mode = showArchived ? 'archive' : viewingWishlist ? 'wishlist' : viewingTierBoard ? 'tierboard' : viewingTimeline ? 'timeline' : 'cataloguex';
+  localStorage.setItem('bayoutonefm-view-mode', mode);
+}
 document.getElementById('toggleArchive').addEventListener('click', ()=>{
   trackEvent('toggle_archive');
   showArchived = !showArchived;
   if(showArchived){ viewingWishlist = false; viewingTierBoard = false; viewingTimeline = false; }
+  saveViewMode();
   updateViewUI();
   render();
 });
@@ -7078,6 +7083,7 @@ document.getElementById('toggleWishlist').addEventListener('click', ()=>{
   trackEvent('toggle_wishlist');
   viewingWishlist = !viewingWishlist;
   if(viewingWishlist){ showArchived = false; viewingTierBoard = false; viewingTimeline = false; }
+  saveViewMode();
   updateViewUI();
   render();
 });
@@ -7085,6 +7091,7 @@ document.getElementById('toggleTierBoard').addEventListener('click', ()=>{
   trackEvent('toggle_tier_board');
   viewingTierBoard = !viewingTierBoard;
   if(viewingTierBoard){ showArchived = false; viewingWishlist = false; viewingTimeline = false; }
+  saveViewMode();
   updateViewUI();
   render();
 });
@@ -7092,6 +7099,7 @@ document.getElementById('toggleTimeline').addEventListener('click', ()=>{
   trackEvent('toggle_timeline');
   viewingTimeline = !viewingTimeline;
   if(viewingTimeline){ showArchived = false; viewingWishlist = false; viewingTierBoard = false; }
+  saveViewMode();
   updateViewUI();
   render();
 });
@@ -9667,9 +9675,9 @@ document.getElementById('search').addEventListener('input', ()=>{
   clearTimeout(searchDebounceTimer);
   searchDebounceTimer = setTimeout(render, 200);
 });
-document.getElementById('filterGenre').addEventListener('change', ()=>{ trackEvent('filter_genre'); render(); });
-document.getElementById('filterMood').addEventListener('change', ()=>{ trackEvent('filter_mood'); render(); });
-document.getElementById('sortBy').addEventListener('change', ()=>{ trackEvent('sort_changed'); render(); });
+document.getElementById('filterGenre').addEventListener('change', ()=>{ trackEvent('filter_genre'); localStorage.setItem('bayoutonefm-filter-genre', document.getElementById('filterGenre').value); render(); });
+document.getElementById('filterMood').addEventListener('change', ()=>{ trackEvent('filter_mood'); localStorage.setItem('bayoutonefm-filter-mood', document.getElementById('filterMood').value); render(); });
+document.getElementById('sortBy').addEventListener('change', ()=>{ trackEvent('sort_changed'); localStorage.setItem('bayoutonefm-sort', document.getElementById('sortBy').value); render(); });
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeModal(); });
 bindCoverInput('f-cover-file', 'f-cover', v=>currentCoverArt=v);
 
@@ -11150,6 +11158,19 @@ async function loadAppForUser(user){
   processFriendRows(friendRows);
   myFriendsCount = friendRows.filter(r=>r.status==='accepted').length;
   renderPeople();
+  try{
+    const savedSort = localStorage.getItem('bayoutonefm-sort');
+    if(savedSort){ const sel = document.getElementById('sortBy'); if(sel && [...sel.options].some(o=>o.value===savedSort)) sel.value = savedSort; }
+    const savedGenre = localStorage.getItem('bayoutonefm-filter-genre');
+    if(savedGenre){ const sel = document.getElementById('filterGenre'); if(sel) sel.value = savedGenre; }
+    const savedMood = localStorage.getItem('bayoutonefm-filter-mood');
+    if(savedMood){ const sel = document.getElementById('filterMood'); if(sel) sel.value = savedMood; }
+    const savedMode = localStorage.getItem('bayoutonefm-view-mode');
+    if(savedMode === 'archive') showArchived = true;
+    else if(savedMode === 'wishlist') viewingWishlist = true;
+    else if(savedMode === 'tierboard') viewingTierBoard = true;
+    else if(savedMode === 'timeline') viewingTimeline = true;
+  }catch(e){}
   updateViewUI();
   await loadStickers();
   render();

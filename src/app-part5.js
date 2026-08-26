@@ -1030,9 +1030,9 @@ document.getElementById('search').addEventListener('input', ()=>{
   clearTimeout(searchDebounceTimer);
   searchDebounceTimer = setTimeout(render, 200);
 });
-document.getElementById('filterGenre').addEventListener('change', ()=>{ trackEvent('filter_genre'); render(); });
-document.getElementById('filterMood').addEventListener('change', ()=>{ trackEvent('filter_mood'); render(); });
-document.getElementById('sortBy').addEventListener('change', ()=>{ trackEvent('sort_changed'); render(); });
+document.getElementById('filterGenre').addEventListener('change', ()=>{ trackEvent('filter_genre'); localStorage.setItem('bayoutonefm-filter-genre', document.getElementById('filterGenre').value); render(); });
+document.getElementById('filterMood').addEventListener('change', ()=>{ trackEvent('filter_mood'); localStorage.setItem('bayoutonefm-filter-mood', document.getElementById('filterMood').value); render(); });
+document.getElementById('sortBy').addEventListener('change', ()=>{ trackEvent('sort_changed'); localStorage.setItem('bayoutonefm-sort', document.getElementById('sortBy').value); render(); });
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeModal(); });
 bindCoverInput('f-cover-file', 'f-cover', v=>currentCoverArt=v);
 

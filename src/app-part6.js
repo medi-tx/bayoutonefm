@@ -702,6 +702,19 @@ async function loadAppForUser(user){
   processFriendRows(friendRows);
   myFriendsCount = friendRows.filter(r=>r.status==='accepted').length;
   renderPeople();
+  try{
+    const savedSort = localStorage.getItem('bayoutonefm-sort');
+    if(savedSort){ const sel = document.getElementById('sortBy'); if(sel && [...sel.options].some(o=>o.value===savedSort)) sel.value = savedSort; }
+    const savedGenre = localStorage.getItem('bayoutonefm-filter-genre');
+    if(savedGenre){ const sel = document.getElementById('filterGenre'); if(sel) sel.value = savedGenre; }
+    const savedMood = localStorage.getItem('bayoutonefm-filter-mood');
+    if(savedMood){ const sel = document.getElementById('filterMood'); if(sel) sel.value = savedMood; }
+    const savedMode = localStorage.getItem('bayoutonefm-view-mode');
+    if(savedMode === 'archive') showArchived = true;
+    else if(savedMode === 'wishlist') viewingWishlist = true;
+    else if(savedMode === 'tierboard') viewingTierBoard = true;
+    else if(savedMode === 'timeline') viewingTimeline = true;
+  }catch(e){}
   updateViewUI();
   await loadStickers();
   render();
