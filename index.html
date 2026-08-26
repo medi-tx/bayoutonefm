@@ -5738,7 +5738,10 @@ async function drawSongShareCard(opts){
     try{
       frontEl.scrollIntoView({behavior:'auto', block:'center', inline:'center'});
       await new Promise(r=>setTimeout(r,150));
-      const c = await html2canvas(frontEl, { backgroundColor: loadTheme().paper || '#eedd95', scale: 2 });
+      const c = await Promise.race([
+        html2canvas(frontEl, { backgroundColor: loadTheme().paper || '#eedd95', scale: 2 }),
+        new Promise((_,rej)=> setTimeout(()=>rej(new Error('html2canvas timeout')), 5000))
+      ]);
       cv.width = c.width; cv.height = c.height;
       const ctx = cv.getContext('2d');
       ctx.drawImage(c, 0, 0);
@@ -5823,7 +5826,10 @@ async function drawSongBackShareCard(opts, cvId){
     try{
       backEl.scrollIntoView({behavior:'auto', block:'center', inline:'center'});
       await new Promise(r=>setTimeout(r,150));
-      const c = await html2canvas(backEl, { backgroundColor: loadTheme().paper || '#eedd95', scale: 2 });
+      const c = await Promise.race([
+        html2canvas(backEl, { backgroundColor: loadTheme().paper || '#eedd95', scale: 2 }),
+        new Promise((_,rej)=> setTimeout(()=>rej(new Error('html2canvas timeout')), 5000))
+      ]);
       cv.width = c.width; cv.height = c.height;
       const ctx = cv.getContext('2d');
       ctx.drawImage(c, 0, 0);
