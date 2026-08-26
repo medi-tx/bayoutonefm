@@ -8,18 +8,18 @@ const THEME_PRESETS = [
   { name:'bayoutonefm (default)', colors: DEFAULT_THEME },
   { name:'Dark', colors: { ink:'#14151A', paper:'#1E2028', paperElevated:'#262933', border:'rgba(52,56,66,0.5)', gold:'#F4A300', teal:'#E63946', rose:'#2A9D8F', lilac:'#8E44AD', sage:'#264653' } },
   { name:'Light', colors: { ink:'#F7F5F0', paper:'#FFFFFF', paperElevated:'#FDFBF6', border:'#E5E1D8', gold:'#F4A300', teal:'#E63946', rose:'#2A9D8F', lilac:'#8E44AD', sage:'#264653' } },
-  { name:'Euphoric', colors: { ink:'#1a0a2e', paper:'#fff8f0', paperElevated:'#ffe8ea', border:'#d6cdcdcc', gold:'#ff2fa0', teal:'#ff9e00', rose:'#ffd60a', lilac:'#7cff6b', sage:'#6bd8ff' } },
-  { name:'Calm', colors: { ink:'#0f2027', paper:'#c2c7c6', paperElevated:'#ecf6f7', border:'#cbd3d3cc', gold:'#8ecae6', teal:'#a8dadc', rose:'#bde0c8', lilac:'#cdeac0', sage:'#e0ece4' } },
-  { name:'Melancholy', colors: { ink:'#141b2e', paper:'#eceff4', paperElevated:'#e0e4ec', border:'#c5c9d0cc', gold:'#5c6b8a', teal:'#4a5a78', rose:'#6b7a99', lilac:'#8c95ab', sage:'#aab0c2' } },
-  { name:'Fierce', colors: { ink:'#100000', paper:'#fff2f0', paperElevated:'#ffe1df', border:'#d4c6c5cc', gold:'#ff7a00', teal:'#ff1e1e', rose:'#8a0f0f', lilac:'#c81d1d', sage:'#4a0a0a' } },
-  { name:'Dreamy', colors: { ink:'#2b1b3d', paper:'#faf4ff', paperElevated:'#f8efff', border:'#d5cddccc', gold:'#e0b3ff', teal:'#c9a0ff', rose:'#a0c4ff', lilac:'#bde0fe', sage:'#ffd6e8' } },
-  { name:'Nostalgic', colors: { ink:'#2e2318', paper:'#f5ecd9', paperElevated:'#f2e6ce', border:'#d1c8b6cc', gold:'#d4a24c', teal:'#c17f4a', rose:'#a85d3b', lilac:'#8a5a44', sage:'#6e6350' } },
-  { name:'Mysterious', colors: { ink:'#0a0a14', paper:'#e8e4f0', paperElevated:'#dfd6ec', border:'#c0bdc8cc', gold:'#7b2fbe', teal:'#4b1d78', rose:'#2e0f52', lilac:'#1a1a3d', sage:'#3d1f5c' } },
-  { name:'Romantic', colors: { ink:'#2b0f1a', paper:'#fff0f3', paperElevated:'#ffe6eb', border:'#d9c8cccc', gold:'#ff6f91', teal:'#e63958', rose:'#c9184a', lilac:'#f8a5c2', sage:'#ffccd5' } },
-  { name:'Anxious', colors: { ink:'#1c1f14', paper:'#eef0e2', paperElevated:'#ebeed3', border:'#c8cabdcc', gold:'#c9d92b', teal:'#8a9a3c', rose:'#5c6b2e', lilac:'#9c8a3c', sage:'#4a4a3c' } },
-  { name:'Confident', colors: { ink:'#0a1128', paper:'#f4f6fb', paperElevated:'#f5f3e8', border:'#cacdd5cc', gold:'#ffd60a', teal:'#1d3d8f', rose:'#3a6ea5', lilac:'#c0c0c0', sage:'#02225f' } },
-  { name:'Playful', colors: { ink:'#1a1a2e', paper:'#fffbf0', paperElevated:'#ffeee4', border:'#d6d2cdcc', gold:'#ff595e', teal:'#ffca3a', rose:'#8ac926', lilac:'#1982c4', sage:'#6a4c93' } },
-  { name:'Serene', colors: { ink:'#1b2b23', paper:'#f7faf5', paperElevated:'#f1f6ee', border:'#cfd5cfcc', gold:'#a8c9a1', teal:'#c8dfc0', rose:'#dceedd', lilac:'#e8f0e3', sage:'#cfe0d8' } }
+  { name:'Euphoric', colors: { ink:'#1a0a2e', paper:'#fff8f0', paperElevated:'#ffe8ea', border:'#d6cdcd', gold:'#ff2fa0', teal:'#ff9e00', rose:'#ffd60a', lilac:'#7cff6b', sage:'#6bd8ff' } },
+  { name:'Calm', colors: { ink:'#0f2027', paper:'#c2c7c6', paperElevated:'#ecf6f7', border:'#cbd3d3', gold:'#8ecae6', teal:'#a8dadc', rose:'#bde0c8', lilac:'#cdeac0', sage:'#e0ece4' } },
+  { name:'Melancholy', colors: { ink:'#141b2e', paper:'#eceff4', paperElevated:'#e0e4ec', border:'#c5c9d0', gold:'#5c6b8a', teal:'#4a5a78', rose:'#6b7a99', lilac:'#8c95ab', sage:'#aab0c2' } },
+  { name:'Fierce', colors: { ink:'#100000', paper:'#fff2f0', paperElevated:'#ffe1df', border:'#d4c6c5', gold:'#ff7a00', teal:'#ff1e1e', rose:'#8a0f0f', lilac:'#c81d1d', sage:'#4a0a0a' } },
+  { name:'Dreamy', colors: { ink:'#2b1b3d', paper:'#faf4ff', paperElevated:'#f8efff', border:'#d5cddd', gold:'#e0b3ff', teal:'#c9a0ff', rose:'#a0c4ff', lilac:'#bde0fe', sage:'#ffd6e8' } },
+  { name:'Nostalgic', colors: { ink:'#2e2318', paper:'#f5ecd9', paperElevated:'#f2e6ce', border:'#d1c8b6', gold:'#d4a24c', teal:'#c17f4a', rose:'#a85d3b', lilac:'#8a5a44', sage:'#6e6350' } },
+  { name:'Mysterious', colors: { ink:'#0a0a14', paper:'#e8e4f0', paperElevated:'#dfd6ec', border:'#c0bdc8', gold:'#7b2fbe', teal:'#4b1d78', rose:'#2e0f52', lilac:'#1a1a3d', sage:'#3d1f5c' } },
+  { name:'Romantic', colors: { ink:'#2b0f1a', paper:'#fff0f3', paperElevated:'#ffe6eb', border:'#d9c8cc', gold:'#ff6f91', teal:'#e63958', rose:'#c9184a', lilac:'#f8a5c2', sage:'#ffccd5' } },
+  { name:'Anxious', colors: { ink:'#1c1f14', paper:'#eef0e2', paperElevated:'#ebeed3', border:'#c8cabd', gold:'#c9d92b', teal:'#8a9a3c', rose:'#5c6b2e', lilac:'#9c8a3c', sage:'#4a4a3c' } },
+  { name:'Confident', colors: { ink:'#0a1128', paper:'#f4f6fb', paperElevated:'#f5f3e8', border:'#cacdd5', gold:'#ffd60a', teal:'#1d3d8f', rose:'#3a6ea5', lilac:'#c0c0c0', sage:'#02225f' } },
+  { name:'Playful', colors: { ink:'#1a1a2e', paper:'#fffbf0', paperElevated:'#ffeee4', border:'#d6d2cd', gold:'#ff595e', teal:'#ffca3a', rose:'#8ac926', lilac:'#1982c4', sage:'#6a4c93' } },
+  { name:'Serene', colors: { ink:'#1b2b23', paper:'#f7faf5', paperElevated:'#f1f6ee', border:'#cfd5cf', gold:'#a8c9a1', teal:'#c8dfc0', rose:'#dceedd', lilac:'#e8f0e3', sage:'#cfe0d8' } }
 ];
 function hexToRgb(hex){
   const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -1734,6 +1734,45 @@ async function drawSongShareCard(opts){
   ctx.fillStyle='#eedd95'; ctx.fillText('Join bayoutonefm today to share your own music', W/2, H - 96);
   ctx.textAlign = 'left';
 }
+
+async function drawSongBackShareCard(opts){
+  const W = 1080, H = 1350;
+  const cv = document.getElementById('shareCanvas');
+  cv.width = W; cv.height = H;
+  const ctx = cv.getContext('2d');
+  cardBase(ctx, W, H, opts.username);
+  const s = opts.song || {};
+  ctx.fillStyle = '#eedd95';
+  ctx.font = '700 42px "Space Grotesk", sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText((s.title||'Untitled'), 88, 220);
+  ctx.font = '500 22px "Space Grotesk", sans-serif';
+  const fields = [
+    ['Track #', trackNoDisplay(s)],
+    ['Record label', s.recordLabel || ''],
+    ['Release date', s.releaseDate || ''],
+    ['Producers', s.producer || ''],
+    ['Songwriters', s.songwriters || ''],
+    ['BPM', s.bpm ? String(s.bpm) : ''],
+    ['Key', s.musicKey ? s.musicKey + (musicKeyToCamelot(s.musicKey)? ' ('+musicKeyToCamelot(s.musicKey)+')':'') : ''],
+    ['Duration', s.duration || '']
+  ];
+  let y = 280;
+  ctx.fillStyle = 'rgba(238,221,149,0.9)';
+  fields.forEach(([label, val])=>{
+    if(!val) return;
+    ctx.font = '600 16px "IBM Plex Mono", monospace';
+    ctx.fillText(label + ':', 88, y);
+    ctx.font = '500 16px "Space Grotesk", sans-serif';
+    ctx.fillText(String(val), 220, y);
+    y += 34;
+  });
+  if(s.genres && s.genres.length){
+    ctx.font = '500 16px "Space Grotesk", sans-serif';
+    ctx.fillText('Genres: ' + s.genres.join(', '), 88, y + 8);
+  }
+}
+
 async function drawTierShareCard(opts){
   const W = 1080, PAD = 88, BADGE_W = 60, BADGE_H = 48, COVER_S = 80, COVER_GAP = 14, ROW_GAP = 18;
   const active = dedupeSongsForBoard((opts.list || []).filter(s=>!s.archived));
@@ -1954,44 +1993,77 @@ document.getElementById('sendFriendDoneBtn').addEventListener('click', ()=>{
 document.getElementById('shareDownloadBtn').addEventListener('click', async ()=>{
   trackEvent('share_download');
   if(!shareState) return;
-  const cv = document.getElementById('shareCanvas');
   const note = document.getElementById('shareNote');
   try{
-    note.textContent = 'Preparing image…';
+    note.textContent = 'Preparing images…';
     const baseName = 'cataloguex-card-' + (String(shareState.username||'you').replace(/[^a-z0-9]/gi,'').toLowerCase() || 'you');
-    let picker = null;
-    if(window.showSaveFilePicker){
-      try{
-        picker = await window.showSaveFilePicker({
-          suggestedName: baseName + '.png',
-          types: [{ description: 'PNG image', accept: { 'image/png': ['.png'] } }]
-        });
-      }catch(e){
-        if(e && e.name === 'AbortError'){ note.textContent = 'Download cancelled.'; return; }
-        if(e && e.name === 'SecurityError'){ picker = null; }
-        else throw e;
+    const frontName = baseName + '-front.png';
+    const backName = baseName + '-back.png';
+
+    function escapeCss(s){ try{return CSS.escape(s); }catch(e){ return s.replace(/"|\\/g,''); } }
+    async function saveBlob(blob, name){
+      if(window.showSaveFilePicker){
+        try{
+          const handle = await window.showSaveFilePicker({ suggestedName: name, types:[{ description: 'PNG image', accept:{ 'image/png':['.png'] } }] });
+          const w = await handle.createWritable();
+          await w.write(blob);
+          await w.close();
+          return;
+        }catch(e){ if(e && e.name === 'AbortError'){ note.textContent = 'Download cancelled.'; throw e; } }
       }
-    }
-    const blob = await new Promise((res, rej)=> cv.toBlob(b => b ? res(b) : rej(new Error('export failed')), 'image/png'));
-    if(picker){
-      const writable = await picker.createWritable();
-      await writable.write(blob);
-      await writable.close();
-      note.textContent = 'Saved — ' + picker.name + '.';
-    }else{
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = baseName + '.png';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setTimeout(()=>URL.revokeObjectURL(url), 1500);
-      note.textContent = 'Downloaded — check your Downloads folder.';
+      const a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); document.body.removeChild(a); setTimeout(()=>URL.revokeObjectURL(url),1500);
     }
+
+    const song = shareState.song || {};
+    let frontEl = null, backEl = null;
+    if(song && song.id){
+      const card = document.querySelector('.card[data-id="' + (escapeCss(song.id)) + '"]');
+      if(card){ frontEl = card.querySelector('.card-front'); backEl = card.querySelector('.card-back'); }
+    }
+
+    // Capture front
+    if(window.html2canvas && frontEl){
+      try{
+        frontEl.scrollIntoView({behavior:'auto', block:'center', inline:'center'});
+        await new Promise(r=>setTimeout(r,120));
+        const c = await html2canvas(frontEl, { backgroundColor: null, scale: 2 });
+        const blob = await new Promise(res=>c.toBlob(res,'image/png'));
+        await saveBlob(blob, frontName);
+      }catch(e){ console.warn('html2canvas front failed, falling back:', e); frontEl = null; }
+    }
+
+    // Fallback: draw front to shareCanvas
+    if(!frontEl){
+      const cv = document.getElementById('shareCanvas');
+      await drawSongShareCard(shareState);
+      const blobFront = await new Promise((res, rej)=> cv.toBlob(b => b ? res(b) : rej(new Error('export failed')), 'image/png'));
+      await saveBlob(blobFront, frontName);
+    }
+
+    // Capture back
+    if(window.html2canvas && backEl){
+      try{
+        backEl.scrollIntoView({behavior:'auto', block:'center', inline:'center'});
+        await new Promise(r=>setTimeout(r,120));
+        const c2 = await html2canvas(backEl, { backgroundColor: null, scale: 2 });
+        const blob2 = await new Promise(res=>c2.toBlob(res,'image/png'));
+        await saveBlob(blob2, backName);
+        note.textContent = 'Saved both images.';
+      }catch(e){ console.warn('html2canvas back failed, falling back:', e); backEl = null; }
+    }
+
+    if(!backEl){
+      const cv2 = document.getElementById('shareCanvas');
+      await drawSongBackShareCard(shareState);
+      const blobBack = await new Promise((res, rej)=> cv2.toBlob(b => b ? res(b) : rej(new Error('export failed')), 'image/png'));
+      await saveBlob(blobBack, backName);
+      note.textContent = 'Saved both images.';
+    }
+
   }catch(err){
     console.error('PNG download failed:', err);
-    note.textContent = 'Download failed — some artwork blocks export. Try Copy image instead.';
+    note.textContent = 'Download failed — some artwork or extension may block capture. Try disabling extensions or use Copy image.';
   }
 });
 document.getElementById('shareCopyBtn').addEventListener('click', async ()=>{
