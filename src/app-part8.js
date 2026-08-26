@@ -61,6 +61,7 @@
   };
   let msgSongSearchDebounce = null;
   let msgPollTimer = null;
+  let msgRefreshInflight = false;
 
   function loadMsgLastRead(){
     try{ msgLastRead = JSON.parse(localStorage.getItem(MSG_LAST_READ_KEY) || '{}') || {}; }
@@ -84,11 +85,17 @@
   }
   async function refreshMsgUnread(){
     if(!currentUserId){ msgUnreadCache = {}; setMsgBadge(0); return; }
-    const rows = await fetchMyFriendRows();
-    processFriendRows(rows);
+    if(!myFriendIds || myFriendIds.size === 0){ msgUnreadCache = {}; setMsgBadge(0); return; }
+    if(msgRefreshInflight) return;
+    msgRefreshInflight = true;
+    try{
     const friendIds = [...myFriendIds];
+    let seeded = false;
+    friendIds.forEach(fid=>{
+      if(!msgLastRead[fid]){ msgLastRead[fid] = new Date().toISOString(); seeded = true; }
+    });
+    if(seeded) saveMsgLastRead();
     msgUnreadCache = {};
-    if(friendIds.length === 0){ setMsgBadge(0); return; }
     const { data, error } = await sb
       .from('messages')
       .select('sender_id, created_at')
@@ -102,6 +109,7 @@
       }
     });
     setMsgBadge(Object.values(msgUnreadCache).reduce((a,b)=>a+b, 0));
+    }finally{ msgRefreshInflight = false; }
   }
   function renderMsgFriendList(){
     const list = document.getElementById('msgFriendList');
@@ -323,7 +331,7 @@
   }
   function startMsgPolling(){
     clearInterval(msgPollTimer);
-    msgPollTimer = setInterval(()=>{ refreshMsgUnread(); }, 4000);
+    msgPollTimer = setInterval(()=>{ refreshMsgUnread(); }, 15000);
   }
 
   loadMsgLastRead();
