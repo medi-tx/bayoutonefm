@@ -521,7 +521,7 @@ function renderTierBadge(tier){
   if(!tier) return `<span class="tier-badge tier-none">UNRATED</span>`;
   return `<span class="tier-badge tier-${tier}">${tier}</span>`;
 }
-const TIER_BANDS = { '★':[85,100], 'S':[70,84], 'A':[55,69], 'B':[40,54], 'C':[0,39] };
+const TIER_BANDS = { '★':[95,100], 'S':[85,94], 'A':[70,84], 'B':[50,69], 'C':[30,49] };
 function bandForTier(t){ return TIER_BANDS[t] || null; }
 function tierForScore(n){
   const keys = ['★','S','A','B','C'];
@@ -2667,7 +2667,7 @@ function renderStarPickers(){
 document.getElementById('f-score').addEventListener('input', ()=>{
   const v = parseInt(document.getElementById('f-score').value, 10);
   if(isNaN(v)) return;
-  const t = tierForScore(Math.max(0, Math.min(100, v)));
+  const t = tierForScore(Math.max(30, Math.min(100, v)));
   if(t && t !== currentTier){
     currentTier = t;
     renderTierPicker();
@@ -2746,7 +2746,7 @@ function handleSave(){
     remindsOf: getSelectedReminds('f'),
     tier: currentTier,
     trackNumber: trackCheck.value,
-    score: (()=>{ const v = parseInt(document.getElementById('f-score').value, 10); return isNaN(v) ? null : Math.max(0, Math.min(100, v)); })(),
+    score: (()=>{ const v = parseInt(document.getElementById('f-score').value, 10); return isNaN(v) ? null : Math.max(30, Math.min(100, v)); })(),
     stars: { lyrics: currentStars.lyrics || 0, vocals: currentStars.vocals || 0, replay: currentStars.replay || 0 },
     vibeEnergy: clampNum(parseInt(document.getElementById('f-vibe-energy').value, 10) || 0, 0, 100),
     vibeMood: clampNum(parseInt(document.getElementById('f-vibe-mood').value, 10) || 0, 0, 100),
