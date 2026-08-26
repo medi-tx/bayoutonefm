@@ -1531,6 +1531,8 @@ async function drawShareCard(opts){
   if(opts && opts.mode === 'tier') return drawTierShareCard(opts);
   const previewBack = document.getElementById('sharePreviewBack');
   if(previewBack) previewBack.style.display = 'none';
+  const dlBack = document.getElementById('shareDownloadBackBtn');
+  if(dlBack) dlBack.style.display = 'none';
   const W = 1080, H = 1350;
   const cv = document.getElementById('shareCanvas');
   cv.width = W; cv.height = H;
@@ -1921,7 +1923,10 @@ async function openShareCard(opts){
   document.getElementById('shareOverlay').classList.add('open');
   document.getElementById('shareSendRow').style.display = (opts.mode === 'song') ? '' : 'none';
   const previewBack = document.getElementById('sharePreviewBack');
-  if(previewBack) previewBack.style.display = (opts.mode === 'song') ? '' : 'none';
+  const dlBack = document.getElementById('shareDownloadBackBtn');
+  const isSong = opts.mode === 'song';
+  if(previewBack) previewBack.style.display = isSong ? '' : 'none';
+  if(dlBack) dlBack.style.display = isSong ? '' : 'none';
   try{
     await drawShareCard(opts);
     document.getElementById('shareNote').textContent = 'Tip: share it in a story, group chat, or wherever you swap music.';
@@ -2027,47 +2032,60 @@ document.getElementById('sendFriendDoneBtn').addEventListener('click', ()=>{
   document.getElementById('sendFriendOverlay').classList.remove('open');
   if(typeof window.btfOpenMessages === 'function') window.btfOpenMessages();
 });
-document.getElementById('shareDownloadBtn').addEventListener('click', async ()=>{
-  trackEvent('share_download');
+async function shareCardBlob(canvas){
+  return new Promise((res, rej)=> canvas.toBlob(b => b ? res(b) : rej(new Error('export failed')), 'image/png'));
+}
+async function saveOrShareBlob(blob, filename){
+  const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 0 && window.matchMedia('(max-width:800px)').matches);
+  if(isMobile && navigator.share && navigator.canShare){
+    const file = new File([blob], filename, { type: 'image/png' });
+    if(navigator.canShare({ files: [file] })){
+      try{ await navigator.share({ files: [file], title: filename }); return; }catch(e){ if(e && e.name === 'AbortError') return; }
+    }
+  }
+  if(window.showSaveFilePicker){
+    try{
+      const handle = await window.showSaveFilePicker({ suggestedName: filename, types:[{ description: 'PNG image', accept:{ 'image/png':['.png'] } }] });
+      const w = await handle.createWritable();
+      await w.write(blob);
+      await w.close();
+      return;
+    }catch(e){ if(e && e.name === 'AbortError') return; }
+  }
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); document.body.removeChild(a); setTimeout(()=>URL.revokeObjectURL(url),1500);
+}
+function shareCardBaseName(){
+  return 'cataloguex-card-' + (String(shareState.username||'you').replace(/[^a-z0-9]/gi,'').toLowerCase() || 'you');
+}
+document.getElementById('shareDownloadFrontBtn').addEventListener('click', async ()=>{
+  trackEvent('share_download_front');
   if(!shareState) return;
   const note = document.getElementById('shareNote');
   try{
-    note.textContent = 'Preparing images…';
-    const baseName = 'cataloguex-card-' + (String(shareState.username||'you').replace(/[^a-z0-9]/gi,'').toLowerCase() || 'you');
-    async function saveBlob(blob, name){
-      if(window.showSaveFilePicker){
-        try{
-          const handle = await window.showSaveFilePicker({ suggestedName: name, types:[{ description: 'PNG image', accept:{ 'image/png':['.png'] } }] });
-          const w = await handle.createWritable();
-          await w.write(blob);
-          await w.close();
-          return;
-        }catch(e){ if(e && e.name === 'AbortError'){ note.textContent = 'Download cancelled.'; throw e; } }
-      }
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); document.body.removeChild(a); setTimeout(()=>URL.revokeObjectURL(url),1500);
-    }
-    const isSong = shareState.mode === 'song';
-    const frontName = isSong ? baseName + '-front.png' : baseName + '.png';
+    note.textContent = 'Preparing image…';
     const cv = document.getElementById('shareCanvas');
-    const blobFront = await new Promise((res, rej)=> cv.toBlob(b => b ? res(b) : rej(new Error('export failed')), 'image/png'));
-    await saveBlob(blobFront, frontName);
-    if(isSong){
-      const backCv = document.getElementById('shareCanvasBack');
-      if(backCv && backCv.width > 10){
-        const backName = baseName + '-back.png';
-        const blobBack = await new Promise((res, rej)=> backCv.toBlob(b => b ? res(b) : rej(new Error('export failed')), 'image/png'));
-        await saveBlob(blobBack, backName);
-        note.textContent = 'Saved both front and back.';
-      } else {
-        note.textContent = 'Saved — check your Downloads folder.';
-      }
-    } else {
-      note.textContent = 'Saved — check your Downloads folder.';
-    }
+    const blob = await shareCardBlob(cv);
+    await saveOrShareBlob(blob, shareCardBaseName() + '-front.png');
+    note.textContent = 'Saved — check your Downloads folder.';
   }catch(err){
-    console.error('PNG download failed:', err);
-    note.textContent = 'Download failed — some artwork blocks export. Try Copy image instead.';
+    console.error('Front download failed:', err);
+    note.textContent = 'Download failed — try Copy image instead.';
+  }
+});
+document.getElementById('shareDownloadBackBtn').addEventListener('click', async ()=>{
+  trackEvent('share_download_back');
+  if(!shareState) return;
+  const note = document.getElementById('shareNote');
+  try{
+    note.textContent = 'Preparing image…';
+    const cv = document.getElementById('shareCanvasBack');
+    const blob = await shareCardBlob(cv);
+    await saveOrShareBlob(blob, shareCardBaseName() + '-back.png');
+    note.textContent = 'Saved — check your Downloads folder.';
+  }catch(err){
+    console.error('Back download failed:', err);
+    note.textContent = 'Download failed — try Copy image instead.';
   }
 });
 document.getElementById('shareCopyBtn').addEventListener('click', async ()=>{
