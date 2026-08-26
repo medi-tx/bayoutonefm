@@ -20,11 +20,11 @@ const THEME_PRESETS = [
   { name:'Confident', colors: { ink:'#0a1128', paper:'#f4f6fb', paperElevated:'#f5f3e8', border:'#cacdd5', gold:'#ffd60a', teal:'#1d3d8f', rose:'#3a6ea5', lilac:'#c0c0c0', sage:'#02225f' } },
   { name:'Playful', colors: { ink:'#1a1a2e', paper:'#fffbf0', paperElevated:'#ffeee4', border:'#d6d2cd', gold:'#ff595e', teal:'#ffca3a', rose:'#8ac926', lilac:'#1982c4', sage:'#6a4c93' } },
   { name:'Serene', colors: { ink:'#1b2b23', paper:'#f7faf5', paperElevated:'#f1f6ee', border:'#cfd5cf', gold:'#a8c9a1', teal:'#c8dfc0', rose:'#dceedd', lilac:'#e8f0e3', sage:'#cfe0d8' } },
-  { name:'Backout Reel', colors: { ink:'#0A0A0F', paper:'#101018', paperElevated:'#1A1A24', border:'#2A2A38', gold:'#FFD166', teal:'#FFD166', rose:'#FF6B6B', lilac:'#4ECDC4', sage:'#A78BFA' } },
+  { name:'Backout Reel', colors: { ink:'#0A0A0F', paper:'#101018', paperElevated:'#1A1A24', border:'#2A2A38', gold:'#FFD700', teal:'#FFD700', rose:'#E63946', lilac:'#4ECDC4', sage:'#A78BFA' } },
   { name:'Cream Sleeve', colors: { ink:'#F3EDE0', paper:'#FAF6EE', paperElevated:'#FFFFFF', border:'#DED2B8', gold:'#C1440E', teal:'#C1440E', rose:'#185FA5', lilac:'#1F6F50', sage:'#5B3A8E' } },
-  { name:'Static Violet', colors: { ink:'#120A1F', paper:'#1B1030', paperElevated:'#251640', border:'#3A2359', gold:'#FFE066', teal:'#FFE066', rose:'#FF3EA5', lilac:'#00E5D0', sage:'#7CFF6B' } },
+  { name:'Static Violet', colors: { ink:'#120A1F', paper:'#1B1030', paperElevated:'#251640', border:'#3A2359', gold:'#FFEA00', teal:'#FFEA00', rose:'#FF1F8F', lilac:'#00E5D0', sage:'#7CFF6B' } },
   { name:'Slate Print', colors: { ink:'#F5F6F8', paper:'#FFFFFF', paperElevated:'#ECEEF2', border:'#DADEE4', gold:'#B91C1C', teal:'#B91C1C', rose:'#65A30D', lilac:'#0369A1', sage:'#9333EA' } },
-  { name:'Deep Tide', colors: { ink:'#071A24', paper:'#0C2530', paperElevated:'#123444', border:'#1D4B5C', gold:'#FFD166', teal:'#FFD166', rose:'#EF476F', lilac:'#06D6A0', sage:'#A78BFA' } },
+  { name:'Deep Tide', colors: { ink:'#071A24', paper:'#0C2530', paperElevated:'#123444', border:'#1D4B5C', gold:'#FFD700', teal:'#FFD700', rose:'#E63946', lilac:'#06D6A0', sage:'#A78BFA' } },
   { name:'Pastel Haze', colors: { ink:'#031435', paper:'#fff8f0', paperElevated:'#e7e5ff', border:'#d6cdcd', gold:'#bf89ec', teal:'#a4daaf', rose:'#f5e69e', lilac:'#a3ade1', sage:'#eaac8a' } },
   { name:'So In Love', colors: { ink:'#ad9090', paper:'#fff8f0', paperElevated:'#ffe8ea', border:'#eed8d8', gold:'#ff0000', teal:'#c80404', rose:'#cf1717', lilac:'#9d0202', sage:'#5e0303' } }
 ];
