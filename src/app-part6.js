@@ -685,7 +685,6 @@ async function loadAppForUser(user){
   songs.forEach(s=>{
     if(!s.tier){
       const r = s.rating || 0;
-      const r = s.rating || 0;
       if(r >= 5) s.tier = 'S';
       else if(r === 4) s.tier = 'A';
       else if(r === 3) s.tier = 'B';
