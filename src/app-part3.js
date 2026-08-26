@@ -20,11 +20,11 @@ const THEME_PRESETS = [
   { name:'Confident', colors: { ink:'#0a1128', paper:'#f4f6fb', paperElevated:'#f5f3e8', border:'#cacdd5', gold:'#ffd60a', teal:'#1d3d8f', rose:'#3a6ea5', lilac:'#c0c0c0', sage:'#02225f' } },
   { name:'Playful', colors: { ink:'#1a1a2e', paper:'#fffbf0', paperElevated:'#ffeee4', border:'#d6d2cd', gold:'#ff595e', teal:'#ffca3a', rose:'#8ac926', lilac:'#1982c4', sage:'#6a4c93' } },
   { name:'Serene', colors: { ink:'#1b2b23', paper:'#f7faf5', paperElevated:'#f1f6ee', border:'#cfd5cf', gold:'#a8c9a1', teal:'#c8dfc0', rose:'#dceedd', lilac:'#e8f0e3', sage:'#cfe0d8' } },
-  { name:'Backout Reel', colors: { ink:'#0A0A0F', paper:'#101018', paperElevated:'#1A1A24', border:'#2A2A38', gold:'#FFD700', teal:'#FFD700', rose:'#E63946', lilac:'#2ECC71', sage:'#9B5DE5' } },
-  { name:'Cream Sleeve', colors: { ink:'#F3EDE0', paper:'#FAF6EE', paperElevated:'#FFFFFF', border:'#DED2B8', gold:'#CC8B00', teal:'#CC8B00', rose:'#C1121F', lilac:'#1B7A43', sage:'#6A4C93' } },
-  { name:'Static Violet', colors: { ink:'#120A1F', paper:'#1B1030', paperElevated:'#251640', border:'#3A2359', gold:'#FFEA00', teal:'#FFEA00', rose:'#FF3B3B', lilac:'#2EE6A8', sage:'#4C6EF5' } },
-  { name:'Slate Print', colors: { ink:'#F5F6F8', paper:'#FFFFFF', paperElevated:'#ECEEF2', border:'#DADEE4', gold:'#CA8A04', teal:'#CA8A04', rose:'#DC2626', lilac:'#16A34A', sage:'#7C3AED' } },
-  { name:'Deep Tide', colors: { ink:'#071A24', paper:'#0C2530', paperElevated:'#123444', border:'#1D4B5C', gold:'#FFD700', teal:'#FFD700', rose:'#E63946', lilac:'#2ECC71', sage:'#9B5DE5' } },
+  { name:'Backout Reel', colors: { ink:'#0A0A0F', paper:'#101018', paperElevated:'#1A1A24', border:'#2A2A38', gold:'#FFD700', teal:'#E63946', rose:'#4C6EF5', lilac:'#2ECC71', sage:'#9B5DE5' } },
+  { name:'Cream Sleeve', colors: { ink:'#F3EDE0', paper:'#FAF6EE', paperElevated:'#FFFFFF', border:'#DED2B8', gold:'#B8860B', teal:'#C1121F', rose:'#1D4ED8', lilac:'#1B7A43', sage:'#6A4C93' } },
+  { name:'Static Violet', colors: { ink:'#120A1F', paper:'#1B1030', paperElevated:'#251640', border:'#3A2359', gold:'#FFEA00', teal:'#FF3B3B', rose:'#00B4D8', lilac:'#2EE6A8', sage:'#FF66C4' } },
+  { name:'Slate Print', colors: { ink:'#F5F6F8', paper:'#FFFFFF', paperElevated:'#ECEEF2', border:'#DADEE4', gold:'#CA8A04', teal:'#DC2626', rose:'#2563EB', lilac:'#16A34A', sage:'#7C3AED' } },
+  { name:'Deep Tide', colors: { ink:'#071A24', paper:'#0C2530', paperElevated:'#123444', border:'#1D4B5C', gold:'#FFD700', teal:'#E63946', rose:'#FF66C4', lilac:'#2ECC71', sage:'#9B5DE5' } },
   { name:'Pastel Haze', colors: { ink:'#031435', paper:'#fff8f0', paperElevated:'#e7e5ff', border:'#d6cdcd', gold:'#bf89ec', teal:'#a4daaf', rose:'#f5e69e', lilac:'#a3ade1', sage:'#eaac8a' } },
   { name:'So In Love', colors: { ink:'#ad9090', paper:'#fff8f0', paperElevated:'#ffe8ea', border:'#eed8d8', gold:'#ff0000', teal:'#c80404', rose:'#cf1717', lilac:'#9d0202', sage:'#5e0303' } }
 ];
