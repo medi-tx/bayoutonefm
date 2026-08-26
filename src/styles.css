@@ -2634,7 +2634,12 @@
   .share-modal{ max-width:420px; }
   .share-sub{ font-size:13px; color:rgba(var(--on-paper-rgb),0.82); margin:-4px 0 12px; }
   .share-preview-wrap{ border-radius:12px; overflow:hidden; border:1px solid rgba(var(--on-paper-rgb),0.15); }
-  .share-preview-wrap canvas{ display:block; width:100%; height:auto; }
+  .share-preview-pair{ display:flex; flex-direction:column; gap:16px; }
+  .share-preview-item{ }
+  .share-preview-label{ display:block; text-align:center; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:1.5px; color:rgba(var(--on-paper-rgb),0.6); padding:10px 0 6px; background:rgba(var(--on-paper-rgb),0.04); border-bottom:1px solid rgba(var(--on-paper-rgb),0.08); }
+  .share-preview-item:last-child .share-preview-label{ border-bottom:none; }
+  .share-preview-item canvas{ display:block; width:100%; height:auto; }
+  .invite-link-row{ display:flex; gap:8px; align-items:center; }
   .share-actions{ display:flex; gap:10px; margin-top:14px; }
   .share-actions button{ flex:1; }
   .share-note{ font-size:11px; color:rgba(var(--on-paper-rgb),0.78); margin:10px 0 0; text-align:center; font-style:italic; }

@@ -737,6 +737,22 @@ async function loadAppForUser(user){
   }
 
   subscribeNotifications();
+
+  /* ---- invite link redemption ---- */
+  try{
+    const params = new URLSearchParams(location.search);
+    const inviteId = params.get('invite');
+    if(inviteId && inviteId !== currentUserId){
+      const alreadyFriend = myFriendIds && myFriendIds.has(inviteId);
+      const alreadyRequested = outgoingRequestIds && outgoingRequestIds.has(inviteId);
+      if(!alreadyFriend && !alreadyRequested){
+        await sendFriendRequest(inviteId);
+        history.replaceState(null, '', location.pathname + location.hash);
+      } else {
+        history.replaceState(null, '', location.pathname + location.hash);
+      }
+    }
+  }catch(e){}
 }
 
 /* ---- Apple Music / iTunes search (album + song lookup) ----

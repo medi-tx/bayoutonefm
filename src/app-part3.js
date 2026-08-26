@@ -1529,6 +1529,8 @@ let shareState = null;
 async function drawShareCard(opts){
   if(opts && opts.mode === 'song') return drawSongShareCard(opts);
   if(opts && opts.mode === 'tier') return drawTierShareCard(opts);
+  const previewBack = document.getElementById('sharePreviewBack');
+  if(previewBack) previewBack.style.display = 'none';
   const W = 1080, H = 1350;
   const cv = document.getElementById('shareCanvas');
   cv.width = W; cv.height = H;
@@ -1667,13 +1669,30 @@ function cardBase(ctx, W, H, username){
   ctx.beginPath(); ctx.moveTo(88, 368); ctx.lineTo(W-88, 368); ctx.stroke();
 }
 async function drawSongShareCard(opts){
-  const W = 1080, H = 1350;
   const cv = document.getElementById('shareCanvas');
+  const s = opts.song || {};
+  function escapeCss(x){ try{return CSS.escape(x); }catch(e){ return String(x).replace(/"|\\/g,''); } }
+  let frontEl = null;
+  if(s.id){
+    const card = document.querySelector('.card[data-id="' + escapeCss(s.id) + '"]');
+    if(card) frontEl = card.querySelector('.card-front');
+  }
+  if(window.html2canvas && frontEl){
+    try{
+      frontEl.scrollIntoView({behavior:'auto', block:'center', inline:'center'});
+      await new Promise(r=>setTimeout(r,150));
+      const c = await html2canvas(frontEl, { backgroundColor: null, scale: 2 });
+      cv.width = c.width; cv.height = c.height;
+      const ctx = cv.getContext('2d');
+      ctx.drawImage(c, 0, 0);
+      return;
+    }catch(e){ console.warn('html2canvas front failed, falling back:', e); }
+  }
+  const W = 1080, H = 1350;
   cv.width = W; cv.height = H;
   const ctx = cv.getContext('2d');
   cardBase(ctx, W, H, opts.username);
   const t = loadTheme();
-  const s = opts.song || {};
   const coverS = 360;
   const coverX = (W - coverS)/2, coverY = 420;
   const img = await loadCardImage(s.coverArt);
@@ -1728,20 +1747,36 @@ async function drawSongShareCard(opts){
     ctx.font = 'italic 500 28px Georgia, serif';
     lines.forEach((ln,i)=>{ ctx.fillText(cardTruncate(ctx, ln, W - 260, ctx.font), W/2, coverY + coverS + 348 + i*40); });
   }
-  ctx.fillStyle = t.paper ? t.paper + '66' : 'rgba(238,221,149,0.4)';
-  ctx.font = '500 20px "Space Grotesk", sans-serif';
-  const now = new Date();
   ctx.fillStyle='#eedd95'; ctx.fillText('Join bayoutonefm today to share your own music', W/2, H - 96);
   ctx.textAlign = 'left';
+  const backCv = document.getElementById('shareCanvasBack');
+  if(backCv) await drawSongBackShareCard(opts, 'shareCanvasBack');
 }
 
-async function drawSongBackShareCard(opts){
+async function drawSongBackShareCard(opts, cvId){
+  const cv = document.getElementById(cvId || 'shareCanvas');
+  const s = opts.song || {};
+  function escapeCss(x){ try{return CSS.escape(x); }catch(e){ return String(x).replace(/"|\\/g,''); } }
+  let backEl = null;
+  if(s.id){
+    const card = document.querySelector('.card[data-id="' + escapeCss(s.id) + '"]');
+    if(card) backEl = card.querySelector('.card-back');
+  }
+  if(window.html2canvas && backEl){
+    try{
+      backEl.scrollIntoView({behavior:'auto', block:'center', inline:'center'});
+      await new Promise(r=>setTimeout(r,150));
+      const c = await html2canvas(backEl, { backgroundColor: null, scale: 2 });
+      cv.width = c.width; cv.height = c.height;
+      const ctx = cv.getContext('2d');
+      ctx.drawImage(c, 0, 0);
+      return;
+    }catch(e){ console.warn('html2canvas back failed, falling back:', e); }
+  }
   const W = 1080, H = 1350;
-  const cv = document.getElementById('shareCanvas');
   cv.width = W; cv.height = H;
   const ctx = cv.getContext('2d');
   cardBase(ctx, W, H, opts.username);
-  const s = opts.song || {};
   ctx.fillStyle = '#eedd95';
   ctx.font = '700 42px "Space Grotesk", sans-serif';
   ctx.textAlign = 'left';
@@ -1885,6 +1920,8 @@ async function openShareCard(opts){
   document.getElementById('shareNote').textContent = 'Generating…';
   document.getElementById('shareOverlay').classList.add('open');
   document.getElementById('shareSendRow').style.display = (opts.mode === 'song') ? '' : 'none';
+  const previewBack = document.getElementById('sharePreviewBack');
+  if(previewBack) previewBack.style.display = (opts.mode === 'song') ? '' : 'none';
   try{
     await drawShareCard(opts);
     document.getElementById('shareNote').textContent = 'Tip: share it in a story, group chat, or wherever you swap music.';
@@ -1997,10 +2034,6 @@ document.getElementById('shareDownloadBtn').addEventListener('click', async ()=>
   try{
     note.textContent = 'Preparing images…';
     const baseName = 'cataloguex-card-' + (String(shareState.username||'you').replace(/[^a-z0-9]/gi,'').toLowerCase() || 'you');
-    const frontName = baseName + '-front.png';
-    const backName = baseName + '-back.png';
-
-    function escapeCss(s){ try{return CSS.escape(s); }catch(e){ return s.replace(/"|\\/g,''); } }
     async function saveBlob(blob, name){
       if(window.showSaveFilePicker){
         try{
@@ -2014,56 +2047,27 @@ document.getElementById('shareDownloadBtn').addEventListener('click', async ()=>
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); document.body.removeChild(a); setTimeout(()=>URL.revokeObjectURL(url),1500);
     }
-
-    const song = shareState.song || {};
-    let frontEl = null, backEl = null;
-    if(song && song.id){
-      const card = document.querySelector('.card[data-id="' + (escapeCss(song.id)) + '"]');
-      if(card){ frontEl = card.querySelector('.card-front'); backEl = card.querySelector('.card-back'); }
+    const isSong = shareState.mode === 'song';
+    const frontName = isSong ? baseName + '-front.png' : baseName + '.png';
+    const cv = document.getElementById('shareCanvas');
+    const blobFront = await new Promise((res, rej)=> cv.toBlob(b => b ? res(b) : rej(new Error('export failed')), 'image/png'));
+    await saveBlob(blobFront, frontName);
+    if(isSong){
+      const backCv = document.getElementById('shareCanvasBack');
+      if(backCv && backCv.width > 10){
+        const backName = baseName + '-back.png';
+        const blobBack = await new Promise((res, rej)=> backCv.toBlob(b => b ? res(b) : rej(new Error('export failed')), 'image/png'));
+        await saveBlob(blobBack, backName);
+        note.textContent = 'Saved both front and back.';
+      } else {
+        note.textContent = 'Saved — check your Downloads folder.';
+      }
+    } else {
+      note.textContent = 'Saved — check your Downloads folder.';
     }
-
-    // Capture front
-    if(window.html2canvas && frontEl){
-      try{
-        frontEl.scrollIntoView({behavior:'auto', block:'center', inline:'center'});
-        await new Promise(r=>setTimeout(r,120));
-        const c = await html2canvas(frontEl, { backgroundColor: null, scale: 2 });
-        const blob = await new Promise(res=>c.toBlob(res,'image/png'));
-        await saveBlob(blob, frontName);
-      }catch(e){ console.warn('html2canvas front failed, falling back:', e); frontEl = null; }
-    }
-
-    // Fallback: draw front to shareCanvas
-    if(!frontEl){
-      const cv = document.getElementById('shareCanvas');
-      await drawSongShareCard(shareState);
-      const blobFront = await new Promise((res, rej)=> cv.toBlob(b => b ? res(b) : rej(new Error('export failed')), 'image/png'));
-      await saveBlob(blobFront, frontName);
-    }
-
-    // Capture back
-    if(window.html2canvas && backEl){
-      try{
-        backEl.scrollIntoView({behavior:'auto', block:'center', inline:'center'});
-        await new Promise(r=>setTimeout(r,120));
-        const c2 = await html2canvas(backEl, { backgroundColor: null, scale: 2 });
-        const blob2 = await new Promise(res=>c2.toBlob(res,'image/png'));
-        await saveBlob(blob2, backName);
-        note.textContent = 'Saved both images.';
-      }catch(e){ console.warn('html2canvas back failed, falling back:', e); backEl = null; }
-    }
-
-    if(!backEl){
-      const cv2 = document.getElementById('shareCanvas');
-      await drawSongBackShareCard(shareState);
-      const blobBack = await new Promise((res, rej)=> cv2.toBlob(b => b ? res(b) : rej(new Error('export failed')), 'image/png'));
-      await saveBlob(blobBack, backName);
-      note.textContent = 'Saved both images.';
-    }
-
   }catch(err){
     console.error('PNG download failed:', err);
-    note.textContent = 'Download failed — some artwork or extension may block capture. Try disabling extensions or use Copy image.';
+    note.textContent = 'Download failed — some artwork blocks export. Try Copy image instead.';
   }
 });
 document.getElementById('shareCopyBtn').addEventListener('click', async ()=>{
@@ -2077,6 +2081,63 @@ document.getElementById('shareCopyBtn').addEventListener('click', async ()=>{
     document.getElementById('shareNote').textContent = 'Copy isn\u2019t supported in this browser — use Download instead.';
   }
 });
+
+/* ---- invite friends ---- */
+document.getElementById('inviteBtn').addEventListener('click', ()=>{
+  trackEvent('invite_open');
+  if(!currentUserId){ alert('Please sign in first.'); return; }
+  const inviteUrl = location.origin + location.pathname + '?invite=' + encodeURIComponent(currentUserId);
+  document.getElementById('inviteLinkInput').value = inviteUrl;
+  document.getElementById('inviteOverlay').classList.add('open');
+  loadInviteHistory();
+});
+document.getElementById('inviteCopyBtn').addEventListener('click', ()=>{
+  trackEvent('invite_copy');
+  const url = document.getElementById('inviteLinkInput').value;
+  navigator.clipboard.writeText(url).then(()=>{
+    document.getElementById('inviteCopyBtn').textContent = '✓ Copied!';
+    setTimeout(()=>{ document.getElementById('inviteCopyBtn').textContent = '📋 Copy'; }, 2000);
+  }).catch(()=>{
+    prompt('Copy this invite link:', url);
+  });
+});
+document.getElementById('inviteShareNativeBtn').addEventListener('click', ()=>{
+  trackEvent('invite_share_native');
+  const url = document.getElementById('inviteLinkInput').value;
+  const text = 'Join me on bayoutonefm — your personal music cataloguex! ' + url;
+  if(navigator.share){
+    navigator.share({ title: 'Join bayoutonefm', text, url }).catch(()=>{});
+  } else {
+    navigator.clipboard.writeText(text).then(()=>{
+      document.getElementById('inviteShareNativeBtn').textContent = '✓ Copied to clipboard!';
+      setTimeout(()=>{ document.getElementById('inviteShareNativeBtn').textContent = '📤 Share via…'; }, 2000);
+    }).catch(()=>{
+      prompt('Share this invite:', text);
+    });
+  }
+});
+document.getElementById('inviteCloseBtn').addEventListener('click', ()=>{
+  document.getElementById('inviteOverlay').classList.remove('open');
+});
+async function loadInviteHistory(){
+  if(!currentUserId || !sb) return;
+  const listEl = document.getElementById('inviteSentList');
+  try{
+    const { data, error } = await sb.from('profiles').select('user_id, username, photo, created_at').order('created_at', {ascending:false}).limit(20);
+    if(error || !data) return;
+    const myFriends = Array.from(myFriendIds || []);
+    const invitees = data.filter(p => myFriends.includes(p.user_id));
+    if(!invitees.length){
+      listEl.innerHTML = '<p style="font-size:12px; color:rgba(var(--on-paper-rgb),0.55); text-align:center;">Share the link above to invite friends!</p>';
+    } else {
+      listEl.innerHTML = '<p class="theme-section-label" style="margin-bottom:8px;">Recent friends</p>' +
+        invitees.slice(0,8).map(p => {
+          const photo = p.photo ? `<img src="${escapeAttr(p.photo)}" alt="" style="width:24px;height:24px;border-radius:50%;object-fit:cover;">` : `<span class="drow-fallback is-pfp" style="width:24px;height:24px;font-size:10px;"></span>`;
+          return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;">${photo}<span style="font-size:13px;color:var(--on-paper);">@${escapeHtml(p.username)}</span></div>`;
+        }).join('');
+    }
+  }catch(e){}
+}
 
 /* ---- 30-second audio previews (official Apple Music previews via iTunes Search API) ---- */
 const previewCache = {};
