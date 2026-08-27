@@ -3896,6 +3896,11 @@ function showAlbumTrackList(){
 
 function renderAlbumTrackList(listEl){
   let html = '';
+  if(!albumBuildTracks.length){
+    html = `<div class="profile-empty-note" style="text-align:center; padding:24px;">No tracks yet. Search for the album again or paste a link to add tracks back.</div>`;
+    const confirm = document.getElementById('spotifyImportConfirmBtn');
+    if(confirm){ confirm.disabled = true; confirm.textContent = 'Done'; }
+  }
   albumBuildTracks.forEach((t, i) => {
     const tierBadge = t.tier ? `<span style="display:inline-block;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700;background:var(--rose);color:#fff;margin-left:6px;">${t.tier}</span>` : '';
     const scoreBadge = t.score ? `<span style="display:inline-block;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700;border:1px solid var(--rose);color:var(--rose);margin-left:4px;">${t.score}</span>` : '';
@@ -3908,7 +3913,10 @@ function renderAlbumTrackList(listEl){
         <span class="drow-name">${escapeHtml(t.title)}</span><br>
         <span class="drow-bio">${escapeHtml((t.artists||[]).join(', '))}</span>${tierBadge}${scoreBadge}${editedBadge}
       </span>
-      <button class="ab-edit-btn" data-ab-edit="${i}" style="flex-shrink:0; font-family:'IBM Plex Mono',monospace; font-size:11px; background:none; border:1px solid rgba(var(--on-paper-rgb),0.25); color:rgba(var(--on-paper-rgb),0.88); padding:5px 10px; border-radius:6px; cursor:pointer;">Edit</button>
+      <span style="display:flex; gap:6px; flex-shrink:0;">
+        <button class="ab-edit-btn" data-ab-edit="${i}" style="font-family:'IBM Plex Mono',monospace; font-size:11px; background:none; border:1px solid rgba(var(--on-paper-rgb),0.25); color:rgba(var(--on-paper-rgb),0.88); padding:5px 10px; border-radius:6px; cursor:pointer;">Edit</button>
+        <button class="ab-remove-btn" data-ab-remove="${i}" title="Remove track" style="font-family:'IBM Plex Mono',monospace; font-size:11px; background:none; border:1px solid var(--rose); color:var(--rose); padding:5px 10px; border-radius:6px; cursor:pointer;">Remove</button>
+      </span>
     </div>`;
   });
   listEl.innerHTML = html;
@@ -3917,6 +3925,16 @@ function renderAlbumTrackList(listEl){
       e.stopPropagation();
       const idx = parseInt(btn.dataset.abEdit, 10);
       openAlbumTrackEditor(idx);
+    });
+  });
+  listEl.querySelectorAll('.ab-remove-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const idx = parseInt(btn.dataset.abRemove, 10);
+      if(idx < 0 || idx >= albumBuildTracks.length) return;
+      if(albumBuildEditingIdx >= 0 && albumBuildEditingIdx > idx) albumBuildEditingIdx--;
+      albumBuildTracks.splice(idx, 1);
+      renderAlbumTrackList(listEl);
     });
   });
 }
