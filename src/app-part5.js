@@ -1693,10 +1693,10 @@ function openWishModal(item){
   document.getElementById('w-artist').value = (item?.artists||[]).join(', ');
   document.getElementById('w-album').value = item?.album || '';
   document.getElementById('w-year').value = item?.year || '';
-  document.getElementById('w-lyric').value = item?.lyricSnippet || '';
   document.getElementById('w-why').value = item?.why || '';
   currentWishCoverArt = item?.coverArt || null;
   setImagePreview('w-cover', currentWishCoverArt);
+  updateWishLyricsBtn();
   document.getElementById('wishSearchField').style.display = item ? 'none' : '';
   document.getElementById('wishManualForm').style.display = item ? '' : 'none';
   document.getElementById('wishSaveBtn').style.display = item ? '' : 'none';
@@ -1715,6 +1715,21 @@ function closeWishModal(){
   document.getElementById('wishOverlay').classList.remove('open');
   editingWishId = null;
 }
+function updateWishLyricsBtn(){
+  const btn = document.getElementById('w-lyrics-btn');
+  const url = geniusLyricsUrl(document.getElementById('w-title').value, document.getElementById('w-artist').value.split(',').map(a=>a.trim()));
+  if(url){
+    btn.href = url;
+    btn.style.opacity = '1';
+    btn.style.pointerEvents = 'auto';
+  } else {
+    btn.removeAttribute('href');
+    btn.style.opacity = '0.45';
+    btn.style.pointerEvents = 'none';
+  }
+}
+document.getElementById('w-title').addEventListener('input', updateWishLyricsBtn);
+document.getElementById('w-artist').addEventListener('input', updateWishLyricsBtn);
 function renderWishSearchResults(query){
   const wrap = document.getElementById('wishSearchResults');
   const q = query.trim().toLowerCase();

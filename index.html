@@ -3761,7 +3761,10 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
       <div class="field"><label>Album</label><input id="w-album" type="text"></div>
     </div>
     <div class="field"><label>Year</label><input id="w-year" type="text" inputmode="numeric"></div>
-    <div class="field"><label>Lyric snippet</label><textarea id="w-lyric" class="lyric-input" placeholder="a line or verse"></textarea></div>
+    <div class="field">
+      <label>Lyrics</label>
+      <a class="lyrics-link" id="w-lyrics-btn" target="_blank" rel="noopener" style="display:inline-block; padding:8px 12px; border:1px solid rgba(var(--on-paper-rgb),0.25); border-radius:6px;">LYRICS ↗</a>
+    </div>
     <div class="field"><label>What you wish you'd written</label><textarea id="w-why" placeholder="the hook, the twist, the line that gets you…"></textarea></div>
     </div>
     <div class="modal-actions">
@@ -10989,10 +10992,10 @@ function openWishModal(item){
   document.getElementById('w-artist').value = (item?.artists||[]).join(', ');
   document.getElementById('w-album').value = item?.album || '';
   document.getElementById('w-year').value = item?.year || '';
-  document.getElementById('w-lyric').value = item?.lyricSnippet || '';
   document.getElementById('w-why').value = item?.why || '';
   currentWishCoverArt = item?.coverArt || null;
   setImagePreview('w-cover', currentWishCoverArt);
+  updateWishLyricsBtn();
   document.getElementById('wishSearchField').style.display = item ? 'none' : '';
   document.getElementById('wishManualForm').style.display = item ? '' : 'none';
   document.getElementById('wishSaveBtn').style.display = item ? '' : 'none';
@@ -11011,6 +11014,21 @@ function closeWishModal(){
   document.getElementById('wishOverlay').classList.remove('open');
   editingWishId = null;
 }
+function updateWishLyricsBtn(){
+  const btn = document.getElementById('w-lyrics-btn');
+  const url = geniusLyricsUrl(document.getElementById('w-title').value, document.getElementById('w-artist').value.split(',').map(a=>a.trim()));
+  if(url){
+    btn.href = url;
+    btn.style.opacity = '1';
+    btn.style.pointerEvents = 'auto';
+  } else {
+    btn.removeAttribute('href');
+    btn.style.opacity = '0.45';
+    btn.style.pointerEvents = 'none';
+  }
+}
+document.getElementById('w-title').addEventListener('input', updateWishLyricsBtn);
+document.getElementById('w-artist').addEventListener('input', updateWishLyricsBtn);
 function renderWishSearchResults(query){
   const wrap = document.getElementById('wishSearchResults');
   const q = query.trim().toLowerCase();
