@@ -3289,15 +3289,13 @@ function openImportUrlScreen(mode){
 }
 document.getElementById('addMusicSongBtn').addEventListener('click', ()=>{
   trackEvent('add_song_single');
-  addMusicMode = 'song';
   document.getElementById('addMusicOverlay').classList.remove('open');
-  openImportUrlScreen('song');
+  openModal(null);
 });
 document.getElementById('addMusicAlbumBtn').addEventListener('click', ()=>{
   trackEvent('add_song_album');
-  addMusicMode = 'album';
   document.getElementById('addMusicOverlay').classList.remove('open');
-  openImportUrlScreen('album');
+  openMultiModal('album');
 });
 document.getElementById('addMusicCancelBtn').addEventListener('click', ()=>{
   document.getElementById('addMusicOverlay').classList.remove('open');
