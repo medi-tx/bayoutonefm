@@ -10996,7 +10996,12 @@ function openWishModal(item){
   document.getElementById('wishSearchResults').style.display = 'none';
   document.getElementById('wishSearchResults').innerHTML = '';
   document.getElementById('wishOverlay').classList.add('open');
-  document.getElementById('w-title').focus();
+  if(item){
+    document.getElementById('w-title').focus();
+  } else {
+    renderWishSearchResults('');
+    document.getElementById('w-search').focus();
+  }
 }
 function closeWishModal(){
   document.getElementById('wishOverlay').classList.remove('open');
@@ -11005,42 +11010,61 @@ function closeWishModal(){
 function renderWishSearchResults(query){
   const wrap = document.getElementById('wishSearchResults');
   const q = query.trim().toLowerCase();
-  if(!q){ wrap.style.display = 'none'; wrap.innerHTML = ''; return; }
-  const matches = songs.filter(s=>{
-    const title = (s.title||'').toLowerCase();
-    const artists = (s.artists||[]).join(' ').toLowerCase();
-    return title.includes(q) || artists.includes(q);
-  }).slice(0, 8);
-  wrap.style.display = 'block';
-  if(matches.length === 0){
-    wrap.innerHTML = '<p class="profile-empty-note">No matching songs in your cataloguex.</p>';
+  let source = songs;
+  if(q){
+    source = songs.filter(s=>{
+      const title = (s.title||'').toLowerCase();
+      const artists = (s.artists||[]).join(' ').toLowerCase();
+      return title.includes(q) || artists.includes(q);
+    });
+  }
+  if(!source.length){
+    wrap.style.display = 'block';
+    wrap.innerHTML = `<p class="profile-empty-note">${q ? 'No matching songs in your cataloguex.' : 'Your cataloguex is empty. Add songs to your library first, or use the form below to add manually.'}</p>`;
     return;
   }
-  wrap.innerHTML = matches.map(s=>`
-    <button type="button" class="discover-row" data-song-id="${s.id}">
-      ${s.coverArt ? `<img loading="lazy" decoding="async" src="${escapeAttr(s.coverArt)}" alt="Album cover">` : `<span class="drow-fallback">${escapeHtml((s.title||'?').charAt(0).toUpperCase())}</span>`}
-      <span>
-        <span class="drow-name">${escapeHtml(s.title||'Untitled')}</span><br>
-        <span class="drow-bio">${escapeHtml((s.artists||[]).join(', ') || 'Unknown artist')}</span>
-      </span>
-    </button>
-  `).join('');
+  const cap = 200;
+  const shown = source.slice(0, cap);
+  let html = shown.map(s=>{
+    const already = wishlist.some(w=>songKey(w)===songKey(s));
+    return `
+      <button type="button" class="discover-row" data-song-id="${s.id}" data-added="${already?'1':'0'}" style="${already ? 'opacity:0.55; cursor:default;' : ''}">
+        ${s.coverArt ? `<img loading="lazy" decoding="async" src="${escapeAttr(s.coverArt)}" alt="Album cover">` : `<span class="drow-fallback">${escapeHtml((s.title||'?').charAt(0).toUpperCase())}</span>`}
+        <span>
+          <span class="drow-name">${escapeHtml(s.title||'Untitled')}</span><br>
+          <span class="drow-bio">${escapeHtml((s.artists||[]).join(', ') || 'Unknown artist')}</span>
+        </span>
+        <span data-wish-tag style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:${already ? 'var(--teal)' : 'var(--rose)'}; flex-shrink:0;">${already ? '✓ In list' : '+ Add'}</span>
+      </button>`;
+  }).join('');
+  if(source.length > cap){
+    html += `<p class="profile-empty-note" style="text-align:center;padding:8px;">Showing first ${cap} of ${source.length} songs. Type to search for a specific one.</p>`;
+  }
+  wrap.style.display = 'block';
+  wrap.innerHTML = html;
 }
 document.getElementById('w-search').addEventListener('input', e=>renderWishSearchResults(e.target.value));
 document.getElementById('wishSearchResults').addEventListener('click', e=>{
   const row = e.target.closest('[data-song-id]');
   if(!row) return;
+  if(row.dataset.added === '1') return;
   const s = songs.find(x=>x.id===row.dataset.songId);
   if(!s) return;
-  document.getElementById('w-title').value = s.title || '';
-  document.getElementById('w-artist').value = (s.artists||[]).join(', ');
-  document.getElementById('w-album').value = s.album || '';
-  document.getElementById('w-year').value = s.year || '';
-  currentWishCoverArt = s.coverArt || null;
-  setImagePreview('w-cover', currentWishCoverArt);
-  document.getElementById('w-search').value = '';
-  document.getElementById('wishSearchResults').style.display = 'none';
-  document.getElementById('wishSearchResults').innerHTML = '';
+  const key = songKey(s);
+  if(wishlist.some(w=>songKey(w)===key)){
+    row.dataset.added = '1';
+    row.style.opacity = '0.55';
+    row.style.cursor = 'default';
+    const tag = row.querySelector('[data-wish-tag]');
+    if(tag){ tag.textContent = '✓ In list'; tag.style.color = 'var(--teal)'; }
+    showToast('Already in your wishlist');
+    return;
+  }
+  wishlist.unshift({ id: uid(), createdAt: Date.now(), title: s.title||'Untitled', artists: s.artists||[], album: s.album||'', year: s.year||'', lyricSnippet: s.lyricSnippet || '', why: s.why || '', coverArt: s.coverArt || null });
+  saveWishlist();
+  renderWishlistGrid();
+  renderWishSearchResults(document.getElementById('w-search').value);
+  showToast(`Added "${s.title}" to songs you wish you wrote`, 4000);
 });
 document.getElementById('openWish').addEventListener('click', ()=>{ trackEvent('open_wishlist_add'); openWishModal(null); });
 document.getElementById('wishCancelBtn').addEventListener('click', closeWishModal);
