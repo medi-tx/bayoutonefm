@@ -2705,6 +2705,14 @@ function closeModal(){
       renderAlbumTrackList(document.getElementById('spotifyTrackList'));
     }
   }
+  if(window._playlistBuildReturn){
+    window._playlistBuildReturn = false;
+    if(playlistImportedTracks && playlistImportedTracks.length){
+      playlistBuildEditingIdx = -1;
+      document.getElementById('spotifyImportOverlay').classList.add('open');
+      renderPlaylistTrackList(document.getElementById('spotifyTrackList'), playlistImportedTracks);
+    }
+  }
 }
 function resetEditorTabs(prefix){
   var tabs = document.querySelectorAll('[data-editor-tab$="-'+prefix+'"]');
@@ -2821,6 +2829,10 @@ function showDupModal(duplicates, onConfirm){
 function handleSave(){
   if(window._albumBuildReturn && albumBuildEditingIdx >= 0){
     saveAlbumTrackBack();
+    return;
+  }
+  if(window._playlistBuildReturn && playlistBuildEditingIdx >= 0){
+    savePlaylistTrackBack();
     return;
   }
   const title = document.getElementById('f-title').value.trim();
@@ -3484,6 +3496,7 @@ let playlistImportUrl = null;
 let playlistImportName = '';
 let playlistImportInProgress = false;
 let playlistImportLoadedUrl = null;
+let playlistBuildEditingIdx = -1;
 let importProgressTimer = null;
 let importProgressState = null;
 
@@ -3939,16 +3952,12 @@ function renderAlbumTrackList(listEl){
   });
 }
 
-function openAlbumTrackEditor(idx){
-  albumBuildEditingIdx = idx;
-  const t = albumBuildTracks[idx];
-  document.getElementById('spotifyImportOverlay').classList.remove('open');
-  editingId = null;
-  document.getElementById('modalTitle').textContent = 'Edit track ' + (t.trackNumber || idx+1) + (t.title ? ' — ' + t.title : '');
+function fillSongEditorFields(t, opts){
+  opts = opts || {};
   document.getElementById('f-title').value = t.title || '';
   document.getElementById('f-artist').value = (t.artists||[]).join(', ');
-  document.getElementById('f-album').value = t.album || albumBuildMeta.albumName || '';
-  document.getElementById('f-year').value = t.year || albumBuildMeta.albumYear || '';
+  document.getElementById('f-album').value = t.album || opts.albumName || '';
+  document.getElementById('f-year').value = t.year || opts.albumYear || '';
   document.getElementById('f-genre').value = (t.genres||[]).join(', ');
   document.getElementById('f-why').value = t.why || '';
   document.getElementById('f-quick').value = '';
@@ -3973,7 +3982,7 @@ function openAlbumTrackEditor(idx){
   document.getElementById('f-vibe-energy').value = 50;
   document.getElementById('f-vibe-mood').value = 50;
   document.getElementById('f-vibe-nostalgia').value = 50;
-  currentCoverArt = t.coverArt || albumBuildMeta.coverArt || null;
+  currentCoverArt = t.coverArt || opts.coverArt || null;
   currentExplicit = !!t.explicit;
   currentFav = false;
   currentSongSource = null;
@@ -3989,6 +3998,15 @@ function openAlbumTrackEditor(idx){
   renderRemindsPicker('f', t.remindsOf || []);
   currentTier = t.tier || null;
   renderTierPicker();
+}
+
+function openAlbumTrackEditor(idx){
+  albumBuildEditingIdx = idx;
+  const t = albumBuildTracks[idx];
+  document.getElementById('spotifyImportOverlay').classList.remove('open');
+  editingId = null;
+  document.getElementById('modalTitle').textContent = 'Edit track ' + (t.trackNumber || idx+1) + (t.title ? ' — ' + t.title : '');
+  fillSongEditorFields(t, { albumName: albumBuildMeta.albumName, albumYear: albumBuildMeta.albumYear, coverArt: albumBuildMeta.coverArt });
   const saveBtn = document.getElementById('saveBtn');
   saveBtn.textContent = 'Go Back To Adding Album';
   saveBtn.classList.add('album-return-btn');
@@ -3996,6 +4014,7 @@ function openAlbumTrackEditor(idx){
   resetEditorTabs('single');
   document.getElementById('f-title').focus();
   window._albumBuildReturn = true;
+  window._playlistBuildReturn = false;
 }
 
 function saveAlbumTrackBack(){
@@ -4024,6 +4043,51 @@ function saveAlbumTrackBack(){
   document.getElementById('overlay').classList.remove('open');
   document.getElementById('spotifyImportOverlay').classList.add('open');
   renderAlbumTrackList(document.getElementById('spotifyTrackList'));
+}
+
+function openPlaylistTrackEditor(idx){
+  playlistBuildEditingIdx = idx;
+  const t = playlistImportedTracks[idx];
+  document.getElementById('spotifyImportOverlay').classList.remove('open');
+  editingId = null;
+  document.getElementById('modalTitle').textContent = 'Edit track ' + (idx+1) + (t.title ? ' — ' + t.title : '');
+  fillSongEditorFields(t, {});
+  const saveBtn = document.getElementById('saveBtn');
+  saveBtn.textContent = 'Go Back To Adding Playlist';
+  saveBtn.classList.add('album-return-btn');
+  document.getElementById('overlay').classList.add('open');
+  resetEditorTabs('single');
+  document.getElementById('f-title').focus();
+  window._playlistBuildReturn = true;
+  window._albumBuildReturn = false;
+}
+
+function savePlaylistTrackBack(){
+  if(playlistBuildEditingIdx < 0 || playlistBuildEditingIdx >= playlistImportedTracks.length) return;
+  window._playlistBuildReturn = false;
+  const t = playlistImportedTracks[playlistBuildEditingIdx];
+  t.title = document.getElementById('f-title').value.trim() || t.title;
+  t.artists = document.getElementById('f-artist').value.split(',').map(a=>a.trim()).filter(Boolean);
+  t.album = document.getElementById('f-album').value.trim() || t.album;
+  t.year = document.getElementById('f-year').value.trim() || t.year;
+  t.genres = document.getElementById('f-genre').value.split(',').map(g=>g.trim()).filter(Boolean);
+  t.why = document.getElementById('f-why').value.trim();
+  t.credit = document.getElementById('f-credit').value.trim();
+  t.appleMusicUrl = document.getElementById('f-apple').value.trim() || t.appleMusicUrl;
+  t.trackNumber = parseInt(document.getElementById('f-track').value, 10) || t.trackNumber;
+  t.score = document.getElementById('f-score').value ? parseInt(document.getElementById('f-score').value, 10) : null;
+  t.tier = currentTier || t.tier;
+  t.explicit = currentExplicit;
+  t.releaseDate = document.getElementById('f-release-date').value.trim() || t.releaseDate;
+  if(currentCoverArt) t.coverArt = currentCoverArt;
+  t.edited = true;
+  playlistBuildEditingIdx = -1;
+  const saveBtn = document.getElementById('saveBtn');
+  saveBtn.textContent = 'Save song';
+  saveBtn.classList.remove('album-return-btn');
+  document.getElementById('overlay').classList.remove('open');
+  document.getElementById('spotifyImportOverlay').classList.add('open');
+  renderPlaylistTrackList(document.getElementById('spotifyTrackList'), playlistImportedTracks);
 }
 
 function importAlbumBuildTracks(){
@@ -4330,6 +4394,7 @@ async function loadPlaylist(url){
   confirmBtn.disabled = true;
   playlistImportedTracks = [];
   playlistImportLoadedUrl = null;
+  playlistBuildEditingIdx = -1;
 
   const service = detectPlaylistService(url);
   if(!service){
@@ -4405,15 +4470,25 @@ async function loadPlaylist(url){
 function renderPlaylistTrackList(listEl, tracks){
   const max = Math.min(tracks.length, 200);
   let html = '';
+  if(!tracks.length){
+    html = `<div class="profile-empty-note" style="text-align:center; padding:24px;">No tracks yet. Paste the playlist link again to reload it.</div>`;
+    const confirm = document.getElementById('spotifyImportConfirmBtn');
+    if(confirm){ confirm.disabled = true; confirm.textContent = 'Import tracks'; }
+  }
   for(let i = 0; i < max; i++){
     const t = tracks[i];
-    html += `<div class="discover-row" style="cursor:default;" data-pl-idx="${i}">
+    const editedBadge = t.edited ? `<span title="Edited" style="display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:var(--teal);color:#fff;font-size:10px;font-weight:700;margin-left:6px;">✓</span>` : '';
+    html += `<div class="discover-row" style="cursor:default; align-items:center;" data-pl-idx="${i}">
       ${t.coverArt
         ? `<img loading="lazy" decoding="async" src="${escapeAttr(t.coverArt)}" style="width:36px;height:36px;border-radius:5px;object-fit:cover;flex-shrink:0;" alt="Album cover">`
         : `<span class="drow-fallback" style="font-size:11px;">${i+1}</span>`}
-      <span style="flex:1;">
+      <span style="flex:1; min-width:0;">
         <span class="drow-name">${escapeHtml(t.title)}</span><br>
-        <span class="drow-bio">${escapeHtml((t.artists||[]).join(', '))}${t.album ? ' · ' + escapeHtml(t.album) : ''}</span>
+        <span class="drow-bio">${escapeHtml((t.artists||[]).join(', '))}${t.album ? ' · ' + escapeHtml(t.album) : ''}</span>${editedBadge}
+      </span>
+      <span style="display:flex; gap:6px; flex-shrink:0;">
+        <button class="pl-edit-btn" data-pl-edit="${i}" style="font-family:'IBM Plex Mono',monospace; font-size:11px; background:none; border:1px solid rgba(var(--on-paper-rgb),0.25); color:rgba(var(--on-paper-rgb),0.88); padding:5px 10px; border-radius:6px; cursor:pointer;">Edit</button>
+        <button class="pl-remove-btn" data-pl-remove="${i}" title="Remove track" style="font-family:'IBM Plex Mono',monospace; font-size:11px; background:none; border:1px solid var(--rose); color:var(--rose); padding:5px 10px; border-radius:6px; cursor:pointer;">Remove</button>
       </span>
     </div>`;
   }
@@ -4421,6 +4496,23 @@ function renderPlaylistTrackList(listEl, tracks){
     html += `<p class="profile-empty-note" style="text-align:center;padding:8px;">Showing first ${max} of ${tracks.length} tracks. Scroll the list or import to add all.</p>`;
   }
   listEl.innerHTML = html;
+  listEl.querySelectorAll('.pl-edit-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const idx = parseInt(btn.dataset.plEdit, 10);
+      openPlaylistTrackEditor(idx);
+    });
+  });
+  listEl.querySelectorAll('.pl-remove-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const idx = parseInt(btn.dataset.plRemove, 10);
+      if(idx < 0 || idx >= tracks.length) return;
+      if(playlistBuildEditingIdx >= 0 && playlistBuildEditingIdx > idx) playlistBuildEditingIdx--;
+      tracks.splice(idx, 1);
+      renderPlaylistTrackList(listEl, tracks);
+    });
+  });
 }
 
 async function enrichTracksFromItunes(tracks, listEl, statusEl){
