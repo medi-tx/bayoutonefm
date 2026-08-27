@@ -3374,6 +3374,11 @@ document.getElementById('openAddMusic').addEventListener('click', ()=>{
 });
 document.querySelectorAll('.empty-state-add-btn').forEach(btn=>{
   btn.addEventListener('click', ()=>{
+    if(viewingWishlist){
+      trackEvent('open_wishlist_add');
+      openWishModal(null);
+      return;
+    }
     trackEvent('open_add_music_from_empty_state');
     document.getElementById('addMusicOverlay').classList.add('open');
   });
