@@ -2961,6 +2961,15 @@ function addTitleBoxRow(focus, prefill){
     artistInput.placeholder = 'Artist(s) for this track — e.g. Artist One, Artist Two (feat. …)';
     if(prefill && prefill.artist) artistInput.value = prefill.artist;
     sub.appendChild(artistInput);
+    const scoreInput = document.createElement('input');
+    scoreInput.type = 'number';
+    scoreInput.className = 'track-box-score';
+    scoreInput.min = '30';
+    scoreInput.max = '100';
+    scoreInput.placeholder = 'Score';
+    scoreInput.style.cssText = 'width:72px;flex:none;font-size:12px;padding:7px 9px;';
+    if(prefill && prefill.score !== undefined && prefill.score !== null) scoreInput.value = prefill.score;
+    sub.appendChild(scoreInput);
     row.appendChild(sub);
 
     const tierRow = document.createElement('div');
@@ -3044,13 +3053,16 @@ function handleMultiSave(){
       if(!title) return null;
       const artistVal = row.querySelector('.track-box-artist').value.trim();
       const trackTier = row._trackTier ? row._trackTier() : null;
+      const scoreEl = row.querySelector('.track-box-score');
+      const trackScore = scoreEl && scoreEl.value ? parseInt(scoreEl.value, 10) : null;
       return {
         id: uid(), pinned:false, createdAt: now, clusterId, clusterName: albumName, title,
         artists: artistVal ? artistVal.split(',').map(a=>a.trim()).filter(Boolean) : sharedArtists,
         trackNumber: row._trackNo || null,
         recordLabel: row._label || null,
         ...shared,
-        tier: trackTier || shared.tier
+        tier: trackTier || shared.tier,
+        score: trackScore || shared.score || null
       };
     }).filter(Boolean);
   } else {
@@ -3290,7 +3302,7 @@ function openImportUrlScreen(mode){
 document.getElementById('addMusicSongBtn').addEventListener('click', ()=>{
   trackEvent('add_song_single');
   document.getElementById('addMusicOverlay').classList.remove('open');
-  openModal(null);
+  openImportUrlScreen('song');
 });
 document.getElementById('addMusicAlbumBtn').addEventListener('click', ()=>{
   trackEvent('add_song_album');
