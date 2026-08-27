@@ -3604,12 +3604,25 @@ async function buildAlbumFromItunesId(albumId){
   }
 }
 
+async function deezerAlbumJsonp(albumId){
+  return new Promise((resolve, reject)=>{
+    const cbName = 'dzAlbLookup_' + Math.random().toString(36).slice(2);
+    const script = document.createElement('script');
+    let settled = false;
+    const cleanup = ()=>{ delete window[cbName]; script.remove(); };
+    window[cbName] = (d)=>{ settled = true; cleanup(); resolve(d); };
+    script.onerror = ()=>{ if(!settled){ settled = true; cleanup(); reject(new Error('deezer_alb_jsonp_failed')); } };
+    script.src = 'https://api.deezer.com/album/' + encodeURIComponent(albumId) + '?output=jsonp&callback=' + cbName;
+    document.body.appendChild(script);
+    setTimeout(()=>{ if(!settled){ settled = true; cleanup(); reject(new Error('deezer_alb_timeout')); } }, 10000);
+  });
+}
+
 async function buildAlbumFromDeezerId(albumId){
   const errEl = document.getElementById('spotifyImportError');
   try{
-    const resp = await fetch('https://api.deezer.com/album/' + albumId);
-    if(!resp.ok) return false;
-    const albumInfo = await resp.json();
+    const cleanedId = String(albumId).replace(/^dza-/, '');
+    const albumInfo = await deezerAlbumJsonp(cleanedId);
     if(!albumInfo || !albumInfo.tracks) return false;
     const tracks = (albumInfo.tracks.data||[]).map((t,i)=>({
       title:t.title || 'Untitled', artists:[t.artist ? t.artist.name : ''], trackNumber:t.track_position || (i+1),
