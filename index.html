@@ -6677,6 +6677,7 @@ function openModal(song){
   document.getElementById('f-song-search').value = '';
   document.getElementById('songSearchResults').style.display = 'none';
   document.getElementById('songSearchResults').innerHTML = '';
+  document.getElementById('f-search-field').style.display = song ? 'none' : '';
   renderRemindsPicker('f', song?.remindsOf || []);
   currentTier = song?.tier || null;
   renderTierPicker();
@@ -7373,7 +7374,7 @@ function openImportUrlScreen(mode){
 document.getElementById('addMusicSongBtn').addEventListener('click', ()=>{
   trackEvent('add_song_single');
   document.getElementById('addMusicOverlay').classList.remove('open');
-  openImportUrlScreen('song');
+  openModal(null);
 });
 document.getElementById('addMusicAlbumBtn').addEventListener('click', ()=>{
   trackEvent('add_song_album');
