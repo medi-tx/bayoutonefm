@@ -3637,7 +3637,7 @@ async function buildAlbumFromDeezerId(albumId){
 }
 
 async function searchAlbums(term){
-  const resultsEl = document.getElementById('albumSearchResults');
+  const resultsEl = document.getElementById('albumTypeSearchResults');
   if(!term.trim()){
     resultsEl.innerHTML = '';
     return;
@@ -3680,7 +3680,7 @@ async function searchAlbums(term){
         const id = row.getAttribute('data-ab-search');
         const album = combined.find(x=> String(x.id) === id);
         if(!album) return;
-        document.getElementById('albumSearchResults').innerHTML = '<p class="msg-empty" style="opacity:0.7;">Loading ' + escapeHtml(album.name) + '…</p>';
+        document.getElementById('albumTypeSearchResults').innerHTML = '<p class="msg-empty" style="opacity:0.7;">Loading ' + escapeHtml(album.name) + '…</p>';
         let ok = false;
         if(album.provider === 'deezer') ok = await buildAlbumFromDeezerId(album.id);
         else ok = await buildAlbumFromItunesId(album.id);

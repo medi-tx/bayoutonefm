@@ -3981,7 +3981,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
         <label>Search for an album</label>
         <input type="text" id="albumSearchInput" placeholder="Search Apple Music &amp; Deezer for an album…" autocomplete="off">
       </div>
-      <div id="albumSearchResults" class="discover-list" style="max-height:220px; overflow-y:auto;"></div>
+      <div id="albumTypeSearchResults" class="discover-list" style="max-height:220px; overflow-y:auto;"></div>
     </div>
     <div class="field">
       <label id="spotifyUrlLabel">Playlist URL (Apple Music, YouTube, or Tidal)</label>
@@ -7760,7 +7760,7 @@ async function buildAlbumFromDeezerId(albumId){
 }
 
 async function searchAlbums(term){
-  const resultsEl = document.getElementById('albumSearchResults');
+  const resultsEl = document.getElementById('albumTypeSearchResults');
   if(!term.trim()){
     resultsEl.innerHTML = '';
     return;
@@ -7803,7 +7803,7 @@ async function searchAlbums(term){
         const id = row.getAttribute('data-ab-search');
         const album = combined.find(x=> String(x.id) === id);
         if(!album) return;
-        document.getElementById('albumSearchResults').innerHTML = '<p class="msg-empty" style="opacity:0.7;">Loading ' + escapeHtml(album.name) + '…</p>';
+        document.getElementById('albumTypeSearchResults').innerHTML = '<p class="msg-empty" style="opacity:0.7;">Loading ' + escapeHtml(album.name) + '…</p>';
         let ok = false;
         if(album.provider === 'deezer') ok = await buildAlbumFromDeezerId(album.id);
         else ok = await buildAlbumFromItunesId(album.id);
