@@ -1,1 +1,7 @@
 ﻿diskids/
+
+# Transfer tool data (contains auth tokens)
+transfer_data/
+tidal_session.json
+synced_tracks.json
+failed_tracks.json

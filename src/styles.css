@@ -2229,6 +2229,16 @@
     background:rgba(var(--on-paper-rgb),0.08);
     text-decoration:none; color:inherit;
   }
+  .msg-song-share{ display:flex; gap:6px; margin-top:6px; position:relative; flex-wrap:wrap; }
+  .msg-song-share .explicit-badge{ position:absolute; top:4px; right:4px; }
+  .msg-song-cell{ position:relative; display:block; flex:1 1 120px; max-width:180px; }
+  .msg-song-cell img{ width:100%; border-radius:10px; display:block; }
+  .msg-song-cell .msg-song-cell-label{
+    position:absolute; left:6px; bottom:6px; padding:2px 7px;
+    font-family:'IBM Plex Mono', monospace; font-size:9px; font-weight:700;
+    background:rgba(0,0,0,0.55); color:#fff; border-radius:4px;
+  }
+  .msg-song-cell a{ text-decoration:none; color:inherit; }
   .msg-song-card img{ width:44px; height:44px; border-radius:6px; flex:0 0 44px; object-fit:cover; }
   .msg-song-meta{ min-width:0; }
   .msg-song-title{ font-size:12px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
@@ -2273,9 +2283,12 @@
   .msg-no-friends{ padding:24px; text-align:center; color:rgba(var(--on-paper-rgb),0.72); font-size:13px; }
   @media (max-width:620px){
     .messages-modal{ max-width:96vw; }
-    .messages-layout{ flex-direction:column; }
-    .msg-friend-list{ width:100%; flex:0 0 auto; max-height:120px; border-right:none; border-bottom:1px solid var(--line-on-paper); }
+    .messages-layout{ flex-direction:row; }
+    .msg-friend-list{ width:104px; flex:0 0 104px; max-height:none; border-right:1px solid var(--line-on-paper); border-bottom:none; }
+    .msg-friend-item{ flex-direction:column; align-items:center; gap:4px; padding:10px 4px; text-align:center; }
+    .msg-friend-name{ font-size:11px; }
     .msg-thread{ min-height:260px; }
+    .msg-bubble{ max-width:88%; }
   }
 
   /* ADD MUSIC PICKER */

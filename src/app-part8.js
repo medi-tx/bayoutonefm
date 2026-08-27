@@ -173,6 +173,19 @@
     return `<div class="${cls}">${content}${song}<span class="msg-time">${timeStr}</span></div>`;
   }
   function msgSongCardHtml(song, msgId){
+    if(song.cardImage){
+      const back = song.cardBackImage
+        ? `<img loading="lazy" decoding="async" class="msg-song-card-face" src="${escapeAttr(song.cardBackImage)}" alt="Card back">`
+        : '';
+      return `<div class="msg-song-share">
+        <a class="msg-song-cell" href="${escapeAttr(song.url || '#')}" target="_blank" rel="noopener">
+          <img loading="lazy" decoding="async" src="${escapeAttr(song.cardImage)}" alt="${escapeAttr((song.title||'Song')+' card')}">
+          <span class="msg-song-cell-label">Front</span>
+        </a>
+        ${back ? `<div class="msg-song-cell"><img loading="lazy" decoding="async" src="${escapeAttr(song.cardBackImage)}" alt="Card back"><span class="msg-song-cell-label">Back</span></div>` : ''}
+        ${song.explicit ? '<span class="explicit-badge" title="Explicit content">E</span>' : ''}
+      </div>`;
+    }
     const cover = song.cover ? `<img loading="lazy" decoding="async" src="${escapeAttr(song.cover)}" alt="Album cover">` : '';
     return `<a class="msg-song-card" href="${escapeAttr(song.url || '#')}" target="_blank" rel="noopener">
       ${cover}

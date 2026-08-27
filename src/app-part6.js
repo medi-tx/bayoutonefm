@@ -276,7 +276,7 @@ async function upsertGlobalSong(song, userId){
     const title = (song.title || '').trim();
     const artist = (song.artists && song.artists[0] || '').trim();
     if(!title || !artist) return;
-    await sb.rpc('upsert_global_song', {
+    const base = {
       p_title: title,
       p_artist: artist,
       p_album: (song.album || '').trim(),
@@ -285,21 +285,29 @@ async function upsertGlobalSong(song, userId){
       p_cover_art: song.coverArt || '',
       p_preview_url: song.previewUrl || '',
       p_explicit: song.explicit || false,
-      p_added_by: userId || null,
-      p_producers: song.producer || '',
-      p_songwriters: song.songwriters || '',
-      p_bpm: song.bpm || null,
-      p_key: song.musicKey || '',
-      p_duration: song.duration || '',
-      p_record_label: song.recordLabel || '',
-      p_spotify_url: song.spotifyUrl || '',
-      p_apple_music_url: song.appleMusicUrl || '',
-      p_youtube_music_url: song.youtubeMusicUrl || '',
-      p_tidal_url: song.tidalUrl || '',
-      p_release_date: song.releaseDate || '',
-      p_artist_website: song.artistWebsite || '',
-      p_track_number: song.trackNumber ? String(song.trackNumber) : ''
-    });
+      p_added_by: userId || null
+    };
+    try{
+      await sb.rpc('upsert_global_song', {
+        ...base,
+        p_producers: song.producer || '',
+        p_songwriters: song.songwriters || '',
+        p_bpm: song.bpm || null,
+        p_key: song.musicKey || '',
+        p_duration: song.duration || '',
+        p_record_label: song.recordLabel || '',
+        p_spotify_url: song.spotifyUrl || '',
+        p_apple_music_url: song.appleMusicUrl || '',
+        p_youtube_music_url: song.youtubeMusicUrl || '',
+        p_tidal_url: song.tidalUrl || '',
+        p_release_date: song.releaseDate || '',
+        p_artist_website: song.artistWebsite || '',
+        p_track_number: song.trackNumber ? String(song.trackNumber) : ''
+      });
+    }catch(e){
+      // Schema may not have migration 0002 (extended fields) yet — retry with the base column set.
+      await sb.rpc('upsert_global_song', base);
+    }
   }catch(e){ console.error('global_songs upsert failed:', e); }
 }
 
@@ -317,7 +325,7 @@ function syncToSongDb(song, userId){
     const title = (song.title || '').trim();
     const artist = (song.artists && song.artists[0] || '').trim();
     if(!title) return;
-    sb.from('song_database').insert({
+    const base = {
       title,
       artist: artist || '',
       album: (song.album || '').trim(),
@@ -326,7 +334,10 @@ function syncToSongDb(song, userId){
       explicit: !!song.explicit,
       cover_art: song.coverArt || null,
       source: 'user',
-      added_by: userId || null,
+      added_by: userId || null
+    };
+    const detail = {
+      ...base,
       producers: song.producer || '',
       songwriters: song.songwriters || '',
       bpm: song.bpm || null,
@@ -340,8 +351,17 @@ function syncToSongDb(song, userId){
       release_date: song.releaseDate || '',
       artist_website: song.artistWebsite || '',
       track_number: song.trackNumber ? String(song.trackNumber) : ''
-    }).then(({error})=>{
-      if(error && error.code !== '23505') console.error('[syncToSongDb] insert error:', error.message);
+    };
+    sb.from('song_database').insert(detail).then(({error})=>{
+      if(!error || error.code === '23505') return;
+      if(error.code === '42P10' || /undefined_column|column .* does not exist/i.test(error.message || '')){
+        // Schema may not have migration 0002 (extended columns) yet — retry with the base column set.
+        sb.from('song_database').insert(base).then(({error: e2})=>{
+          if(e2 && e2.code !== '23505') console.error('[syncToSongDb] insert error:', e2.message);
+        });
+      } else {
+        console.error('[syncToSongDb] insert error:', error.message);
+      }
     });
   }catch(e){}
 }
