@@ -4525,10 +4525,10 @@ document.getElementById('spotify-url-input').addEventListener('input', e=>{
   }
   spotifyUrlDebounce = setTimeout(()=>handleSingleUrl(val), 600);
 });
-let albumSearchDebounce = null;
+let albumTypeSearchDebounce = null;
 document.getElementById('albumSearchInput').addEventListener('input', e=>{
-  clearTimeout(albumSearchDebounce);
-  albumSearchDebounce = setTimeout(()=>searchAlbums(e.target.value.trim()), 450);
+  clearTimeout(albumTypeSearchDebounce);
+  albumTypeSearchDebounce = setTimeout(()=>searchAlbums(e.target.value.trim()), 450);
 });
 
 document.getElementById('spotifyImportConfirmBtn').addEventListener('click', ()=>{
