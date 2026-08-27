@@ -287,27 +287,28 @@ async function upsertGlobalSong(song, userId){
       p_explicit: song.explicit || false,
       p_added_by: userId || null
     };
-    try{
-      await sb.rpc('upsert_global_song', {
-        ...base,
-        p_producers: song.producer || '',
-        p_songwriters: song.songwriters || '',
-        p_bpm: song.bpm || null,
-        p_key: song.musicKey || '',
-        p_duration: song.duration || '',
-        p_record_label: song.recordLabel || '',
-        p_spotify_url: song.spotifyUrl || '',
-        p_apple_music_url: song.appleMusicUrl || '',
-        p_youtube_music_url: song.youtubeMusicUrl || '',
-        p_tidal_url: song.tidalUrl || '',
-        p_release_date: song.releaseDate || '',
-        p_artist_website: song.artistWebsite || '',
-        p_track_number: song.trackNumber ? String(song.trackNumber) : ''
-      });
-    }catch(e){
+    const full = {
+      ...base,
+      p_producers: song.producer || '',
+      p_songwriters: song.songwriters || '',
+      p_bpm: song.bpm || null,
+      p_key: song.musicKey || '',
+      p_duration: song.duration || '',
+      p_record_label: song.recordLabel || '',
+      p_spotify_url: song.spotifyUrl || '',
+      p_apple_music_url: song.appleMusicUrl || '',
+      p_youtube_music_url: song.youtubeMusicUrl || '',
+      p_tidal_url: song.tidalUrl || '',
+      p_release_date: song.releaseDate || '',
+      p_artist_website: song.artistWebsite || '',
+      p_track_number: song.trackNumber ? String(song.trackNumber) : ''
+    };
+    let res = await sb.rpc('upsert_global_song', full);
+    if(res && res.error && (/does not exist|could not find the function|could not match|schema cache|argument/i.test(res.error.message || ''))){
       // Schema may not have migration 0002 (extended fields) yet — retry with the base column set.
-      await sb.rpc('upsert_global_song', base);
+      res = await sb.rpc('upsert_global_song', base);
     }
+    if(res && res.error) console.error('global_songs upsert failed:', res.error.message);
   }catch(e){ console.error('global_songs upsert failed:', e); }
 }
 
