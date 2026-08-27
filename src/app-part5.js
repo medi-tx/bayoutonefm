@@ -1698,6 +1698,8 @@ function openWishModal(item){
   currentWishCoverArt = item?.coverArt || null;
   setImagePreview('w-cover', currentWishCoverArt);
   document.getElementById('wishSearchField').style.display = item ? 'none' : '';
+  document.getElementById('wishManualForm').style.display = item ? '' : 'none';
+  document.getElementById('wishSaveBtn').style.display = item ? '' : 'none';
   document.getElementById('w-search').value = '';
   document.getElementById('wishSearchResults').style.display = 'none';
   document.getElementById('wishSearchResults').innerHTML = '';
