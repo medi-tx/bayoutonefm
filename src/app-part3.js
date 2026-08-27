@@ -1677,6 +1677,32 @@ function cardBase(ctx, W, H, username){
   ctx.lineWidth = 2;
   ctx.beginPath(); ctx.moveTo(88, 368); ctx.lineTo(W-88, 368); ctx.stroke();
 }
+const SHARE_SHEET_W = 1080;
+const SHARE_SHEET_H = 1350;
+const SHARE_SHEET_PAD = 64;
+function fitCardIntoSheet(src){
+  const W = SHARE_SHEET_W, H = SHARE_SHEET_H, pad = SHARE_SHEET_PAD;
+  const out = document.createElement('canvas');
+  out.width = W; out.height = H;
+  const octx = out.getContext('2d');
+  const t = loadTheme();
+  octx.fillStyle = t.paper || '#eedd95';
+  octx.fillRect(0, 0, W, H);
+  if(src && src.width && src.height){
+    const iw = src.width, ih = src.height;
+    const scale = Math.min((W - pad*2) / iw, (H - pad*2) / ih);
+    const dw = Math.max(1, iw * scale), dh = Math.max(1, ih * scale);
+    octx.drawImage(src, (W - dw)/2, (H - dh)/2, dw, dh);
+  }
+  return out;
+}
+function applySheetToTarget(targetId, src){
+  const cv = document.getElementById(targetId);
+  if(!cv) return;
+  const norm = fitCardIntoSheet(src);
+  cv.width = norm.width; cv.height = norm.height;
+  cv.getContext('2d').drawImage(norm, 0, 0);
+}
 async function drawSongShareCard(opts){
   const cv = document.getElementById('shareCanvas');
   const s = opts.song || {};
@@ -1694,9 +1720,7 @@ async function drawSongShareCard(opts){
         html2canvas(frontEl, { backgroundColor: loadTheme().paper || '#eedd95', scale: 2, useCORS: true }),
         new Promise((_,rej)=> setTimeout(()=>rej(new Error('html2canvas timeout')), 5000))
       ]);
-      cv.width = c.width; cv.height = c.height;
-      const ctx = cv.getContext('2d');
-      ctx.drawImage(c, 0, 0);
+      applySheetToTarget('shareCanvas', c);
       const backCv = document.getElementById('shareCanvasBack');
       if(backCv) await drawSongBackShareCard(opts, 'shareCanvasBack');
       return;
@@ -1763,8 +1787,12 @@ async function drawSongShareCard(opts){
   }
   ctx.fillStyle='#eedd95'; ctx.fillText('Join bayoutonefm today to share your own music', W/2, H - 96);
   ctx.textAlign = 'left';
+  const frontSnap = cv.toDataURL('image/png');
   const backCv = document.getElementById('shareCanvasBack');
   if(backCv) await drawSongBackShareCard(opts, 'shareCanvasBack');
+  const normImg = new Image();
+  normImg.onload = function(){ applySheetToTarget('shareCanvas', normImg); };
+  normImg.src = frontSnap;
 }
 
 async function drawSongBackShareCard(opts, cvId){
@@ -1787,9 +1815,7 @@ async function drawSongBackShareCard(opts, cvId){
         html2canvas(backEl, { backgroundColor: loadTheme().paper || '#eedd95', scale: 2, useCORS: true }),
         new Promise((_,rej)=> setTimeout(()=>rej(new Error('html2canvas timeout')), 5000))
       ]);
-      cv.width = c.width; cv.height = c.height;
-      const ctx = cv.getContext('2d');
-      ctx.drawImage(c, 0, 0);
+      applySheetToTarget(cvId, c);
       return;
     }catch(e){ console.warn('html2canvas back failed, falling back:', e); }
     finally{
@@ -1829,6 +1855,10 @@ async function drawSongBackShareCard(opts, cvId){
     ctx.font = '500 16px "Space Grotesk", sans-serif';
     ctx.fillText('Genres: ' + s.genres.join(', '), 88, y + 8);
   }
+  const backSnap = cv.toDataURL('image/png');
+  const img = new Image();
+  img.onload = function(){ applySheetToTarget(cv.id, img); };
+  img.src = backSnap;
 }
 
 async function drawTierShareCard(opts){
@@ -2664,14 +2694,6 @@ function openModal(song){
 function closeModal(){
   document.getElementById('overlay').classList.remove('open');
   editingId = null;
-  if(window._albumBuildReturn){
-    window._albumBuildReturn = false;
-    if(albumBuildTracks && albumBuildTracks.length){
-      const ov = document.getElementById('spotifyImportOverlay');
-      ov.classList.add('open');
-      renderAlbumTrackList(document.getElementById('spotifyTrackList'));
-    }
-  }
 }
 function resetEditorTabs(prefix){
   var tabs = document.querySelectorAll('[data-editor-tab$="-'+prefix+'"]');
@@ -2786,10 +2808,6 @@ function showDupModal(duplicates, onConfirm){
   confirmBtn.onclick = ()=>{ close(); onConfirm(); };
 }
 function handleSave(){
-  if(window._albumBuildReturn && albumBuildEditingIdx >= 0){
-    saveAlbumTrackBack();
-    return;
-  }
   const title = document.getElementById('f-title').value.trim();
   if(!title){ document.getElementById('f-title').focus(); return; }
   const trackCheck = validateTrackNo(document.getElementById('f-track').value);
@@ -3337,14 +3355,38 @@ let addMusicMode = null;
 let albumBuildTracks = [];
 let albumBuildMeta = {};
 let albumBuildEditingIdx = -1;
+let albumTrackCoverArt = null;
+let albumTrackExplicit = false;
+let albumTrackTier = null;
+function renderAlbumTrackTierPicker(){
+  const el = document.getElementById('atTierPicker');
+  if(!el) return;
+  el.innerHTML = '';
+  TIERS.forEach(t=>{
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'tier-' + t + (albumTrackTier===t ? ' selected':'');
+    btn.textContent = t;
+    btn.addEventListener('click', ()=>{
+      albumTrackTier = (albumTrackTier === t) ? null : t;
+      renderAlbumTrackTierPicker();
+    });
+    el.appendChild(btn);
+  });
+}
 function openImportUrlScreen(mode){
-  addMusicMode = 'song';
+  addMusicMode = mode || 'song';
   const ov = document.getElementById('spotifyImportOverlay');
   ov.classList.add('open');
   const titleEl = document.getElementById('importModalTitle');
-  const labelEl = ov.querySelector('label');
-  titleEl.textContent = 'Add Music';
-  labelEl.textContent = 'Paste an Apple Music, YouTube, or Tidal link';
+  const labelEl = document.getElementById('spotifyUrlLabel');
+  const isAlbum = addMusicMode === 'album';
+  titleEl.textContent = isAlbum ? 'Add an Album' : 'Add Music';
+  labelEl.textContent = isAlbum ? 'Or paste an Apple Music album link' : 'Paste an Apple Music, YouTube, or Tidal link';
+  document.getElementById('albumSearchField').style.display = isAlbum ? 'block' : 'none';
+  document.getElementById('albumSearchInput').value = '';
+  document.getElementById('albumSearchResults').innerHTML = '';
+  document.getElementById('spotify-url-input').placeholder = isAlbum ? 'Paste an Apple Music album link…' : 'Paste an Apple Music, YouTube, or Tidal playlist URL…';
   document.getElementById('spotify-url-input').value = '';
   document.getElementById('spotifyImportResults').style.display = 'none';
   document.getElementById('spotifyImportError').style.display = 'none';
@@ -3358,7 +3400,8 @@ function openImportUrlScreen(mode){
   playlistImportLoadedUrl = null;
   playlistImportInProgress = false;
   stopImportProgressTimer();
-  document.getElementById('spotify-url-input').focus();
+  if(isAlbum){ document.getElementById('albumSearchInput').focus(); }
+  else { document.getElementById('spotify-url-input').focus(); }
 }
 document.getElementById('addMusicSongBtn').addEventListener('click', ()=>{
   trackEvent('add_song_single');
@@ -3528,6 +3571,132 @@ document.getElementById('spotifyImportPauseBtn').addEventListener('click', ()=>{
   }
 });
 
+async function buildAlbumFromItunesId(albumId){
+  const errEl = document.getElementById('spotifyImportError');
+  try{
+    const albumResp = await fetch('https://itunes.apple.com/lookup?id=' + albumId + '&entity=album');
+    if(!albumResp.ok) return false;
+    const ad = await albumResp.json();
+    const albumInfo = ad.results && ad.results.find(r=> r.wrapperType === 'collection');
+    if(!albumInfo) return false;
+    const trackResp = await fetch('https://itunes.apple.com/lookup?id=' + albumId + '&entity=song&limit=200');
+    if(!trackResp.ok) return false;
+    const td = await trackResp.json();
+    const tracks = (td.results||[]).filter(r=> r.wrapperType === 'track' && r.collectionId == albumId).map((t,i)=>({ title:t.trackName, artists:[t.artistName], trackNumber:t.trackNumber, coverArt:t.artworkUrl100||null, appleMusicUrl:t.trackViewUrl||'' }));
+    const albumName = albumInfo.collectionName || '';
+    const albumArtist = albumInfo.artistName || '';
+    const albumYear = albumInfo.releaseDate || '';
+    const coverArt = albumInfo.artworkUrl100 ? albumInfo.artworkUrl100.replace('100x100','600x600') : null;
+    albumBuildMeta = { albumName, albumArtist, albumYear, coverArt, clusterId: uid() };
+    albumBuildTracks = tracks.map((t,i)=>({
+      title:t.title, artists:(t.artists&&t.artists.length)?t.artists:[albumArtist], trackNumber:t.trackNumber||(i+1), coverArt:t.coverArt||coverArt, appleMusicUrl:t.appleMusicUrl||'',
+      album:albumName, year:albumYear||null, releaseDate:albumYear||null, tier:null, score:null,
+      genres:[], why:'', credit:'', remindsOf:[]
+    }));
+    errEl.style.display = 'none';
+    showAlbumTrackList();
+    return true;
+  }catch(e){
+    console.error('iTunes album lookup error:', e);
+    errEl.style.display = 'block';
+    errEl.innerHTML = '<p class="profile-empty-note">' + escapeHtml(e.message||'Could not load this album.') + '</p>';
+    return false;
+  }
+}
+
+async function buildAlbumFromDeezerId(albumId){
+  const errEl = document.getElementById('spotifyImportError');
+  try{
+    const resp = await fetch('https://api.deezer.com/album/' + albumId);
+    if(!resp.ok) return false;
+    const albumInfo = await resp.json();
+    if(!albumInfo || !albumInfo.tracks) return false;
+    const tracks = (albumInfo.tracks.data||[]).map((t,i)=>({
+      title:t.title || 'Untitled', artists:[t.artist ? t.artist.name : ''], trackNumber:t.track_position || (i+1),
+      coverArt:albumInfo.cover_big ? albumInfo.cover_big.replace('/500x500','/150x150') : null, appleMusicUrl:''
+    }));
+    const albumName = albumInfo.title || '';
+    const albumArtist = albumInfo.artist ? albumInfo.artist.name : '';
+    const albumYear = albumInfo.release_date || '';
+    const coverArt = albumInfo.cover_big || null;
+    albumBuildMeta = { albumName, albumArtist, albumYear, coverArt, clusterId: uid() };
+    albumBuildTracks = tracks.map((t,i)=>({
+      title:t.title, artists:(t.artists&&t.artists.length)?t.artists:[albumArtist], trackNumber:t.trackNumber||(i+1), coverArt:t.coverArt||coverArt, appleMusicUrl:t.appleMusicUrl||'',
+      album:albumName, year:albumYear||null, releaseDate:albumYear||null, tier:null, score:null,
+      genres:[], why:'', credit:'', remindsOf:[]
+    }));
+    errEl.style.display = 'none';
+    showAlbumTrackList();
+    return true;
+  }catch(e){
+    console.error('Deezer album lookup error:', e);
+    errEl.style.display = 'block';
+    errEl.innerHTML = '<p class="profile-empty-note">' + escapeHtml(e.message||'Could not load this album.') + '</p>';
+    return false;
+  }
+}
+
+async function searchAlbums(term){
+  const resultsEl = document.getElementById('albumSearchResults');
+  if(!term.trim()){
+    resultsEl.innerHTML = '';
+    return;
+  }
+  resultsEl.innerHTML = '<p class="msg-empty" style="opacity:0.7;">Searching…</p>';
+  const apples = itunesSearch(term, 'album', 8);
+  const deezers = deezerAlbumSearch(term, 8);
+  try{
+    const [appleResults, deezerResults] = await Promise.all([apples, deezers]);
+    const seen = new Set();
+    const combined = [];
+    deezerResults.forEach(r=>{
+      const key = r.collectionName.toLowerCase() + '|' + (r.artistName||'').toLowerCase();
+      if(seen.has(key)) return;
+      seen.add(key);
+      combined.push({ id: r.collectionId, name: r.collectionName, artist: r.artistName, year: (r.releaseDate||'').substring(0,4), coverArt: r.artworkUrl100, provider: 'deezer' });
+    });
+    appleResults.forEach(r=>{
+      const key = (r.collectionName||'').toLowerCase() + '|' + (r.artistName||'').toLowerCase();
+      if(seen.has(key)) return;
+      seen.add(key);
+      combined.push({ id: r.collectionId, name: r.collectionName, artist: r.artistName, year: (r.releaseDate||'').substring(0,4), coverArt: r.artworkUrl100, provider: 'apple' });
+    });
+    if(!combined.length){
+      resultsEl.innerHTML = '<p class="msg-empty">No albums found. Try a different search or paste a link.</p>';
+      return;
+    }
+    resultsEl.innerHTML = combined.map(a=>`
+      <div class="discover-row" style="cursor:pointer; align-items:center;" data-ab-search="${escapeHtml(a.id)}">
+        ${a.coverArt
+          ? `<img loading="lazy" decoding="async" src="${escapeAttr(a.coverArt)}" style="width:36px;height:36px;border-radius:5px;object-fit:cover;flex-shrink:0;" alt="">`
+          : `<span class="drow-fallback" style="font-size:11px;">${escapeHtml((a.name||'?').charAt(0).toUpperCase())}</span>`}
+        <span style="flex:1; min-width:0;">
+          <span class="drow-name">${escapeHtml(a.name)}</span><br>
+          <span class="drow-bio">${escapeHtml(a.artist + (a.year ? ' · ' + a.year : ''))}</span>
+        </span>
+      </div>`).join('');
+    resultsEl.querySelectorAll('[data-ab-search]').forEach(row=>{
+      row.addEventListener('click', async ()=>{
+        const id = row.getAttribute('data-ab-search');
+        const album = combined.find(x=> String(x.id) === id);
+        if(!album) return;
+        document.getElementById('albumSearchResults').innerHTML = '<p class="msg-empty" style="opacity:0.7;">Loading ' + escapeHtml(album.name) + '…</p>';
+        let ok = false;
+        if(album.provider === 'deezer') ok = await buildAlbumFromDeezerId(album.id);
+        else ok = await buildAlbumFromItunesId(album.id);
+        if(ok){
+          document.getElementById('albumSearchField').style.display = 'none';
+          document.getElementById('spotifyUrlLabel').style.display = 'none';
+          document.getElementById('spotify-url-input').style.display = 'none';
+        }
+      });
+    });
+  }catch(e){
+    console.error('Album search error:', e);
+    resultsEl.innerHTML = '<p class="msg-empty">Could not search for albums. Try pasting a link instead.</p>';
+  }
+}
+
 async function handleSingleUrl(url){
   const errEl = document.getElementById('spotifyImportError');
   const resultsEl = document.getElementById('spotifyImportResults');
@@ -3554,30 +3723,8 @@ async function handleSingleUrl(url){
     }
     if(appleMatch && appleMatch[1] && !appleMatch[2]){
       const albumId = appleMatch[1];
-      const albumResp = await fetch('https://itunes.apple.com/lookup?id=' + albumId + '&entity=album');
-      if(albumResp.ok){
-        const ad = await albumResp.json();
-        const albumInfo = ad.results && ad.results.find(r=> r.wrapperType === 'collection');
-        if(albumInfo){
-          const trackResp = await fetch('https://itunes.apple.com/lookup?id=' + albumId + '&entity=song&limit=200');
-          if(trackResp.ok){
-            const td = await trackResp.json();
-            const tracks = (td.results||[]).filter(r=> r.wrapperType === 'track' && r.collectionId == albumId).map((t,i)=>({ title:t.trackName, artists:[t.artistName], trackNumber:t.trackNumber, coverArt:t.artworkUrl100||null, appleMusicUrl:t.trackViewUrl||'' }));
-            const albumName = albumInfo.collectionName || '';
-            const albumArtist = albumInfo.artistName || '';
-            const albumYear = albumInfo.releaseDate || '';
-            const coverArt = albumInfo.artworkUrl100 ? albumInfo.artworkUrl100.replace('100x100','600x600') : null;
-            albumBuildMeta = { albumName, albumArtist, albumYear, coverArt, clusterId: uid() };
-            albumBuildTracks = tracks.map((t,i)=>({
-              title:t.title, artists:(t.artists&&t.artists.length)?t.artists:[albumArtist], trackNumber:t.trackNumber||(i+1), coverArt:t.coverArt||coverArt, appleMusicUrl:t.appleMusicUrl||'',
-              album:albumName, year:albumYear||null, releaseDate:albumYear||null, tier:null, score:null,
-              genres:[], why:'', credit:'', remindsOf:[]
-            }));
-            showAlbumTrackList();
-            return;
-          }
-        }
-      }
+      const ok = await buildAlbumFromItunesId(albumId);
+      if(ok) return;
     }
     if(isTidalTrack){
       const trackId = url.match(/tidal\.com\/(?:browse\/)?track\/(\d+)/)[1];
@@ -3716,10 +3863,11 @@ function showAlbumTrackList(){
   const ov = document.getElementById('spotifyImportOverlay');
   ov.classList.add('open');
   document.getElementById('importModalTitle').textContent = albumBuildMeta.albumName || 'Album Import';
-  const labelEl = ov.querySelector('label');
+  const labelEl = document.getElementById('spotifyUrlLabel');
   labelEl.textContent = albumBuildMeta.albumArtist ? albumBuildMeta.albumArtist + ' — ' + (albumBuildMeta.albumName||'') : (albumBuildMeta.albumName||'Album');
   document.getElementById('spotify-url-input').value = '';
   document.getElementById('spotify-url-input').style.display = 'none';
+  document.getElementById('albumSearchField').style.display = 'none';
   labelEl.style.display = 'none';
   const resultsEl = document.getElementById('spotifyImportResults');
   resultsEl.style.display = 'block';
@@ -3767,79 +3915,47 @@ function openAlbumTrackEditor(idx){
   albumBuildEditingIdx = idx;
   const t = albumBuildTracks[idx];
   document.getElementById('spotifyImportOverlay').classList.remove('open');
-  editingId = null;
-  document.getElementById('modalTitle').textContent = 'Edit track ' + (t.trackNumber || idx+1);
-  document.getElementById('f-title').value = t.title || '';
-  document.getElementById('f-artist').value = (t.artists||[]).join(', ');
-  document.getElementById('f-album').value = t.album || albumBuildMeta.albumName || '';
-  document.getElementById('f-year').value = t.year || albumBuildMeta.albumYear || '';
-  document.getElementById('f-genre').value = (t.genres||[]).join(', ');
-  document.getElementById('f-why').value = t.why || '';
-  document.getElementById('f-quick').value = '';
-  document.getElementById('f-credit').value = t.credit || '';
-  document.getElementById('f-label').value = '';
-  document.getElementById('f-duration').value = '';
-  document.getElementById('f-producer').value = '';
-  document.getElementById('f-songwriters').value = '';
-  document.getElementById('f-bpm').value = '';
-  document.getElementById('f-key').value = '';
-  updateCamelotPreview('f-key','f-key-camelot');
-  document.getElementById('f-release-date').value = t.releaseDate || '';
-  document.getElementById('f-spotify').value = '';
-  document.getElementById('f-apple').value = t.appleMusicUrl || '';
-  document.getElementById('f-youtube').value = '';
-  document.getElementById('f-tidal').value = '';
-  document.getElementById('f-artist-website').value = '';
-  document.getElementById('f-track').value = t.trackNumber || '';
-  document.getElementById('f-score').value = t.score ?? '';
-  currentStars = { lyrics:0, vocals:0, replay:0 };
-  renderStarPickers();
-  document.getElementById('f-vibe-energy').value = 50;
-  document.getElementById('f-vibe-mood').value = 50;
-  document.getElementById('f-vibe-nostalgia').value = 50;
-  currentCoverArt = t.coverArt || albumBuildMeta.coverArt || null;
-  currentExplicit = false;
-  currentFav = false;
-  currentSongSource = null;
-  setImagePreview('f-cover', currentCoverArt);
-  const expBtn = document.getElementById('f-explicit-btn');
-  const expLabel = document.getElementById('f-explicit-label');
-  expBtn.classList.remove('on');
-  expLabel.textContent = 'Not explicit';
-  document.getElementById('f-song-search').value = '';
-  document.getElementById('songSearchResults').style.display = 'none';
-  document.getElementById('songSearchResults').innerHTML = '';
-  document.getElementById('f-search-field').style.display = 'none';
-  renderRemindsPicker('f', t.remindsOf || []);
-  currentTier = t.tier || null;
-  renderTierPicker();
-  document.getElementById('overlay').classList.add('open');
-  resetEditorTabs('single');
-  document.getElementById('f-title').focus();
-  window._albumBuildReturn = true;
+  document.getElementById('albumTrackEditTitle').textContent = 'Edit track ' + (t.trackNumber || idx+1) + (t.title ? ' — ' + t.title : '');
+  document.getElementById('at-title').value = t.title || '';
+  document.getElementById('at-artist').value = (t.artists||[]).join(', ');
+  document.getElementById('at-album').value = t.album || albumBuildMeta.albumName || '';
+  document.getElementById('at-year').value = t.year || albumBuildMeta.albumYear || '';
+  document.getElementById('at-track').value = t.trackNumber || '';
+  document.getElementById('at-genre').value = (t.genres||[]).join(', ');
+  document.getElementById('at-score').value = t.score ?? '';
+  document.getElementById('at-credit').value = t.credit || '';
+  document.getElementById('at-why').value = t.why || '';
+  albumTrackCoverArt = t.coverArt || albumBuildMeta.coverArt || null;
+  setImagePreview('at-cover', albumTrackCoverArt);
+  albumTrackExplicit = !!t.explicit;
+  const expBtn = document.getElementById('at-explicit-btn');
+  const expLabel = document.getElementById('at-explicit-label');
+  expBtn.classList.toggle('on', albumTrackExplicit);
+  expLabel.textContent = albumTrackExplicit ? 'Explicit' : 'Not explicit';
+  albumTrackTier = t.tier || null;
+  renderAlbumTrackTierPicker();
+  document.getElementById('albumTrackEditOverlay').classList.add('open');
+  document.getElementById('at-title').focus();
 }
 
 function saveAlbumTrackBack(){
   if(albumBuildEditingIdx < 0 || albumBuildEditingIdx >= albumBuildTracks.length) return;
-  window._albumBuildReturn = false;
   const t = albumBuildTracks[albumBuildEditingIdx];
-  t.title = document.getElementById('f-title').value.trim() || t.title;
-  t.artists = document.getElementById('f-artist').value.split(',').map(a=>a.trim()).filter(Boolean);
-  t.album = document.getElementById('f-album').value.trim() || t.album;
-  t.year = document.getElementById('f-year').value.trim() || t.year;
-  t.genres = document.getElementById('f-genre').value.split(',').map(g=>g.trim()).filter(Boolean);
-  t.why = document.getElementById('f-why').value.trim();
-  t.credit = document.getElementById('f-credit').value.trim();
-  t.appleMusicUrl = document.getElementById('f-apple').value.trim() || t.appleMusicUrl;
-  t.trackNumber = parseInt(document.getElementById('f-track').value, 10) || t.trackNumber;
-  t.score = document.getElementById('f-score').value ? parseInt(document.getElementById('f-score').value, 10) : null;
-  t.tier = currentTier || t.tier;
-  t.releaseDate = document.getElementById('f-release-date').value.trim() || t.releaseDate;
-  if(currentCoverArt) t.coverArt = currentCoverArt;
+  t.title = document.getElementById('at-title').value.trim() || t.title;
+  t.artists = document.getElementById('at-artist').value.split(',').map(a=>a.trim()).filter(Boolean);
+  t.album = document.getElementById('at-album').value.trim() || t.album;
+  t.year = document.getElementById('at-year').value.trim() || t.year;
+  t.trackNumber = parseInt(document.getElementById('at-track').value, 10) || t.trackNumber;
+  t.genres = document.getElementById('at-genre').value.split(',').map(g=>g.trim()).filter(Boolean);
+  t.score = document.getElementById('at-score').value ? parseInt(document.getElementById('at-score').value, 10) : null;
+  t.credit = document.getElementById('at-credit').value.trim();
+  t.why = document.getElementById('at-why').value.trim();
+  t.explicit = albumTrackExplicit;
+  t.tier = albumTrackTier || t.tier;
+  if(albumTrackCoverArt) t.coverArt = albumTrackCoverArt;
   albumBuildEditingIdx = -1;
-  document.getElementById('overlay').classList.remove('open');
-  const ov = document.getElementById('spotifyImportOverlay');
-  ov.classList.add('open');
+  document.getElementById('albumTrackEditOverlay').classList.remove('open');
+  document.getElementById('spotifyImportOverlay').classList.add('open');
   renderAlbumTrackList(document.getElementById('spotifyTrackList'));
 }
 
@@ -3854,6 +3970,7 @@ function importAlbumBuildTracks(){
     tier:t.tier||null, remindsOf:t.remindsOf||[], year:t.year||albumBuildMeta.albumYear||null,
     trackNumber:t.trackNumber||(i+1), appleMusicUrl:t.appleMusicUrl||'',
     releaseDate:t.releaseDate||albumBuildMeta.albumYear||null, score:t.score||null,
+    explicit:!!t.explicit,
   }));
   const dupes = findDuplicates(allImported);
   const dupeKeys = new Set(dupes.map(d=>songKey(d)));
@@ -3868,7 +3985,8 @@ function importAlbumBuildTracks(){
   albumBuildMeta = {};
   document.getElementById('spotifyImportOverlay').classList.remove('open');
   document.getElementById('spotify-url-input').style.display = '';
-  document.getElementById('spotifyImportOverlay').querySelector('label').style.display = '';
+  document.getElementById('spotifyUrlLabel').style.display = '';
+  document.getElementById('albumSearchField').style.display = 'none';
   render();
   enrichImportedSongs(clusterId, 'Apple Music');
   if(dupes.length>0) showToast('Imported '+newSongs.length+' songs. Skipped '+dupes.length+' duplicates.');
@@ -3881,7 +3999,8 @@ function cancelAlbumBuild(){
   albumBuildEditingIdx = -1;
   document.getElementById('spotifyImportOverlay').classList.remove('open');
   document.getElementById('spotify-url-input').style.display = '';
-  document.getElementById('spotifyImportOverlay').querySelector('label').style.display = '';
+  document.getElementById('spotifyUrlLabel').style.display = '';
+  document.getElementById('albumSearchField').style.display = 'block';
 }
 
 async function fetchViaProxy(url){
@@ -4406,6 +4525,11 @@ document.getElementById('spotify-url-input').addEventListener('input', e=>{
   }
   spotifyUrlDebounce = setTimeout(()=>handleSingleUrl(val), 600);
 });
+let albumSearchDebounce = null;
+document.getElementById('albumSearchInput').addEventListener('input', e=>{
+  clearTimeout(albumSearchDebounce);
+  albumSearchDebounce = setTimeout(()=>searchAlbums(e.target.value.trim()), 450);
+});
 
 document.getElementById('spotifyImportConfirmBtn').addEventListener('click', ()=>{
   if(albumBuildTracks.length > 0){
@@ -4482,7 +4606,7 @@ document.getElementById('overlay').addEventListener('click', e=>{
   closeModal();
 });
 document.querySelectorAll('.overlay').forEach(ov=>{
-  if(ov.id === 'overlay' || ov.id === 'termsGateOverlay' || ov.id === 'onboardingOverlay' || ov.id === 'spotifyImportOverlay') return;
+  if(ov.id === 'overlay' || ov.id === 'termsGateOverlay' || ov.id === 'onboardingOverlay' || ov.id === 'spotifyImportOverlay' || ov.id === 'albumTrackEditOverlay') return;
   ov.addEventListener('click', e=>{
     if(e.target !== ov) return;
     ov.classList.remove('open');
@@ -4501,6 +4625,29 @@ document.getElementById('f-explicit-btn').addEventListener('click', ()=>{
   const label = document.getElementById('f-explicit-label');
   btn.classList.toggle('on', currentExplicit);
   label.textContent = currentExplicit ? 'Explicit' : 'Not explicit';
+});
+
+bindCoverInput('at-cover-file', 'at-cover', v=>albumTrackCoverArt=v);
+document.getElementById('at-explicit-btn').addEventListener('click', ()=>{
+  albumTrackExplicit = !albumTrackExplicit;
+  const btn = document.getElementById('at-explicit-btn');
+  const label = document.getElementById('at-explicit-label');
+  btn.classList.toggle('on', albumTrackExplicit);
+  label.textContent = albumTrackExplicit ? 'Explicit' : 'Not explicit';
+});
+document.getElementById('albumTrackEditSaveBtn').addEventListener('click', saveAlbumTrackBack);
+document.getElementById('albumTrackEditCancelBtn').addEventListener('click', ()=>{
+  if(albumBuildEditingIdx < 0) return;
+  albumBuildEditingIdx = -1;
+  document.getElementById('albumTrackEditOverlay').classList.remove('open');
+  const ov = document.getElementById('spotifyImportOverlay');
+  ov.classList.add('open');
+  renderAlbumTrackList(document.getElementById('spotifyTrackList'));
+});
+document.addEventListener('keydown', e=>{
+  if(e.key === 'Escape' && document.getElementById('albumTrackEditOverlay').classList.contains('open')){
+    document.getElementById('albumTrackEditCancelBtn').click();
+  }
 });
 
 function updateCamelotPreview(inputId, chipId){
