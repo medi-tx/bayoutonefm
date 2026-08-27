@@ -7508,7 +7508,6 @@ document.getElementById('spotifyImportPauseBtn').addEventListener('click', ()=>{
   }
 });
 
-
 async function handleSingleUrl(url){
   const errEl = document.getElementById('spotifyImportError');
   const resultsEl = document.getElementById('spotifyImportResults');
@@ -7707,7 +7706,6 @@ async function handleSingleUrl(url){
     errEl.innerHTML = '<p class="profile-empty-note">' + escapeHtml(e.message||'Could not look up this URL.') + '</p>';
   }
 }
-
 
 
 async function fetchViaProxy(url){
@@ -7984,7 +7982,7 @@ async function loadPlaylist(url){
   document.getElementById('spotifyImportStopBtn').style.display = '';
   document.getElementById('spotifyImportPauseBtn').style.display = '';
   document.getElementById('spotifyImportPauseBtn').textContent = 'Pause';
-    const serviceLabel = service === 'apple' ? 'Apple Music' : service === 'youtube' ? 'YouTube Music' : 'Tidal';
+  const serviceLabel = service === 'apple' ? 'Apple Music' : service === 'youtube' ? 'YouTube Music' : 'Tidal';
   listEl.innerHTML = `<p class="profile-empty-note">Connecting to ${serviceLabel}…</p>`;
   resultsEl.style.display = 'block';
   const oldStatus = document.getElementById('plEnrichStatus');
@@ -8017,7 +8015,7 @@ async function loadPlaylist(url){
     stopImportProgressTimer();
     document.getElementById('spotifyImportStopBtn').style.display = 'none';
     document.getElementById('spotifyImportPauseBtn').style.display = 'none';
-  const serviceLabel = service === 'apple' ? 'Apple Music' : service === 'youtube' ? 'YouTube Music' : 'Tidal';
+    const serviceLabel = service === 'apple' ? 'Apple Music' : service === 'youtube' ? 'YouTube Music' : 'Tidal';
     infoEl.innerHTML = `
       ${coverArt ? `<img loading="lazy" decoding="async" src="${escapeAttr(coverArt)}" style="width:48px;height:48px;border-radius:6px;object-fit:cover;" alt="Album cover">` : ''}
       <div>
