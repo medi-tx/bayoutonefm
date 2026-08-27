@@ -7038,6 +7038,9 @@ function addTitleBoxRow(focus, prefill){
     tierLabel.textContent = 'Tier:';
     tierRow.appendChild(tierLabel);
     let trackTier = (prefill && prefill.tier) ? prefill.tier : null;
+    if(!trackTier && prefill && prefill.score){
+      trackTier = tierForScore(Math.max(30, Math.min(100, prefill.score)));
+    }
     ['★','S','A','B','C'].forEach(t=>{
       const btn = document.createElement('button');
       btn.type = 'button';
@@ -7051,6 +7054,15 @@ function addTitleBoxRow(focus, prefill){
     });
     row._trackTier = ()=> trackTier;
     row.appendChild(tierRow);
+    scoreInput.addEventListener('input', ()=>{
+      const sv = parseInt(scoreInput.value, 10);
+      if(isNaN(sv)) return;
+      const autoTier = tierForScore(Math.max(30, Math.min(100, sv)));
+      if(autoTier){
+        trackTier = autoTier;
+        tierRow.querySelectorAll('.track-tier-btn').forEach(b=>b.classList.toggle('selected', b.textContent===trackTier));
+      }
+    });
   } else {
     row.className = 'title-box-row';
     row.appendChild(input);
