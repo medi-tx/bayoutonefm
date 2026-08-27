@@ -114,6 +114,9 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
     justify-content:center;
     padding:24px;
   }
+  .consent-open .auth-screen{
+    padding-bottom: calc(24px + var(--consent-h, 320px));
+  }
   .auth-card{
     width:100%;
     max-width:380px;
@@ -208,6 +211,15 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
     cursor:pointer;
   }
   .theme-btn:hover{ color:var(--rose); border-color:var(--rose); }
+  .theme-btn[disabled], .theme-btn.locked{
+    opacity:0.42;
+    filter:grayscale(45%);
+    cursor:not-allowed;
+  }
+  .theme-btn[disabled]:hover, .theme-btn.locked:hover{
+    color:var(--text-dim);
+    border-color:rgba(238,221,149,0.25);
+  }
 
   /* THEME MODAL */
   .theme-grid{
@@ -6550,6 +6562,7 @@ document.addEventListener('keydown', e=>{
 });
 
 function render(){
+  updateHeaderFeatureAccess();
   if(viewingTimeline){
     document.getElementById('grid').style.display = 'none';
     document.getElementById('gridSentinel').style.display = 'none';
@@ -7414,6 +7427,22 @@ function updateViewUI(){
   tierBtn.style.display = (showArchived || viewingWishlist || viewingTimeline) ? 'none' : '';
   clusterFilterId = null;
   remindsFilterId = null;
+}
+function updateHeaderFeatureAccess(){
+  const unlocked = songs.length > 0;
+  [['sotdBtn','Song of the Day'],['leaderboardBtn','Leaderboards'],['statsBtn','Stats']].forEach(([id,label])=>{
+    const btn = document.getElementById(id);
+    if(!btn) return;
+    if(!unlocked){
+      btn.setAttribute('disabled','disabled');
+      btn.classList.add('locked');
+      btn.title = 'Add your first song to unlock ' + label;
+    } else {
+      btn.removeAttribute('disabled');
+      btn.classList.remove('locked');
+      btn.removeAttribute('title');
+    }
+  });
 }
 function saveViewMode(){
   const mode = showArchived ? 'archive' : viewingWishlist ? 'wishlist' : viewingTierBoard ? 'tierboard' : viewingTimeline ? 'timeline' : 'cataloguex';
@@ -14561,9 +14590,16 @@ document.getElementById('feedCloseBtn').addEventListener('click', ()=>{
 /* ---- ANALYTICS CONSENT ---- */
 const ANALYTICS_CONSENT_KEY = 'bayoutonefm-analytics-consent';
 function getAnalyticsConsent(){ return localStorage.getItem(ANALYTICS_CONSENT_KEY); }
+function syncConsentReserve(){
+  const banner = document.getElementById('analyticsConsentBanner');
+  const visible = banner && banner.style.display !== 'none';
+  document.body.classList.toggle('consent-open', !!visible);
+  document.body.style.setProperty('--consent-h', (banner ? banner.offsetHeight : 0) + 'px');
+}
 window.acceptAnalytics = function(){
   localStorage.setItem(ANALYTICS_CONSENT_KEY, 'accepted');
   document.getElementById('analyticsConsentBanner').style.display = 'none';
+  syncConsentReserve();
 };
 window.rejectAnalytics = function(){
   localStorage.setItem(ANALYTICS_CONSENT_KEY, 'rejected');
@@ -14571,6 +14607,7 @@ window.rejectAnalytics = function(){
   try{ localStorage.removeItem(ANALYTICS_KEY); }catch(e){}
   window.trackEvent = function(){};
   document.getElementById('analyticsConsentBanner').style.display = 'none';
+  syncConsentReserve();
 };
 window.saveConsentPrefs = function(){
   const analyticsOn = document.getElementById('consentAnalyticsToggle').checked;
@@ -14580,7 +14617,14 @@ function showAnalyticsBannerIfNeeded(){
   if(!getAnalyticsConsent()){
     const toggle = document.getElementById('consentAnalyticsToggle');
     if(toggle) toggle.checked = false;
-    document.getElementById('analyticsConsentBanner').style.display = '';
+    const banner = document.getElementById('analyticsConsentBanner');
+    banner.style.display = '';
+    syncConsentReserve();
+    let rick = null;
+    window.addEventListener('resize', function(){
+      clearTimeout(rick);
+      rick = setTimeout(syncConsentReserve, 150);
+    });
   }
 }
 setTimeout(showAnalyticsBannerIfNeeded, 1500);

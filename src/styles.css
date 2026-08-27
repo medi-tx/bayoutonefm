@@ -64,6 +64,9 @@
     justify-content:center;
     padding:24px;
   }
+  .consent-open .auth-screen{
+    padding-bottom: calc(24px + var(--consent-h, 320px));
+  }
   .auth-card{
     width:100%;
     max-width:380px;
@@ -158,6 +161,15 @@
     cursor:pointer;
   }
   .theme-btn:hover{ color:var(--rose); border-color:var(--rose); }
+  .theme-btn[disabled], .theme-btn.locked{
+    opacity:0.42;
+    filter:grayscale(45%);
+    cursor:not-allowed;
+  }
+  .theme-btn[disabled]:hover, .theme-btn.locked:hover{
+    color:var(--text-dim);
+    border-color:rgba(238,221,149,0.25);
+  }
 
   /* THEME MODAL */
   .theme-grid{

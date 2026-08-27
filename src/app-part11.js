@@ -427,9 +427,16 @@ document.getElementById('feedCloseBtn').addEventListener('click', ()=>{
 /* ---- ANALYTICS CONSENT ---- */
 const ANALYTICS_CONSENT_KEY = 'bayoutonefm-analytics-consent';
 function getAnalyticsConsent(){ return localStorage.getItem(ANALYTICS_CONSENT_KEY); }
+function syncConsentReserve(){
+  const banner = document.getElementById('analyticsConsentBanner');
+  const visible = banner && banner.style.display !== 'none';
+  document.body.classList.toggle('consent-open', !!visible);
+  document.body.style.setProperty('--consent-h', (banner ? banner.offsetHeight : 0) + 'px');
+}
 window.acceptAnalytics = function(){
   localStorage.setItem(ANALYTICS_CONSENT_KEY, 'accepted');
   document.getElementById('analyticsConsentBanner').style.display = 'none';
+  syncConsentReserve();
 };
 window.rejectAnalytics = function(){
   localStorage.setItem(ANALYTICS_CONSENT_KEY, 'rejected');
@@ -437,6 +444,7 @@ window.rejectAnalytics = function(){
   try{ localStorage.removeItem(ANALYTICS_KEY); }catch(e){}
   window.trackEvent = function(){};
   document.getElementById('analyticsConsentBanner').style.display = 'none';
+  syncConsentReserve();
 };
 window.saveConsentPrefs = function(){
   const analyticsOn = document.getElementById('consentAnalyticsToggle').checked;
@@ -446,7 +454,14 @@ function showAnalyticsBannerIfNeeded(){
   if(!getAnalyticsConsent()){
     const toggle = document.getElementById('consentAnalyticsToggle');
     if(toggle) toggle.checked = false;
-    document.getElementById('analyticsConsentBanner').style.display = '';
+    const banner = document.getElementById('analyticsConsentBanner');
+    banner.style.display = '';
+    syncConsentReserve();
+    let rick = null;
+    window.addEventListener('resize', function(){
+      clearTimeout(rick);
+      rick = setTimeout(syncConsentReserve, 150);
+    });
   }
 }
 setTimeout(showAnalyticsBannerIfNeeded, 1500);

@@ -2467,6 +2467,7 @@ document.addEventListener('keydown', e=>{
 });
 
 function render(){
+  updateHeaderFeatureAccess();
   if(viewingTimeline){
     document.getElementById('grid').style.display = 'none';
     document.getElementById('gridSentinel').style.display = 'none';
@@ -3331,6 +3332,22 @@ function updateViewUI(){
   tierBtn.style.display = (showArchived || viewingWishlist || viewingTimeline) ? 'none' : '';
   clusterFilterId = null;
   remindsFilterId = null;
+}
+function updateHeaderFeatureAccess(){
+  const unlocked = songs.length > 0;
+  [['sotdBtn','Song of the Day'],['leaderboardBtn','Leaderboards'],['statsBtn','Stats']].forEach(([id,label])=>{
+    const btn = document.getElementById(id);
+    if(!btn) return;
+    if(!unlocked){
+      btn.setAttribute('disabled','disabled');
+      btn.classList.add('locked');
+      btn.title = 'Add your first song to unlock ' + label;
+    } else {
+      btn.removeAttribute('disabled');
+      btn.classList.remove('locked');
+      btn.removeAttribute('title');
+    }
+  });
 }
 function saveViewMode(){
   const mode = showArchived ? 'archive' : viewingWishlist ? 'wishlist' : viewingTierBoard ? 'tierboard' : viewingTimeline ? 'timeline' : 'cataloguex';
