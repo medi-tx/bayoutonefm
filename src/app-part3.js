@@ -28,6 +28,10 @@ const THEME_PRESETS = [
   { name:'Pastel Haze', colors: { ink:'#031435', paper:'#fff8f0', paperElevated:'#e7e5ff', border:'#d6cdcd', gold:'#bf89ec', teal:'#a4daaf', rose:'#f5e69e', lilac:'#a3ade1', sage:'#eaac8a' } },
   { name:'So In Love', colors: { ink:'#ad9090', paper:'#fff8f0', paperElevated:'#ffe8ea', border:'#eed8d8', gold:'#ff0000', teal:'#c80404', rose:'#cf1717', lilac:'#9d0202', sage:'#5e0303' } }
 ];
+const THEME_UNLOCK_STEPS = [0,0,0,3,3,5,5,10,10,10,15,15,20,20,25,30,30,40,40,50,50,75];
+function themeUnlockThreshold(i){ return THEME_UNLOCK_STEPS[i] !== undefined ? THEME_UNLOCK_STEPS[i] : 0; }
+function themeLockedAt(i){ const need = themeUnlockThreshold(i); return need > 0 && songs.length < need ? need : 0; }
+function themeUnlocksLeft(i){ const need = themeUnlockThreshold(i); if(need <= 0) return 0; return Math.max(0, need - songs.length); }
 function hexToRgb(hex){
   const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   return m ? { r:parseInt(m[1],16), g:parseInt(m[2],16), b:parseInt(m[3],16) } : { r:0,g:0,b:0 };
@@ -207,12 +211,23 @@ function saveCustomThemes(list){
 function renderThemePresets(){
   const wrap = document.getElementById('themePresets');
   wrap.innerHTML = '';
-  THEME_PRESETS.forEach(preset=>{
+  THEME_PRESETS.forEach((preset, i)=>{
     const btn = document.createElement('button');
     btn.type = 'button';
-    btn.className = 'theme-preset-btn';
+    const lockedNeed = themeLockedAt(i);
+    const locked = lockedNeed > 0;
+    btn.className = 'theme-preset-btn' + (locked ? ' locked' : '');
+    btn.setAttribute('data-theme-idx', String(i));
     const c = preset.colors;
-    btn.innerHTML = `<span class="theme-preset-swatch"><span style="background:${c.ink}"></span><span style="background:${c.gold}"></span><span style="background:${c.rose}"></span><span style="background:${c.teal}"></span><span style="background:${c.lilac||'#c9a0dc'}"></span><span style="background:${c.sage||'#7a8b6a'}"></span></span>${preset.name}`;
+    btn.innerHTML = `<span class="theme-preset-swatch"><span style="background:${c.ink}"></span><span style="background:${c.gold}"></span><span style="background:${c.rose}"></span><span style="background:${c.teal}"></span><span style="background:${c.lilac||'#c9a0dc'}"></span><span style="background:${c.sage||'#7a8b6a'}"></span></span>${preset.name}${locked ? `<span class="theme-preset-lock" title="Unlocks at ${lockedNeed} songs">🔒 ${lockedNeed}</span>` : ''}`;
+    if(locked){
+      btn.title = `Unlocks at ${lockedNeed} songs — add ${lockedNeed - songs.length} more to unlock ${preset.name}.`;
+      btn.addEventListener('click', ()=>{
+        showToast(`Add ${lockedNeed - songs.length} more song${lockedNeed - songs.length === 1 ? '' : 's'} to unlock ${preset.name}.`);
+      });
+      wrap.appendChild(btn);
+      return;
+    }
     btn.addEventListener('click', ()=>{
       applyTheme(preset.colors);
       saveTheme(preset.colors);
@@ -232,6 +247,23 @@ function renderThemePresets(){
     });
     wrap.appendChild(btn);
   });
+  let unlockedCount = 0;
+  THEME_PRESETS.forEach((_, i)=>{ if(themeUnlockThreshold(i) <= songs.length) unlockedCount++; });
+  const hint = document.getElementById('themeUnlockHint');
+  if(hint){
+    let msg;
+    if(unlockedCount >= THEME_PRESETS.length){
+      msg = `All ${THEME_PRESETS.length} themes unlocked!`;
+    } else {
+      let nextI = -1;
+      for(let j = 0; j < THEME_PRESETS.length; j++){
+        if(themeUnlockThreshold(j) > songs.length){ nextI = j; break; }
+      }
+      const nextNeed = nextI >= 0 ? themeUnlockThreshold(nextI) : 0;
+      msg = `${unlockedCount}/${THEME_PRESETS.length} themes unlocked` + (nextI >= 0 ? ` · next theme at ${nextNeed} songs` : '');
+    }
+    hint.textContent = msg;
+  }
   wrap.querySelectorAll('[data-delete-theme]').forEach(x=>{
     x.addEventListener('click', (e)=>{
       e.stopPropagation();
@@ -2468,6 +2500,7 @@ document.addEventListener('keydown', e=>{
 
 function render(){
   updateHeaderFeatureAccess();
+  renderThemePresets();
   if(viewingTimeline){
     document.getElementById('grid').style.display = 'none';
     document.getElementById('gridSentinel').style.display = 'none';
@@ -3335,7 +3368,7 @@ function updateViewUI(){
 }
 function updateHeaderFeatureAccess(){
   const unlocked = songs.length > 0;
-  [['sotdBtn','Song of the Day'],['leaderboardBtn','Leaderboards'],['statsBtn','Stats']].forEach(([id,label])=>{
+  [['sotdBtn','Song of the Day'],['leaderboardBtn','Leaderboards'],['statsBtn','Stats'],['songDbBtn','the Song Database']].forEach(([id,label])=>{
     const btn = document.getElementById(id);
     if(!btn) return;
     if(!unlocked){

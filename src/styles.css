@@ -232,6 +232,25 @@
     cursor:pointer;
   }
   .theme-preset-btn:hover{ border-color:var(--rose); color:var(--rose); }
+  .theme-preset-btn.locked{
+    opacity:0.5;
+    filter:grayscale(55%);
+    cursor:not-allowed;
+  }
+  .theme-preset-btn.locked:hover{ border-color:rgba(var(--on-paper-rgb),0.15); color:rgba(var(--on-paper-rgb),0.9); }
+  .theme-preset-lock{
+    margin-left:auto;
+    font-size:10px;
+    color:var(--text-dim);
+    white-space:nowrap;
+  }
+  .theme-unlock-hint{
+    font-family:'IBM Plex Mono',monospace;
+    font-weight:400;
+    font-size:10px;
+    color:var(--text-dim);
+    letter-spacing:0;
+  }
   .theme-preset-swatch{
     display:flex;
     width:20px; height:20px;
