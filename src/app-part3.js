@@ -1318,9 +1318,9 @@ document.getElementById('yrCloseBtn').addEventListener('click', ()=>{
 });
 /* ---- FEATURE USAGE ANALYTICS EXPORT ---- */
 function showAnalyticsExport(){
+  document.getElementById('themeBtn').style.display = '';
   if(myProfile && myProfile.username === 'samannleblanc'){
     document.getElementById('exportAnalyticsBtn').style.display = '';
-    document.getElementById('themeBtn').style.display = '';
   }
 }
 /* ---- SONG OF THE DAY: WEEKLY SCHEDULER (samannleblanc only) ---- */
