@@ -3071,6 +3071,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
       <button class="theme-btn" id="themeBtn">🎨 Theme</button>
       <button class="theme-btn" id="songDbBtn">📀 Song Database</button>
       <button class="theme-btn" id="testerBtn">🧪 Become a Tester</button>
+      <button class="theme-btn" id="discordBtn">Discord</button>
       <button class="avatar-btn" id="myProfileBtn" title="My profile"><span id="myAvatarContent">?</span></button>
       <button class="logout-btn" id="logoutBtn">Log out</button>
     </div>
@@ -5409,6 +5410,10 @@ document.getElementById('testerBtn').addEventListener('click', ()=>{
   trackEvent('become_a_tester');
   const fallback = 'https://docs.google.com/forms/d/e/1FAIpQLSdfM-OtLC51PooQoj0yz5S9rHAlN7Jbvw1a97hNkGXrXqMITA/viewform?usp=publish-editor';
   window.open((typeof TESTER_FORM_URL === 'string' && TESTER_FORM_URL) || fallback, '_blank', 'noopener');
+});
+document.getElementById('discordBtn').addEventListener('click', ()=>{
+  trackEvent('open_discord');
+  window.open('https://discord.gg/WYj8D8NUgV', '_blank', 'noopener');
 });
 document.getElementById('testerFormsCloseBtn').addEventListener('click', ()=>{
   document.getElementById('testerFormsOverlay').classList.remove('open');

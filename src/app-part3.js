@@ -1223,6 +1223,10 @@ document.getElementById('testerBtn').addEventListener('click', ()=>{
   const fallback = 'https://docs.google.com/forms/d/e/1FAIpQLSdfM-OtLC51PooQoj0yz5S9rHAlN7Jbvw1a97hNkGXrXqMITA/viewform?usp=publish-editor';
   window.open((typeof TESTER_FORM_URL === 'string' && TESTER_FORM_URL) || fallback, '_blank', 'noopener');
 });
+document.getElementById('discordBtn').addEventListener('click', ()=>{
+  trackEvent('open_discord');
+  window.open('https://discord.gg/WYj8D8NUgV', '_blank', 'noopener');
+});
 document.getElementById('testerFormsCloseBtn').addEventListener('click', ()=>{
   document.getElementById('testerFormsOverlay').classList.remove('open');
 });
