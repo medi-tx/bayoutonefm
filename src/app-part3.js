@@ -216,15 +216,16 @@ function renderThemePresets(){
     btn.type = 'button';
     const lockedNeed = themeLockedAt(i);
     const locked = lockedNeed > 0;
+    const remaining = locked ? lockedNeed - songs.length : 0;
     btn.className = 'theme-preset-btn' + (locked ? ' locked' : '');
     btn.setAttribute('data-theme-idx', String(i));
     const c = preset.colors;
-    btn.innerHTML = `<span class="theme-preset-swatch"><span style="background:${c.ink}"></span><span style="background:${c.gold}"></span><span style="background:${c.rose}"></span><span style="background:${c.teal}"></span><span style="background:${c.lilac||'#c9a0dc'}"></span><span style="background:${c.sage||'#7a8b6a'}"></span></span>${preset.name}${locked ? `<span class="theme-preset-lock" title="Unlocks at ${lockedNeed} songs">🔒 ${lockedNeed}</span>` : ''}`;
+    btn.innerHTML = `<span class="theme-preset-swatch"><span style="background:${c.ink}"></span><span style="background:${c.gold}"></span><span style="background:${c.rose}"></span><span style="background:${c.teal}"></span><span style="background:${c.lilac||'#c9a0dc'}"></span><span style="background:${c.sage||'#7a8b6a'}"></span></span>${preset.name}${locked ? `<span class="theme-preset-lock" title="Unlocks at ${lockedNeed} songs">🔒 ${remaining} more ${remaining === 1 ? 'song' : 'songs'}</span>` : ''}`;
     if(locked){
-      btn.title = `Unlocks at ${lockedNeed} songs — add ${lockedNeed - songs.length} more to unlock ${preset.name}.`;
+      btn.title = `${preset.name} unlocks at ${lockedNeed} songs — add ${remaining} more song${remaining === 1 ? '' : 's'} to your list.`;
       btn.addEventListener('click', ()=>{
         applyTheme(preset.colors);
-        showToast(`Locked theme — previewing ${preset.name}. Add ${lockedNeed - songs.length} more song${lockedNeed - songs.length === 1 ? '' : 's'} to unlock it.`);
+        showToast(`You unlock themes by adding songs. ${preset.name} needs ${lockedNeed} total songs — add ${remaining} more song${remaining === 1 ? '' : 's'} to unlock it.`);
       });
       wrap.appendChild(btn);
       return;
@@ -261,7 +262,7 @@ function renderThemePresets(){
         if(themeUnlockThreshold(j) > songs.length){ nextI = j; break; }
       }
       const nextNeed = nextI >= 0 ? themeUnlockThreshold(nextI) : 0;
-      msg = `${unlockedCount}/${THEME_PRESETS.length} themes unlocked` + (nextI >= 0 ? ` · next theme at ${nextNeed} songs` : '');
+      msg = `You unlock themes by adding songs · ${unlockedCount}/${THEME_PRESETS.length} unlocked` + (nextI >= 0 ? ` · next at ${nextNeed} songs` : '');
     }
     hint.textContent = msg;
   }
