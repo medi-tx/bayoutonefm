@@ -380,6 +380,25 @@
     padding:2px 4px;
   }
   .backup-tip-x:hover{ color:var(--rose); }
+  .backup-tip-actions{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    flex-shrink:0;
+  }
+  .backup-tip-btn{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.5px;
+    background:rgba(90,155,155,0.15);
+    border:1px solid rgba(90,155,155,0.5);
+    color:var(--on-ink);
+    padding:6px 11px;
+    border-radius:7px;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .backup-tip-btn:hover{ background:rgba(90,155,155,0.25); border-color:var(--teal); }
 
   /* MULTI-ENTRY MODAL */
   .multi-hint{ font-size:13px; color: rgba(var(--on-paper-rgb),0.82); margin:-4px 0 14px; }

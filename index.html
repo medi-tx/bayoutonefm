@@ -430,6 +430,25 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
     padding:2px 4px;
   }
   .backup-tip-x:hover{ color:var(--rose); }
+  .backup-tip-actions{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    flex-shrink:0;
+  }
+  .backup-tip-btn{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.5px;
+    background:rgba(90,155,155,0.15);
+    border:1px solid rgba(90,155,155,0.5);
+    color:var(--on-ink);
+    padding:6px 11px;
+    border-radius:7px;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .backup-tip-btn:hover{ background:rgba(90,155,155,0.25); border-color:var(--teal); }
 
   /* MULTI-ENTRY MODAL */
   .multi-hint{ font-size:13px; color: rgba(var(--on-paper-rgb),0.82); margin:-4px 0 14px; }
@@ -3106,7 +3125,11 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
   </header>
 
   <div class="backup-tip" id="backupTip">
-    <span class="backup-tip-body">💾 <b>Save your library.</b> Export a backup of your songs anytime from <b>Stats → 📦 Export Backup</b> — if you ever lose your cataloguex, restore it from <b>My Profile → 📥 Import / Restore backup</b>.</span>
+    <span class="backup-tip-body">💾 <b>Save your library.</b> Keep a backup so you never lose your cataloguex.</span>
+    <span class="backup-tip-actions">
+      <button type="button" class="backup-tip-btn" id="backupTipExport">📦 Export backup</button>
+      <button type="button" class="backup-tip-btn" id="backupTipImport">📥 Import / Restore backup</button>
+    </span>
     <button type="button" class="backup-tip-x" id="backupTipX" aria-label="Dismiss" title="Dismiss">✕</button>
   </div>
 
@@ -5458,6 +5481,14 @@ document.getElementById('discordBtn').addEventListener('click', ()=>{
   document.getElementById('backupTipX').addEventListener('click', ()=>{
     localStorage.setItem('bayoutonefm-backup-tip-seen', '1');
     tip.classList.remove('show');
+  });
+  document.getElementById('backupTipExport').addEventListener('click', ()=>{
+    const btn = document.getElementById('exportBackupBtn');
+    if(btn) btn.click();
+  });
+  document.getElementById('backupTipImport').addEventListener('click', ()=>{
+    const btn = document.getElementById('importDataBtn');
+    if(btn) btn.click();
   });
 })();
 document.getElementById('testerFormsCloseBtn').addEventListener('click', ()=>{

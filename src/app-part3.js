@@ -1238,6 +1238,14 @@ document.getElementById('discordBtn').addEventListener('click', ()=>{
     localStorage.setItem('bayoutonefm-backup-tip-seen', '1');
     tip.classList.remove('show');
   });
+  document.getElementById('backupTipExport').addEventListener('click', ()=>{
+    const btn = document.getElementById('exportBackupBtn');
+    if(btn) btn.click();
+  });
+  document.getElementById('backupTipImport').addEventListener('click', ()=>{
+    const btn = document.getElementById('importDataBtn');
+    if(btn) btn.click();
+  });
 })();
 document.getElementById('testerFormsCloseBtn').addEventListener('click', ()=>{
   document.getElementById('testerFormsOverlay').classList.remove('open');
