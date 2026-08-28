@@ -2269,6 +2269,19 @@
     background:rgba(0,0,0,0.55); color:#fff; border-radius:4px;
   }
   .msg-song-cell a{ text-decoration:none; color:inherit; }
+  .msg-song-save{
+    border:1px solid rgba(var(--on-ink-rgb),0.4); border-radius:8px;
+    padding:5px 9px; cursor:pointer; font-family:'IBM Plex Mono', monospace; font-size:10px; font-weight:600;
+    background:var(--ink); color:var(--on-ink); flex:0 0 auto; margin-left:auto; line-height:1.2; align-self:center;
+  }
+  .msg-song-save:hover{ opacity:0.88; }
+  .song-search-prominent{
+    margin-bottom:14px; padding:14px; border:1px solid rgba(var(--on-paper-rgb),0.18);
+    border-radius:12px; background:rgba(var(--on-paper-rgb),0.05);
+  }
+  .song-search-prominent label{ font-size:12px; font-weight:700; }
+  .song-search-prominent input{ font-size:15px; padding:12px 14px; }
+  .song-search-hint{ font-size:11px; opacity:0.75; margin:6px 0 0; line-height:1.5; }
   .msg-song-card img{ width:44px; height:44px; border-radius:6px; flex:0 0 44px; object-fit:cover; }
   .msg-song-meta{ min-width:0; }
   .msg-song-title{ font-size:12px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
@@ -2353,6 +2366,13 @@
   .sotd-link{ color:var(--rose); text-decoration:none; font-size:12px; flex:0 0 auto; }
   .sotd-link:hover{ text-decoration:underline; }
   .sotd-preview{ display:flex; align-items:center; gap:8px; flex:0 0 auto; }
+  .sotd-metarow{ display:flex; align-items:center; gap:8px; flex:0 0 auto; }
+  .sotd-close-btn{
+    flex:0 0 auto; width:28px; height:28px; display:flex; align-items:center; justify-content:center;
+    background:none; border:1px solid rgba(238,221,149,0.35); border-radius:6px;
+    color:var(--text-on-ink); font-size:13px; cursor:pointer; line-height:1;
+  }
+  .sotd-close-btn:hover{ background:rgba(238,221,149,0.15); }
   .sotd-add-btn{
     flex:0 0 auto;
     font-family:'IBM Plex Mono', monospace;

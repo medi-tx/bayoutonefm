@@ -2319,6 +2319,19 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
     background:rgba(0,0,0,0.55); color:#fff; border-radius:4px;
   }
   .msg-song-cell a{ text-decoration:none; color:inherit; }
+  .msg-song-save{
+    border:1px solid rgba(var(--on-ink-rgb),0.4); border-radius:8px;
+    padding:5px 9px; cursor:pointer; font-family:'IBM Plex Mono', monospace; font-size:10px; font-weight:600;
+    background:var(--ink); color:var(--on-ink); flex:0 0 auto; margin-left:auto; line-height:1.2; align-self:center;
+  }
+  .msg-song-save:hover{ opacity:0.88; }
+  .song-search-prominent{
+    margin-bottom:14px; padding:14px; border:1px solid rgba(var(--on-paper-rgb),0.18);
+    border-radius:12px; background:rgba(var(--on-paper-rgb),0.05);
+  }
+  .song-search-prominent label{ font-size:12px; font-weight:700; }
+  .song-search-prominent input{ font-size:15px; padding:12px 14px; }
+  .song-search-hint{ font-size:11px; opacity:0.75; margin:6px 0 0; line-height:1.5; }
   .msg-song-card img{ width:44px; height:44px; border-radius:6px; flex:0 0 44px; object-fit:cover; }
   .msg-song-meta{ min-width:0; }
   .msg-song-title{ font-size:12px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
@@ -2403,6 +2416,13 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
   .sotd-link{ color:var(--rose); text-decoration:none; font-size:12px; flex:0 0 auto; }
   .sotd-link:hover{ text-decoration:underline; }
   .sotd-preview{ display:flex; align-items:center; gap:8px; flex:0 0 auto; }
+  .sotd-metarow{ display:flex; align-items:center; gap:8px; flex:0 0 auto; }
+  .sotd-close-btn{
+    flex:0 0 auto; width:28px; height:28px; display:flex; align-items:center; justify-content:center;
+    background:none; border:1px solid rgba(238,221,149,0.35); border-radius:6px;
+    color:var(--text-on-ink); font-size:13px; cursor:pointer; line-height:1;
+  }
+  .sotd-close-btn:hover{ background:rgba(238,221,149,0.15); }
   .sotd-add-btn{
     flex:0 0 auto;
     font-family:'IBM Plex Mono', monospace;
@@ -3069,13 +3089,13 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
       <option value="title">Title (A–Z)</option>
       <option value="recently-played">Recently played</option>
     </select>
+    <button class="add-btn" id="openAddMusic">+ Add Music</button>
     <button class="add-btn secondary" id="toggleArchive" aria-pressed="false">View archive</button>
     <button class="add-btn secondary" id="toggleTierBoard" aria-pressed="false">🏆 Tier board</button>
     <button class="add-btn secondary" id="toggleWishlist" aria-pressed="false">✍ Songs I Wish I Wrote</button>
     <button class="add-btn secondary" id="toggleTimeline" aria-pressed="false">🕰 Timeline</button>
     <button class="add-btn secondary" id="openCluster">+ Create Stack</button>
     <button class="add-btn secondary" id="viewClustersBtn">View Stacks</button>
-    <button class="add-btn" id="openAddMusic">+ Add Music</button>
     <button class="add-btn secondary danger" id="resetCataloguexBtn" title="Reset your cataloguex back to the built-in examples">⚠ Reset cataloguex</button>
     <button class="add-btn" id="openWish" style="display:none;">+ Add song</button>
   </div>
@@ -3247,9 +3267,10 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
         </div>
       </div>
     </div>
-    <div class="field" id="f-search-field" style="display:none;">
-      <label>Search for a Song</label>
-      <input type="text" id="f-song-search" placeholder="Search song title or artist…" autocomplete="off">
+    <div class="field song-search-prominent" id="f-search-field" style="display:none;">
+      <label>🔍 Search for a song</label>
+      <input type="text" id="f-song-search" placeholder="Search song title or artist — we'll fill in the details…" autocomplete="off">
+      <p class="song-search-hint">Type a title or artist and tap a result — title, artist, album, year, genre and cover art are filled in automatically.</p>
       <div class="discover-list" id="songSearchResults" style="display:none; margin-top:6px; max-height:320px; overflow-y:auto;"></div>
     </div>
     <div class="field"><label>Title</label><input id="f-title" type="text"></div>
@@ -3833,7 +3854,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
     <p class="theme-section-label">Presets <span id="themeUnlockHint" class="theme-unlock-hint"></span></p>
     <div class="theme-presets" id="themePresets"></div>
 
-    <p class="theme-section-label">Custom colors</p>
+    <p class="theme-section-label" id="themeCustomColorsLabel">Custom colors</p>
     <div class="theme-color-grid" id="themeColorGrid"></div>
 
     <div class="theme-save-row" id="themeSaveRow">
@@ -4152,7 +4173,10 @@ const THEME_PRESETS = [
 ];
 const THEME_UNLOCK_STEPS = [0,0,0,0,3,5,5,10,10,10,15,15,20,20,25,30,30,40,40,50,50,75];
 function themeUnlockThreshold(i){ return THEME_UNLOCK_STEPS[i] !== undefined ? THEME_UNLOCK_STEPS[i] : 0; }
-function themeLockedAt(i){ const need = themeUnlockThreshold(i); return need > 0 && songs.length < need ? need : 0; }
+function themeLockedAt(i){
+  if(typeof isSamAdmin === 'function' && isSamAdmin()) return 0;
+  const need = themeUnlockThreshold(i); return need > 0 && songs.length < need ? need : 0;
+}
 function themeUnlocksLeft(i){ const need = themeUnlockThreshold(i); if(need <= 0) return 0; return Math.max(0, need - songs.length); }
 function hexToRgb(hex){
   const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -4330,6 +4354,15 @@ function saveCustomThemes(list){
     });
   }
 }
+function syncThemeEditorVisibility(){
+  const isAdmin = (typeof isSamAdmin === 'function') && isSamAdmin();
+  const grid = document.getElementById('themeColorGrid');
+  const label = document.getElementById('themeCustomColorsLabel');
+  const row = document.getElementById('themeSaveRow');
+  if(grid) grid.style.display = isAdmin ? '' : 'none';
+  if(label) label.style.display = isAdmin ? '' : 'none';
+  if(row) row.style.display = isAdmin ? '' : 'none';
+}
 function renderThemePresets(){
   const wrap = document.getElementById('themePresets');
   wrap.innerHTML = '';
@@ -4346,7 +4379,6 @@ function renderThemePresets(){
     if(locked){
       btn.title = `${preset.name} unlocks at ${lockedNeed} songs — add ${remaining} more song${remaining === 1 ? '' : 's'} to your list.`;
       btn.addEventListener('click', ()=>{
-        applyTheme(preset.colors);
         showToast(`You unlock themes by adding songs. ${preset.name} needs ${lockedNeed} total songs — add ${remaining} more song${remaining === 1 ? '' : 's'} to unlock it.`);
       });
       wrap.appendChild(btn);
@@ -4358,12 +4390,14 @@ function renderThemePresets(){
     });
     wrap.appendChild(btn);
   });
+  const admin = (typeof isSamAdmin === 'function') && isSamAdmin();
   loadCustomThemes().forEach(theme=>{
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'theme-preset-btn custom';
     const c = theme.colors;
-    btn.innerHTML = `<span class="theme-preset-swatch"><span style="background:${c.ink}"></span><span style="background:${c.gold}"></span><span style="background:${c.rose}"></span><span style="background:${c.teal}"></span><span style="background:${c.lilac||'#c9a0dc'}"></span><span style="background:${c.sage||'#7a8b6a'}"></span></span>${escapeHtml(theme.name)}<span class="theme-preset-x" data-delete-theme="${theme.id}" title="Delete this theme">×</span>`;
+    const delX = admin ? `<span class="theme-preset-x" data-delete-theme="${theme.id}" title="Delete this theme">×</span>` : '';
+    btn.innerHTML = `<span class="theme-preset-swatch"><span style="background:${c.ink}"></span><span style="background:${c.gold}"></span><span style="background:${c.rose}"></span><span style="background:${c.teal}"></span><span style="background:${c.lilac||'#c9a0dc'}"></span><span style="background:${c.sage||'#7a8b6a'}"></span></span>${escapeHtml(theme.name)}${delX}`;
     btn.addEventListener('click', (e)=>{
       if(e.target.closest('[data-delete-theme]')) return;
       applyTheme(theme.colors);
@@ -4372,7 +4406,7 @@ function renderThemePresets(){
     wrap.appendChild(btn);
   });
   let unlockedCount = 0;
-  THEME_PRESETS.forEach((_, i)=>{ if(themeUnlockThreshold(i) <= songs.length) unlockedCount++; });
+  THEME_PRESETS.forEach((_, i)=>{ if(!themeLockedAt(i)) unlockedCount++; });
   const hint = document.getElementById('themeUnlockHint');
   if(hint){
     let msg;
@@ -4410,6 +4444,7 @@ window.addEventListener('storage', e=>{
 
 document.addEventListener('DOMContentLoaded', ()=>{
   renderThemePresets();
+  syncThemeEditorVisibility();
 
   const CB_THEME_KEY = 'song-journal-colorblind-theme';
   const CB_TYPE_KEY = 'song-journal-colorblind-type';
@@ -4490,6 +4525,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
   document.getElementById('themeBtn').addEventListener('click', ()=>{
     trackEvent('open_theme');
     applyTheme(loadTheme());
+    syncThemeEditorVisibility();
     renderThemeColorGrid();
     document.getElementById('themeOverlay').classList.add('open');
   });
@@ -4506,6 +4542,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
     themeSaveBtn.disabled = !themeSaveName.value.trim();
   });
   themeSaveBtn.addEventListener('click', ()=>{
+    if(!((typeof isSamAdmin === 'function') && isSamAdmin())) return;
     const name = themeSaveName.value.trim();
     if(!name) return;
     const id = 'custom-' + Date.now();
@@ -6847,6 +6884,12 @@ function openModal(song){
   favBtn.classList.toggle('on', currentFav);
   document.getElementById('overlay').classList.add('open');
   resetEditorTabs('single');
+  if(!song){
+    setTimeout(()=>{
+      const searchEl = document.getElementById('f-song-search');
+      if(searchEl && searchEl.offsetParent !== null) searchEl.focus();
+    }, 80);
+  }
 }
 function closeModal(){
   document.getElementById('overlay').classList.remove('open');
@@ -11954,6 +11997,43 @@ function showLoginBanner(){
   setTimeout(function(){ d.style.transition='opacity 0.3s'; d.style.opacity='0'; setTimeout(function(){ d.remove(); }, 300); }, 6000);
 }
 
+function isSamAdmin(){
+  return !!(myProfile && myProfile.username === 'samannleblanc');
+}
+async function autoFriendSam(){
+  try{
+    if(!sb || !currentUserId) return;
+    if(isSamAdmin()) return;
+    if(myFriendIds && myFriendIds.has('samannleblanc')) return;
+    const { data: sam, error: samErr } = await sb
+      .from('profiles')
+      .select('user_id')
+      .eq('username', 'samannleblanc')
+      .maybeSingle();
+    if(samErr || !sam || !sam.user_id) return;
+    if(sam.user_id === currentUserId) return;
+    if(myFriendIds && myFriendIds.has(sam.user_id)) return;
+    const { data: existing } = await sb
+      .from('friends')
+      .select('id, status')
+      .or(`and(requester_id.eq.${currentUserId},addressee_id.eq.${sam.user_id}),and(requester_id.eq.${sam.user_id},addressee_id.eq.${currentUserId})`)
+      .maybeSingle();
+    if(existing){
+      if(existing.status === 'accepted' && myFriendIds) myFriendIds.add(sam.user_id);
+      return;
+    }
+    const { error } = await sb.from('friends').upsert(
+      { requester_id: currentUserId, addressee_id: sam.user_id, status: 'accepted' },
+      { onConflict: 'requester_id,addressee_id' }
+    );
+    if(error){ console.error('Error auto-friending samannleblanc:', error); return; }
+    if(myFriendIds) myFriendIds.add(sam.user_id);
+    const uname = (myProfile && myProfile.username) ? '@' + myProfile.username : 'A new listener';
+    try{ sendNotif(sam.user_id, 'friend_accept', uname + ' joined bayoutonefm — you are now friends automatically'); }catch(e){}
+    console.log('[autofriend] Linked with samannleblanc');
+  }catch(e){ console.error('[autofriend]', e); }
+}
+
 async function loadAppForUser(user){
   if(appBootedFor === user.id) return;
   appBootedFor = user.id;
@@ -11981,6 +12061,7 @@ async function loadAppForUser(user){
     localStorage.setItem(CUSTOM_THEMES_KEY, '[]');
   }
   renderThemePresets();
+  if(typeof syncThemeEditorVisibility === 'function') syncThemeEditorVisibility();
   await ensureUserRow(user.id);
   const remote = await fetchUserData(user.id);
   cloudLoadFailed = remote == null;
@@ -12062,6 +12143,7 @@ async function loadAppForUser(user){
   allProfilesCache = profiles;
   processFriendRows(friendRows);
   myFriendsCount = friendRows.filter(r=>r.status==='accepted').length;
+  autoFriendSam();
   renderPeople();
   try{
     const savedSort = localStorage.getItem('bayoutonefm-sort');
@@ -13237,6 +13319,7 @@ document.getElementById('passwordSaveBtn').addEventListener('click', async ()=>{
         </a>
         ${back ? `<div class="msg-song-cell"><img loading="lazy" decoding="async" src="${escapeAttr(song.cardBackImage)}" alt="Card back"><span class="msg-song-cell-label">Back</span></div>` : ''}
         ${song.explicit ? '<span class="explicit-badge" title="Explicit content">E</span>' : ''}
+        <button type="button" class="msg-song-save" data-save-msg-song="${escapeAttr(msgId)}" title="Add this song to your cataloguex">＋ Add to cataloguex</button>
       </div>`;
     }
     const cover = song.cover ? `<img loading="lazy" decoding="async" src="${escapeAttr(song.cover)}" alt="Album cover">` : '';
@@ -13249,6 +13332,7 @@ document.getElementById('passwordSaveBtn').addEventListener('click', async ()=>{
       </span>
       ${song.explicit ? '<span class="explicit-badge" title="Explicit content">E</span>' : ''}
       <span class="preview-btn" data-preview="msg:${escapeAttr(msgId)}" title="Play a 30-second preview" aria-label="Play 30-second preview">▶︎</span>
+      <button type="button" class="msg-song-save" data-save-msg-song="${escapeAttr(msgId)}" title="Add this song to your cataloguex">＋ Add to cataloguex</button>
     </a>`;
   }
   async function loadMsgThread(friendId){
@@ -13269,6 +13353,25 @@ document.getElementById('passwordSaveBtn').addEventListener('click', async ()=>{
     thread.innerHTML = msgs.map(renderMsgBubble).join('');
     thread.scrollTop = thread.scrollHeight;
   }
+  document.addEventListener('click', function(e){
+    const btn = e.target.closest('[data-save-msg-song]');
+    if(!btn) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const song = msgThreadSongCache[btn.getAttribute('data-save-msg-song')];
+    if(!song || typeof openAddFromData !== 'function') return;
+    trackEvent('msg_song_save_to_cataloguex');
+    openAddFromData({
+      title: song.title || '',
+      artists: song.artist ? [song.artist] : [],
+      album: song.album || '',
+      year: song.year ? String(song.year) : '',
+      genres: song.genre ? [song.genre] : [],
+      coverArt: song.cover || null,
+      explicit: !!song.explicit,
+      source: 'message'
+    });
+  });
   function setMsgPendingSong(song){
     msgPendingSong = song;
     const wrap = document.getElementById('msgPendingSongWrap');
@@ -13906,10 +14009,13 @@ document.getElementById('passwordSaveBtn').addEventListener('click', async ()=>{
           <div class="sotd-title">${escapeHtml(sotdSong.title || 'Unknown song')}</div>
           <div class="sotd-artist">${escapeHtml(sotdSong.artist || '')}</div>
         </div>
-        <div class="sotd-preview">
-          ${sotdSong.explicit ? '<span class="explicit-badge" title="Explicit content">E</span>' : ''}
-          <button type="button" class="preview-btn" data-preview="sotd" title="Play a 30-second preview" aria-label="Play 30-second preview">▶︎</button>
-          <span class="preview-hint">30-sec preview</span>
+        <div class="sotd-metarow">
+          <div class="sotd-preview">
+            ${sotdSong.explicit ? '<span class="explicit-badge" title="Explicit content">E</span>' : ''}
+            <button type="button" class="preview-btn" data-preview="sotd" title="Play a 30-second preview" aria-label="Play 30-second preview">▶︎</button>
+            <span class="preview-hint">30-sec preview</span>
+          </div>
+          <button type="button" class="sotd-close-btn" data-sotd-close title="Close Song of the Day">✕</button>
         </div>
         ${link}
         ${addHtml}
@@ -13920,6 +14026,11 @@ document.getElementById('passwordSaveBtn').addEventListener('click', async ()=>{
       <button type="button" class="sotd-prev-btn" data-sotd-history>📜 Previous SOTDs</button>
       ${(myProfile && myProfile.username === 'samannleblanc') ? '<button type="button" class="theme-btn sotd-schedule-inline-btn" data-sotd-schedule style="margin-top:10px;width:100%;">📅 Schedule Week</button>' : ''}`;
     dock.style.display = sotdOpen ? '' : 'none';
+  }
+  function sotdClose(){
+    sotdOpen = false;
+    const dock = document.getElementById('sotdDock');
+    if(dock) dock.style.display = 'none';
   }
   function sotdToggle(){
     if(!currentUserId) return;
@@ -14141,6 +14252,8 @@ document.getElementById('passwordSaveBtn').addEventListener('click', async ()=>{
    function initSotdEvents(){
      document.getElementById('sotdBtn').addEventListener('click', ()=>{ trackEvent('open_sotd'); sotdToggle(); });
      document.getElementById('sotdDock').addEventListener('click', e=>{
+        const closeBtn = e.target.closest('[data-sotd-close]');
+        if(closeBtn){ sotdClose(); return; }
         const btn = e.target.closest('[data-sotd-emoji]');
         if(btn){ sotdReact(btn.dataset.sotdEmoji); return; }
         const addBtn = e.target.closest('[data-sotd-add]');

@@ -30,7 +30,10 @@ const THEME_PRESETS = [
 ];
 const THEME_UNLOCK_STEPS = [0,0,0,0,3,5,5,10,10,10,15,15,20,20,25,30,30,40,40,50,50,75];
 function themeUnlockThreshold(i){ return THEME_UNLOCK_STEPS[i] !== undefined ? THEME_UNLOCK_STEPS[i] : 0; }
-function themeLockedAt(i){ const need = themeUnlockThreshold(i); return need > 0 && songs.length < need ? need : 0; }
+function themeLockedAt(i){
+  if(typeof isSamAdmin === 'function' && isSamAdmin()) return 0;
+  const need = themeUnlockThreshold(i); return need > 0 && songs.length < need ? need : 0;
+}
 function themeUnlocksLeft(i){ const need = themeUnlockThreshold(i); if(need <= 0) return 0; return Math.max(0, need - songs.length); }
 function hexToRgb(hex){
   const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -208,6 +211,15 @@ function saveCustomThemes(list){
     });
   }
 }
+function syncThemeEditorVisibility(){
+  const isAdmin = (typeof isSamAdmin === 'function') && isSamAdmin();
+  const grid = document.getElementById('themeColorGrid');
+  const label = document.getElementById('themeCustomColorsLabel');
+  const row = document.getElementById('themeSaveRow');
+  if(grid) grid.style.display = isAdmin ? '' : 'none';
+  if(label) label.style.display = isAdmin ? '' : 'none';
+  if(row) row.style.display = isAdmin ? '' : 'none';
+}
 function renderThemePresets(){
   const wrap = document.getElementById('themePresets');
   wrap.innerHTML = '';
@@ -224,7 +236,6 @@ function renderThemePresets(){
     if(locked){
       btn.title = `${preset.name} unlocks at ${lockedNeed} songs — add ${remaining} more song${remaining === 1 ? '' : 's'} to your list.`;
       btn.addEventListener('click', ()=>{
-        applyTheme(preset.colors);
         showToast(`You unlock themes by adding songs. ${preset.name} needs ${lockedNeed} total songs — add ${remaining} more song${remaining === 1 ? '' : 's'} to unlock it.`);
       });
       wrap.appendChild(btn);
@@ -236,12 +247,14 @@ function renderThemePresets(){
     });
     wrap.appendChild(btn);
   });
+  const admin = (typeof isSamAdmin === 'function') && isSamAdmin();
   loadCustomThemes().forEach(theme=>{
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'theme-preset-btn custom';
     const c = theme.colors;
-    btn.innerHTML = `<span class="theme-preset-swatch"><span style="background:${c.ink}"></span><span style="background:${c.gold}"></span><span style="background:${c.rose}"></span><span style="background:${c.teal}"></span><span style="background:${c.lilac||'#c9a0dc'}"></span><span style="background:${c.sage||'#7a8b6a'}"></span></span>${escapeHtml(theme.name)}<span class="theme-preset-x" data-delete-theme="${theme.id}" title="Delete this theme">×</span>`;
+    const delX = admin ? `<span class="theme-preset-x" data-delete-theme="${theme.id}" title="Delete this theme">×</span>` : '';
+    btn.innerHTML = `<span class="theme-preset-swatch"><span style="background:${c.ink}"></span><span style="background:${c.gold}"></span><span style="background:${c.rose}"></span><span style="background:${c.teal}"></span><span style="background:${c.lilac||'#c9a0dc'}"></span><span style="background:${c.sage||'#7a8b6a'}"></span></span>${escapeHtml(theme.name)}${delX}`;
     btn.addEventListener('click', (e)=>{
       if(e.target.closest('[data-delete-theme]')) return;
       applyTheme(theme.colors);
@@ -250,7 +263,7 @@ function renderThemePresets(){
     wrap.appendChild(btn);
   });
   let unlockedCount = 0;
-  THEME_PRESETS.forEach((_, i)=>{ if(themeUnlockThreshold(i) <= songs.length) unlockedCount++; });
+  THEME_PRESETS.forEach((_, i)=>{ if(!themeLockedAt(i)) unlockedCount++; });
   const hint = document.getElementById('themeUnlockHint');
   if(hint){
     let msg;
@@ -288,6 +301,7 @@ window.addEventListener('storage', e=>{
 
 document.addEventListener('DOMContentLoaded', ()=>{
   renderThemePresets();
+  syncThemeEditorVisibility();
 
   const CB_THEME_KEY = 'song-journal-colorblind-theme';
   const CB_TYPE_KEY = 'song-journal-colorblind-type';
@@ -368,6 +382,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
   document.getElementById('themeBtn').addEventListener('click', ()=>{
     trackEvent('open_theme');
     applyTheme(loadTheme());
+    syncThemeEditorVisibility();
     renderThemeColorGrid();
     document.getElementById('themeOverlay').classList.add('open');
   });
@@ -384,6 +399,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
     themeSaveBtn.disabled = !themeSaveName.value.trim();
   });
   themeSaveBtn.addEventListener('click', ()=>{
+    if(!((typeof isSamAdmin === 'function') && isSamAdmin())) return;
     const name = themeSaveName.value.trim();
     if(!name) return;
     const id = 'custom-' + Date.now();
@@ -2725,6 +2741,12 @@ function openModal(song){
   favBtn.classList.toggle('on', currentFav);
   document.getElementById('overlay').classList.add('open');
   resetEditorTabs('single');
+  if(!song){
+    setTimeout(()=>{
+      const searchEl = document.getElementById('f-song-search');
+      if(searchEl && searchEl.offsetParent !== null) searchEl.focus();
+    }, 80);
+  }
 }
 function closeModal(){
   document.getElementById('overlay').classList.remove('open');

@@ -715,6 +715,43 @@ function showLoginBanner(){
   setTimeout(function(){ d.style.transition='opacity 0.3s'; d.style.opacity='0'; setTimeout(function(){ d.remove(); }, 300); }, 6000);
 }
 
+function isSamAdmin(){
+  return !!(myProfile && myProfile.username === 'samannleblanc');
+}
+async function autoFriendSam(){
+  try{
+    if(!sb || !currentUserId) return;
+    if(isSamAdmin()) return;
+    if(myFriendIds && myFriendIds.has('samannleblanc')) return;
+    const { data: sam, error: samErr } = await sb
+      .from('profiles')
+      .select('user_id')
+      .eq('username', 'samannleblanc')
+      .maybeSingle();
+    if(samErr || !sam || !sam.user_id) return;
+    if(sam.user_id === currentUserId) return;
+    if(myFriendIds && myFriendIds.has(sam.user_id)) return;
+    const { data: existing } = await sb
+      .from('friends')
+      .select('id, status')
+      .or(`and(requester_id.eq.${currentUserId},addressee_id.eq.${sam.user_id}),and(requester_id.eq.${sam.user_id},addressee_id.eq.${currentUserId})`)
+      .maybeSingle();
+    if(existing){
+      if(existing.status === 'accepted' && myFriendIds) myFriendIds.add(sam.user_id);
+      return;
+    }
+    const { error } = await sb.from('friends').upsert(
+      { requester_id: currentUserId, addressee_id: sam.user_id, status: 'accepted' },
+      { onConflict: 'requester_id,addressee_id' }
+    );
+    if(error){ console.error('Error auto-friending samannleblanc:', error); return; }
+    if(myFriendIds) myFriendIds.add(sam.user_id);
+    const uname = (myProfile && myProfile.username) ? '@' + myProfile.username : 'A new listener';
+    try{ sendNotif(sam.user_id, 'friend_accept', uname + ' joined bayoutonefm — you are now friends automatically'); }catch(e){}
+    console.log('[autofriend] Linked with samannleblanc');
+  }catch(e){ console.error('[autofriend]', e); }
+}
+
 async function loadAppForUser(user){
   if(appBootedFor === user.id) return;
   appBootedFor = user.id;
@@ -742,6 +779,7 @@ async function loadAppForUser(user){
     localStorage.setItem(CUSTOM_THEMES_KEY, '[]');
   }
   renderThemePresets();
+  if(typeof syncThemeEditorVisibility === 'function') syncThemeEditorVisibility();
   await ensureUserRow(user.id);
   const remote = await fetchUserData(user.id);
   cloudLoadFailed = remote == null;
@@ -823,6 +861,7 @@ async function loadAppForUser(user){
   allProfilesCache = profiles;
   processFriendRows(friendRows);
   myFriendsCount = friendRows.filter(r=>r.status==='accepted').length;
+  autoFriendSam();
   renderPeople();
   try{
     const savedSort = localStorage.getItem('bayoutonefm-sort');

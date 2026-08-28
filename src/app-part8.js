@@ -184,6 +184,7 @@
         </a>
         ${back ? `<div class="msg-song-cell"><img loading="lazy" decoding="async" src="${escapeAttr(song.cardBackImage)}" alt="Card back"><span class="msg-song-cell-label">Back</span></div>` : ''}
         ${song.explicit ? '<span class="explicit-badge" title="Explicit content">E</span>' : ''}
+        <button type="button" class="msg-song-save" data-save-msg-song="${escapeAttr(msgId)}" title="Add this song to your cataloguex">＋ Add to cataloguex</button>
       </div>`;
     }
     const cover = song.cover ? `<img loading="lazy" decoding="async" src="${escapeAttr(song.cover)}" alt="Album cover">` : '';
@@ -196,6 +197,7 @@
       </span>
       ${song.explicit ? '<span class="explicit-badge" title="Explicit content">E</span>' : ''}
       <span class="preview-btn" data-preview="msg:${escapeAttr(msgId)}" title="Play a 30-second preview" aria-label="Play 30-second preview">▶︎</span>
+      <button type="button" class="msg-song-save" data-save-msg-song="${escapeAttr(msgId)}" title="Add this song to your cataloguex">＋ Add to cataloguex</button>
     </a>`;
   }
   async function loadMsgThread(friendId){
@@ -216,6 +218,25 @@
     thread.innerHTML = msgs.map(renderMsgBubble).join('');
     thread.scrollTop = thread.scrollHeight;
   }
+  document.addEventListener('click', function(e){
+    const btn = e.target.closest('[data-save-msg-song]');
+    if(!btn) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const song = msgThreadSongCache[btn.getAttribute('data-save-msg-song')];
+    if(!song || typeof openAddFromData !== 'function') return;
+    trackEvent('msg_song_save_to_cataloguex');
+    openAddFromData({
+      title: song.title || '',
+      artists: song.artist ? [song.artist] : [],
+      album: song.album || '',
+      year: song.year ? String(song.year) : '',
+      genres: song.genre ? [song.genre] : [],
+      coverArt: song.cover || null,
+      explicit: !!song.explicit,
+      source: 'message'
+    });
+  });
   function setMsgPendingSong(song){
     msgPendingSong = song;
     const wrap = document.getElementById('msgPendingSongWrap');

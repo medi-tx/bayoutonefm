@@ -419,10 +419,13 @@
           <div class="sotd-title">${escapeHtml(sotdSong.title || 'Unknown song')}</div>
           <div class="sotd-artist">${escapeHtml(sotdSong.artist || '')}</div>
         </div>
-        <div class="sotd-preview">
-          ${sotdSong.explicit ? '<span class="explicit-badge" title="Explicit content">E</span>' : ''}
-          <button type="button" class="preview-btn" data-preview="sotd" title="Play a 30-second preview" aria-label="Play 30-second preview">▶︎</button>
-          <span class="preview-hint">30-sec preview</span>
+        <div class="sotd-metarow">
+          <div class="sotd-preview">
+            ${sotdSong.explicit ? '<span class="explicit-badge" title="Explicit content">E</span>' : ''}
+            <button type="button" class="preview-btn" data-preview="sotd" title="Play a 30-second preview" aria-label="Play 30-second preview">▶︎</button>
+            <span class="preview-hint">30-sec preview</span>
+          </div>
+          <button type="button" class="sotd-close-btn" data-sotd-close title="Close Song of the Day">✕</button>
         </div>
         ${link}
         ${addHtml}
@@ -433,6 +436,11 @@
       <button type="button" class="sotd-prev-btn" data-sotd-history>📜 Previous SOTDs</button>
       ${(myProfile && myProfile.username === 'samannleblanc') ? '<button type="button" class="theme-btn sotd-schedule-inline-btn" data-sotd-schedule style="margin-top:10px;width:100%;">📅 Schedule Week</button>' : ''}`;
     dock.style.display = sotdOpen ? '' : 'none';
+  }
+  function sotdClose(){
+    sotdOpen = false;
+    const dock = document.getElementById('sotdDock');
+    if(dock) dock.style.display = 'none';
   }
   function sotdToggle(){
     if(!currentUserId) return;
@@ -654,6 +662,8 @@
    function initSotdEvents(){
      document.getElementById('sotdBtn').addEventListener('click', ()=>{ trackEvent('open_sotd'); sotdToggle(); });
      document.getElementById('sotdDock').addEventListener('click', e=>{
+        const closeBtn = e.target.closest('[data-sotd-close]');
+        if(closeBtn){ sotdClose(); return; }
         const btn = e.target.closest('[data-sotd-emoji]');
         if(btn){ sotdReact(btn.dataset.sotdEmoji); return; }
         const addBtn = e.target.closest('[data-sotd-add]');
