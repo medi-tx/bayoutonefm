@@ -13,7 +13,8 @@ const map = [
   "src/app-part8.js",
   "src/app-part9.js",
   "src/app-part10.js",
-  "src/app-part11.js"
+  "src/app-part11.js",
+  "src/app-part12.js"
 ];
 
 function parseScripts(h) {

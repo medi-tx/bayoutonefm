@@ -259,6 +259,7 @@ document.getElementById('recoverySubmitBtn').addEventListener('click', async ()=
     localStorage.removeItem(CUSTOM_THEMES_KEY);
     applyTheme(DEFAULT_THEME);
     showSotdScheduleBtn();
+    if(typeof syncCDButton === 'function') syncCDButton();
     unsubscribeNotifications();
     if(window.stopMsgRealtime) window.stopMsgRealtime();
     showAuthScreen();
@@ -911,6 +912,7 @@ async function loadAppForUser(user){
   renderThemePresets();
   if(typeof syncThemeEditorVisibility === 'function') syncThemeEditorVisibility();
   if(typeof syncTesterButton === 'function') syncTesterButton();
+  if(typeof syncCDButton === 'function') syncCDButton();
   await ensureUserRow(user.id);
   const remote = await fetchUserData(user.id);
   cloudLoadFailed = remote == null;
@@ -1679,6 +1681,7 @@ sb.auth.onAuthStateChange((event, session)=>{
     localStorage.removeItem(CUSTOM_THEMES_KEY);
     applyTheme(DEFAULT_THEME);
     showSotdScheduleBtn();
+    if(typeof syncCDButton === 'function') syncCDButton();
     unsubscribeNotifications();
     if(window.stopMsgRealtime) window.stopMsgRealtime();
     showAuthScreen();
@@ -1698,6 +1701,7 @@ sb.auth.onAuthStateChange((event, session)=>{
     localStorage.removeItem(CUSTOM_THEMES_KEY);
     applyTheme(DEFAULT_THEME);
     showSotdScheduleBtn();
+    if(typeof syncCDButton === 'function') syncCDButton();
     unsubscribeNotifications();
     if(window.stopMsgRealtime) window.stopMsgRealtime();
     showAuthScreen();

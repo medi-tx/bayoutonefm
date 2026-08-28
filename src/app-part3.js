@@ -1796,7 +1796,7 @@ function fitCardIntoSheet(src){
   out.width = W; out.height = H;
   const octx = out.getContext('2d');
   const t = loadTheme();
-  octx.fillStyle = t.paper || '#eedd95';
+  octx.fillStyle = t.ink || '#12141c';
   octx.fillRect(0, 0, W, H);
   if(src && src.width && src.height){
     const iw = src.width, ih = src.height;
@@ -1839,8 +1839,10 @@ async function drawSongShareCard(opts){
   const W = 1080, H = 1350;
   cv.width = W; cv.height = H;
   const ctx = cv.getContext('2d');
-  cardBase(ctx, W, H, opts.username);
   const t = loadTheme();
+  cardBase(ctx, W, H, opts.username);
+  ctx.fillStyle = t.lilac || '#8E44AD';
+  ctx.fillRect(0, 0, W, 3);
   const coverS = 360;
   const coverX = (W - coverS)/2, coverY = 420;
   const img = await loadCardImage(s.coverArt);
@@ -1936,6 +1938,9 @@ async function drawSongBackShareCard(opts, cvId){
   cv.width = W; cv.height = H;
   const ctx = cv.getContext('2d');
   cardBase(ctx, W, H, opts.username);
+  const tb = loadTheme();
+  ctx.fillStyle = tb.lilac || '#8E44AD';
+  ctx.fillRect(0, 0, W, 3);
   ctx.fillStyle = '#eedd95';
   ctx.font = '700 42px "Space Grotesk", sans-serif';
   ctx.textAlign = 'left';

@@ -3016,6 +3016,96 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
 @media (max-width:620px){ #loginBanner{ top: 16px; } }
 @media (max-width:620px){ .stats-modal{ max-width:100%; } .stats-modal canvas{ max-width:100%; height:auto; } .stat-total span{ font-size:16px; } .stat-section{ margin:6px 0; } .stats-totals{ gap:6px; margin:2px 0 8px; } }
 @media (max-width:620px){ .sotd-dock-head{ flex-wrap:wrap; } .sotd-meta{ flex:1 1 100%; order:-1; } .sotd-preview{ order:0; } .sotd-link{ order:1; } .sotd-add-btn, .sotd-added-tag{ order:2; } }
+
+/* ---- MY CD COLLECTION (certified testers) ---- */
+.cd-modal{ max-width:780px; }
+.cd-modal-sub{ font-size:13px; color:rgba(var(--on-paper-rgb),0.82); margin:-4px 0 16px; line-height:1.5; }
+.cd-scan-row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
+.cd-scan-row input{
+  flex:1; min-width:180px;
+  background:var(--field-bg);
+  border:1px solid rgba(var(--on-paper-rgb),0.2);
+  color:var(--on-paper);
+  padding:8px 12px;
+  border-radius:7px;
+  font-family:'Space Grotesk', sans-serif;
+  font-size:14px;
+}
+.cd-scan-viewport{ margin-bottom:12px; border-radius:12px; overflow:hidden; background:#000; position:relative; }
+.cd-scan-viewport video{ display:block; width:100%; max-height:240px; object-fit:cover; }
+.cd-scan-hint{ font-size:12px; color:rgba(255,255,255,0.9); background:rgba(0,0,0,0.55); padding:6px 10px; margin:0; position:absolute; left:0; right:0; bottom:0; font-style:italic; }
+.cd-scan-viewport .btn-cancel{ position:absolute; top:8px; right:8px; background:rgba(0,0,0,0.55); color:#fff; border-radius:6px; }
+.cd-lookup-status{ font-size:13px; color:rgba(var(--on-paper-rgb),0.85); font-style:italic; margin:0 0 12px; }
+.cd-lookup-status.error{ color:var(--rose); }
+
+.cd-lookup-card{ display:flex; gap:16px; padding:14px; border:1px solid rgba(var(--on-paper-rgb),0.15); border-radius:12px; background:rgba(var(--on-paper-rgb),0.05); margin-bottom:12px; }
+.cd-lookup-cover{ width:110px; height:110px; object-fit:cover; border-radius:8px; flex-shrink:0; background:var(--field-bg); }
+.cd-cover-fallback{ display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,var(--ink),var(--ink-2)); }
+.cd-lookup-body{ display:flex; flex-direction:column; gap:2px; min-width:0; }
+.cd-lookup-title{ font-family:'Fraunces', serif; font-size:18px; font-weight:700; }
+.cd-lookup-artist{ font-size:13px; color:rgba(var(--on-paper-rgb),0.9); }
+.cd-lookup-meta{ font-family:'IBM Plex Mono', monospace; font-size:11px; color:rgba(var(--on-paper-rgb),0.7); }
+.cd-lookup-actions{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:12px; }
+.cd-already{ font-size:13px; color:var(--teal); font-weight:600; }
+
+.cd-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:12px; margin-top:4px; }
+.cd-card{
+  display:flex; flex-direction:column; gap:8px; padding:10px;
+  background:var(--field-bg);
+  border:1px solid rgba(var(--on-paper-rgb),0.14);
+  border-radius:12px;
+  color:inherit; font-family:inherit; text-align:left; cursor:pointer;
+  transition:transform .15s ease, border-color .15s ease;
+}
+.cd-card:hover{ transform:translateY(-2px); border-color:rgba(var(--on-paper-rgb),0.4); }
+.cd-cover{ position:relative; width:100%; aspect-ratio:1; border-radius:8px; overflow:hidden; background:var(--ink); display:flex; align-items:center; justify-content:center; }
+.cd-cover-img{ width:100%; height:100%; object-fit:cover; }
+.cd-cover.no-cover{ display:flex; }
+.cd-cover-initial{ font-family:'Fraunces', serif; font-size:34px; font-weight:700; color:var(--paper); }
+.cd-card-info{ display:flex; flex-direction:column; gap:1px; min-width:0; }
+.cd-card-title{ font-size:13px; font-weight:600; line-height:1.35; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.cd-card-artist{ font-size:11.5px; color:rgba(var(--on-paper-rgb),0.85); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.cd-card-year{ font-family:'IBM Plex Mono', monospace; font-size:10.5px; color:rgba(var(--on-paper-rgb),0.7); }
+.cd-loading{ font-size:13px; color:rgba(var(--on-paper-rgb),0.8); font-style:italic; padding:20px 4px; }
+
+.cd-detail-modal{ max-width:640px; }
+.cd-detail-hero{ display:flex; gap:18px; margin-bottom:18px; }
+.cd-vinyl{ width:150px; height:150px; border-radius:10px; object-fit:cover; flex-shrink:0; background:var(--field-bg); box-shadow:0 6px 18px rgba(0,0,0,0.25); }
+.cd-vinyl-fallback{ display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,var(--ink),var(--ink-2)); }
+.cd-detail-info{ min-width:0; }
+.cd-detail-info h3{ margin:0 0 4px; }
+.cd-detail-artist{ font-size:14px; color:rgba(var(--on-paper-rgb),0.92); margin:0 0 4px; }
+.cd-detail-meta{ font-family:'IBM Plex Mono', monospace; font-size:11.5px; color:rgba(var(--on-paper-rgb),0.72); margin:0 0 4px; }
+.cd-detail-barcode{ font-family:'IBM Plex Mono', monospace; font-size:11px; color:rgba(var(--on-paper-rgb),0.6); margin:0 0 10px; }
+.cd-stream-links{ display:flex; flex-wrap:wrap; gap:6px; }
+.cd-stream-link{
+  display:inline-block; font-size:12px; font-weight:600;
+  padding:5px 12px; border-radius:999px; text-decoration:none;
+  border:1px solid rgba(var(--on-paper-rgb),0.25); color:var(--on-paper);
+  transition:border-color .15s ease, background .15s ease;
+}
+.cd-stream-link:hover{ border-color:var(--teal); color:var(--teal); }
+.cd-tracklist h4{ font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:1px; text-transform:uppercase; color:rgba(var(--on-paper-rgb),0.8); margin:0 0 8px; }
+.cd-track-row{ display:flex; align-items:center; gap:10px; padding:6px 8px; border-bottom:1px solid rgba(var(--on-paper-rgb),0.08); }
+.cd-track-row:hover{ background:rgba(var(--on-paper-rgb),0.05); }
+.cd-track-num{ font-family:'IBM Plex Mono', monospace; font-size:11px; color:rgba(var(--on-paper-rgb),0.6); width:20px; text-align:right; flex-shrink:0; }
+.cd-track-name{ flex:1; min-width:0; font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.cd-track-dur{ font-family:'IBM Plex Mono', monospace; font-size:11px; color:rgba(var(--on-paper-rgb),0.7); flex-shrink:0; }
+.cd-track-preview-btn{
+  width:28px; height:28px; border-radius:50%; border:1px solid rgba(var(--on-paper-rgb),0.25);
+  background:transparent; color:var(--on-paper); font-size:11px; cursor:pointer; flex-shrink:0;
+  transition:border-color .15s ease, color .15s ease;
+}
+.cd-track-preview-btn:hover{ border-color:var(--teal); color:var(--teal); }
+.cd-track-preview-btn.playing{ background:var(--teal); border-color:var(--teal); color:#fff; }
+@media (max-width:560px){
+  .cd-modal{ padding:18px; }
+  .cd-lookup-card{ flex-direction:column; align-items:flex-start; }
+  .cd-lookup-cover{ width:100%; height:170px; }
+  .cd-detail-hero{ flex-direction:column; }
+  .cd-vinyl{ width:100%; height:210px; }
+  .cd-grid{ grid-template-columns:repeat(auto-fill, minmax(120px, 1fr)); }
+}
 </style>
 </head>
 <body>
@@ -6084,7 +6174,7 @@ function fitCardIntoSheet(src){
   out.width = W; out.height = H;
   const octx = out.getContext('2d');
   const t = loadTheme();
-  octx.fillStyle = t.paper || '#eedd95';
+  octx.fillStyle = t.ink || '#12141c';
   octx.fillRect(0, 0, W, H);
   if(src && src.width && src.height){
     const iw = src.width, ih = src.height;
@@ -6127,8 +6217,10 @@ async function drawSongShareCard(opts){
   const W = 1080, H = 1350;
   cv.width = W; cv.height = H;
   const ctx = cv.getContext('2d');
-  cardBase(ctx, W, H, opts.username);
   const t = loadTheme();
+  cardBase(ctx, W, H, opts.username);
+  ctx.fillStyle = t.lilac || '#8E44AD';
+  ctx.fillRect(0, 0, W, 3);
   const coverS = 360;
   const coverX = (W - coverS)/2, coverY = 420;
   const img = await loadCardImage(s.coverArt);
@@ -6224,6 +6316,9 @@ async function drawSongBackShareCard(opts, cvId){
   cv.width = W; cv.height = H;
   const ctx = cv.getContext('2d');
   cardBase(ctx, W, H, opts.username);
+  const tb = loadTheme();
+  ctx.fillStyle = tb.lilac || '#8E44AD';
+  ctx.fillRect(0, 0, W, 3);
   ctx.fillStyle = '#eedd95';
   ctx.font = '700 42px "Space Grotesk", sans-serif';
   ctx.textAlign = 'left';
@@ -11753,6 +11848,7 @@ document.getElementById('recoverySubmitBtn').addEventListener('click', async ()=
     localStorage.removeItem(CUSTOM_THEMES_KEY);
     applyTheme(DEFAULT_THEME);
     showSotdScheduleBtn();
+    if(typeof syncCDButton === 'function') syncCDButton();
     unsubscribeNotifications();
     if(window.stopMsgRealtime) window.stopMsgRealtime();
     showAuthScreen();
@@ -12405,6 +12501,7 @@ async function loadAppForUser(user){
   renderThemePresets();
   if(typeof syncThemeEditorVisibility === 'function') syncThemeEditorVisibility();
   if(typeof syncTesterButton === 'function') syncTesterButton();
+  if(typeof syncCDButton === 'function') syncCDButton();
   await ensureUserRow(user.id);
   const remote = await fetchUserData(user.id);
   cloudLoadFailed = remote == null;
@@ -13173,6 +13270,7 @@ sb.auth.onAuthStateChange((event, session)=>{
     localStorage.removeItem(CUSTOM_THEMES_KEY);
     applyTheme(DEFAULT_THEME);
     showSotdScheduleBtn();
+    if(typeof syncCDButton === 'function') syncCDButton();
     unsubscribeNotifications();
     if(window.stopMsgRealtime) window.stopMsgRealtime();
     showAuthScreen();
@@ -13192,6 +13290,7 @@ sb.auth.onAuthStateChange((event, session)=>{
     localStorage.removeItem(CUSTOM_THEMES_KEY);
     applyTheme(DEFAULT_THEME);
     showSotdScheduleBtn();
+    if(typeof syncCDButton === 'function') syncCDButton();
     unsubscribeNotifications();
     if(window.stopMsgRealtime) window.stopMsgRealtime();
     showAuthScreen();
@@ -15451,6 +15550,515 @@ if(getAnalyticsConsent() === 'rejected'){
   }
   if(document.readyState === 'loading'){ document.addEventListener('DOMContentLoaded', applySiteIcons); } else { applySiteIcons(); }
 })();</script>
+<script>/* ---- MY CD COLLECTION (certified testers) ---- */
+let cdList = [];
+let cdScanActive = false;
+let cdScanDetector = null;
+let cdScanStream = null;
+let cdScanRaf = 0;
+let cdAudio = null;
+let cdPendingAlbum = null;
+let cdPendingBarcode = '';
+
+function syncCDButton(){
+  const btn = document.getElementById('cdBtn');
+  if(!btn) return;
+  btn.style.display = (typeof isCertifiedTester === 'function' && isCertifiedTester()) ? '' : 'none';
+}
+window.syncCDButton = syncCDButton;
+
+function cdEscapeAttr(v){ return escapeAttr(v); }
+function cdEscape(v){ return escapeHtml(v); }
+
+document.getElementById('cdBtn').addEventListener('click', ()=>{
+  if(!(typeof isCertifiedTester === 'function' && isCertifiedTester())){
+    showToast('My CDs is for certified testers only for now', 3200);
+    return;
+  }
+  trackEvent('open_my_cds');
+  document.getElementById('cdOverlay').classList.add('open');
+  loadCDCollection();
+  document.getElementById('cdBarcodeInput').value = '';
+  document.getElementById('cdBarcodeInput').focus();
+});
+document.getElementById('cdCloseBtn').addEventListener('click', ()=>{
+  stopCDScan();
+  document.getElementById('cdOverlay').classList.remove('open');
+});
+document.getElementById('cdOverlay').addEventListener('click', e=>{
+  if(e.target === document.getElementById('cdOverlay')) stopCDScan();
+});
+document.getElementById('cdScanBtn').addEventListener('click', ()=>{
+  trackEvent('cd_start_scan');
+  startCDScan();
+});
+document.getElementById('cdScanStopBtn').addEventListener('click', ()=>{
+  stopCDScan();
+});
+document.getElementById('cdLookupBtn').addEventListener('click', ()=>{
+  trackEvent('cd_manual_lookup');
+  const val = String(document.getElementById('cdBarcodeInput').value || '').trim();
+  if(val) lookupCD(val);
+});
+document.getElementById('cdBarcodeInput').addEventListener('keydown', e=>{
+  if(e.key === 'Enter'){
+    const val = String(document.getElementById('cdBarcodeInput').value || '').trim();
+    if(val){ trackEvent('cd_manual_lookup'); lookupCD(val); }
+  }
+});
+
+async function loadCDCollection(){
+  const grid = document.getElementById('cdGrid');
+  const empty = document.getElementById('cdEmpty');
+  grid.innerHTML = '<div class="cd-loading">Loading your CDs…</div>';
+  cdList = [];
+  let rows = [];
+  try{
+    const { data, error } = await sb
+      .from('cd_collection')
+      .select('*')
+      .eq('user_id', currentUserId)
+      .order('created_at', { ascending: false });
+    if(error) throw error;
+    rows = data || [];
+  }catch(err){
+    console.error('Error loading CD collection:', err);
+    showToast('Could not load your CDs — check your connection', 4000);
+  }
+  cdList = rows;
+  grid.style.display = rows.length ? '' : 'none';
+  empty.style.display = rows.length ? 'none' : '';
+  if(rows.length){
+    grid.innerHTML = cdCardsHtml(rows);
+  }
+}
+
+function cdCardsHtml(list){
+  return list.map(cd=>{
+    const cover = cd.cover_art
+      ? `<img loading="lazy" decoding="async" class="cd-cover-img" src="${cdEscapeAttr(cd.cover_art)}" alt="" data-initial="${cdEscapeAttr(cd.title ? cd.title.charAt(0).toUpperCase() : '♪')}" onerror="cdCoverFallback(this)">`
+      : `<span class="cd-cover-initial">${cdEscape(cd.title ? cd.title.charAt(0).toUpperCase() : '♪')}</span>`;
+    return `<button type="button" class="cd-card" data-cd-id="${cdEscapeAttr(cd.id)}" aria-label="View ${cdEscapeAttr(cd.title || 'album')}">
+      <span class="cd-cover">${cover}</span>
+      <span class="cd-card-info">
+        <b class="cd-card-title">${cdEscape(cd.title || 'Unknown album')}</b>
+        <span class="cd-card-artist">${cdEscape(cd.artist || 'Unknown artist')}</span>
+        <span class="cd-card-year">${cdEscape(cd.year || '')}</span>
+      </span>
+    </button>`;
+  }).join('');
+}
+window.cdCoverFallback = function(img){
+  const cover = img.closest('.cd-cover') || img.parentElement;
+  const initial = cover.getAttribute('data-initial') || '♪';
+  cover.classList.add('no-cover');
+  cover.innerHTML = `<span class="cd-cover-initial">${cdEscape(initial)}</span>`;
+};
+window.cdVinylFallback = function(img){
+  const wrap = img.parentElement;
+  const initial = img.getAttribute('data-initial') || '♪';
+  if(wrap && wrap.classList.contains('cd-detail-hero')){
+    img.replaceWith(`<div class="cd-vinyl cd-vinyl-fallback"><span class="cd-cover-initial">${cdEscape(initial)}</span></div>`);
+  }else{
+    img.replaceWith(`<div class="cd-vinyl-fallback"><span class="cd-cover-initial">${cdEscape(initial)}</span></div>`);
+  }
+};
+document.getElementById('cdGrid').addEventListener('click', e=>{
+  const card = e.target.closest('.cd-card');
+  if(!card) return;
+  trackEvent('cd_open_detail');
+  openCDDetail(card.dataset.cdId);
+});
+
+function openCDDetail(id){
+  const cd = cdList.find(c=>c.id === id);
+  if(!cd) return;
+  stopCDScan();
+  const body = document.getElementById('cdDetailBody');
+  const cover = cd.cover_art
+    ? `<img loading="lazy" decoding="async" class="cd-vinyl" src="${cdEscapeAttr(cd.cover_art)}" alt="${cdEscapeAttr(cd.title || 'Album cover')}" data-initial="${cdEscapeAttr((cd.title || '♪').charAt(0).toUpperCase())}" onerror="cdVinylFallback(this)">`
+    : `<div class="cd-vinyl cd-vinyl-fallback"><span class="cd-cover-initial">${cdEscape(cd.title ? cd.title.charAt(0).toUpperCase() : '♪')}</span></div>`;
+  const meta = [cd.year, cd.country, cd.label].filter(Boolean);
+  const tracklist = (cd.tracklist && cd.tracklist.length)
+    ? `<div class="cd-tracklist">
+        <h4>Tracklist</h4>
+        ${cd.tracklist.map(t=>{
+          const dur = t.duration ? cdFmtDuration(t.duration) : '';
+          const preview = t.preview
+            ? `<button type="button" class="cd-track-preview-btn" data-url="${cdEscapeAttr(t.preview)}" title="Play 30s preview">▶</button>`
+            : '';
+          return `<div class="cd-track-row">
+            <span class="cd-track-num">${t.position || '·'}</span>
+            <span class="cd-track-name">${cdEscape(t.title || 'Untitled')}</span>
+            <span class="cd-track-dur">${dur}</span>
+            ${preview}
+          </div>`;
+        }).join('')}
+      </div>`
+    : '';
+  body.innerHTML = `
+    <div class="cd-detail-hero">
+      ${cover}
+      <div class="cd-detail-info">
+        <h3>${cdEscape(cd.title || 'Unknown album')}</h3>
+        <p class="cd-detail-artist">${cdEscape(cd.artist || 'Unknown artist')}</p>
+        ${meta.length ? `<p class="cd-detail-meta">${cdEscape(meta.join(' · '))}</p>` : ''}
+        ${cd.barcode ? `<p class="cd-detail-barcode">UPC/EAN: ${cdEscape(cd.barcode)}</p>` : ''}
+        <div class="cd-stream-links">${cdStreamLinks(cd)}</div>
+      </div>
+    </div>
+    ${tracklist}`;
+  document.getElementById('cdDetailDeleteBtn').dataset.cdId = cd.id;
+  document.getElementById('cdDetailOverlay').classList.add('open');
+}
+function cdStreamLinks(cd){
+  const u = cd.stream_urls || {};
+  const q = encodeURIComponent(((cd.artist || '') + ' ' + (cd.title || '')).trim());
+  const links = [];
+  if(u.deezer) links.push({ label: 'Listen on Deezer', url: u.deezer });
+  links.push({ label: 'Spotify', url: 'https://open.spotify.com/search/' + q });
+  links.push({ label: 'Apple Music', url: 'https://music.apple.com/search?term=' + q });
+  links.push({ label: 'YouTube Music', url: 'https://music.youtube.com/search?q=' + q });
+  return links.map(l=>`<a class="cd-stream-link" href="${cdEscapeAttr(l.url)}" target="_blank" rel="noopener noreferrer">${cdEscape(l.label)}</a>`).join('');
+}
+function cdFmtDuration(ms){
+  if(!ms) return '';
+  const sec = Math.round(ms / 1000);
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return m + ':' + (s < 10 ? '0' : '') + s;
+}
+document.getElementById('cdDetailBody').addEventListener('click', e=>{
+  const btn = e.target.closest('.cd-track-preview-btn');
+  if(!btn) return;
+  cdPlayTrack(btn);
+});
+function cdPlayTrack(btn){
+  const url = btn.dataset.url;
+  if(!url) return;
+  if(!cdAudio) cdAudio = new Audio();
+  if(cdAudio.dataset.url === url && !cdAudio.paused){
+    cdAudio.pause();
+    cdResetPreviewBtns();
+    cdAudio.removeAttribute('src');
+    cdAudio.dataset.url = '';
+    btn.textContent = '▶';
+    return;
+  }
+  cdResetPreviewBtns();
+  cdAudio.dataset.url = url;
+  cdAudio.src = url;
+  btn.textContent = '⏸';
+  btn.classList.add('playing');
+  cdAudio.play().catch(()=>{
+    btn.textContent = '▶';
+    btn.classList.remove('playing');
+    showToast('Preview unavailable', 2400);
+  });
+  cdAudio.onended = ()=>{
+    cdResetPreviewBtns();
+    cdAudio.removeAttribute('src');
+    cdAudio.dataset.url = '';
+  };
+}
+function cdResetPreviewBtns(){
+  document.querySelectorAll('#cdDetailBody .cd-track-preview-btn').forEach(b=>{
+    b.textContent = '▶';
+    b.classList.remove('playing');
+  });
+}
+document.getElementById('cdDetailCloseBtn').addEventListener('click', ()=>{
+  if(cdAudio) cdAudio.pause();
+  document.getElementById('cdDetailOverlay').classList.remove('open');
+});
+document.getElementById('cdDetailOverlay').addEventListener('click', e=>{
+  if(e.target === document.getElementById('cdDetailOverlay')){
+    if(cdAudio) cdAudio.pause();
+    document.getElementById('cdDetailOverlay').classList.remove('open');
+  }
+});
+document.getElementById('cdDetailDeleteBtn').addEventListener('click', async ()=>{
+  const id = document.getElementById('cdDetailDeleteBtn').dataset.cdId;
+  if(!id) return;
+  trackEvent('cd_delete');
+  const cd = cdList.find(c=>c.id === id);
+  const name = cd && cd.title ? cd.title : 'this CD';
+  if(!confirm('Remove ' + name + ' from your CDs?')) return;
+  try{
+    const { error } = await sb.from('cd_collection').delete().eq('user_id', currentUserId).eq('id', id);
+    if(error) throw error;
+    if(cdAudio) cdAudio.pause();
+    document.getElementById('cdDetailOverlay').classList.remove('open');
+    showToast('Removed from your CDs', 2400);
+    loadCDCollection();
+  }catch(err){
+    console.error('Error deleting CD:', err);
+    showToast('Could not remove that CD', 3200);
+  }
+});
+
+function startCDScan(){
+  const viewport = document.getElementById('cdScanViewport');
+  const hint = document.getElementById('cdScanHint');
+  viewport.style.display = '';
+  hint.textContent = 'Starting camera…';
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    hint.textContent = 'Camera not supported here — type the barcode number above instead.';
+    return;
+  }
+  navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false }).then(stream=>{
+    cdScanStream = stream;
+    const video = document.getElementById('cdScanVideo');
+    video.srcObject = stream;
+    return video.play();
+  }).then(()=>{
+    if('BarcodeDetector' in window){
+      try{
+        cdScanDetector = new BarcodeDetector({ formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39', 'itf'] });
+      }catch(e){ cdScanDetector = null; }
+    } else {
+      cdScanDetector = null;
+    }
+    if(cdScanDetector){
+      hint.textContent = 'Point the camera at the barcode on the back of the CD case…';
+      cdScanActive = true;
+      cdScanLoop(document.getElementById('cdScanVideo'));
+    } else {
+      hint.textContent = 'Camera is on, but this browser can\u2019t auto-read barcodes — find the number under the barcode and type it above.';
+      setTimeout(()=>{ viewport.style.display = 'none'; }, 6000);
+    }
+  }).catch(err=>{
+    console.warn('Camera failed:', err);
+    hint.textContent = 'Camera unavailable — type the barcode number above instead.';
+  });
+}
+async function cdScanLoop(video){
+  if(!cdScanActive) return;
+  try{
+    const codes = await cdScanDetector.detect(video);
+    for(const code of codes){
+      const val = String(code.rawValue || '').replace(/[^0-9]/g, '');
+      if(val.length >= 8 && val.length <= 14){
+        stopCDScan();
+        document.getElementById('cdBarcodeInput').value = val;
+        lookupCD(val);
+        return;
+      }
+    }
+  }catch(e){}
+  if(cdScanActive) cdScanRaf = requestAnimationFrame(()=>cdScanLoop(video));
+}
+function stopCDScan(){
+  cdScanActive = false;
+  if(cdScanRaf){ cancelAnimationFrame(cdScanRaf); cdScanRaf = 0; }
+  if(cdScanStream){
+    cdScanStream.getTracks().forEach(t=>t.stop());
+    cdScanStream = null;
+  }
+  const video = document.getElementById('cdScanVideo');
+  if(video) video.srcObject = null;
+  const viewport = document.getElementById('cdScanViewport');
+  if(viewport && viewport.style.display !== 'none') viewport.style.display = 'none';
+}
+
+function cdSetStatus(msg, isError){
+  const el = document.getElementById('cdLookupStatus');
+  el.style.display = msg ? '' : 'none';
+  el.textContent = msg || '';
+  el.classList.toggle('error', !!isError);
+}
+
+async function lookupCD(barcode){
+  stopCDScan();
+  document.getElementById('cdPreview').style.display = 'none';
+  document.getElementById('cdPreview').innerHTML = '';
+  cdSetStatus('Looking up barcode ' + barcode + ' on MusicBrainz…');
+  try{
+    const album = await mbLookupBarcode(barcode);
+    if(!album){
+      cdSetStatus('No album found for that barcode yet. Double-check the number and try again.', true);
+      return;
+    }
+    cdSetStatus('Found it — adding stream links…');
+    await enrichWithDeezer(album);
+    cdPendingAlbum = album;
+    cdPendingBarcode = barcode;
+    cdRenderedLookup(album, barcode);
+    cdSetStatus('');
+  }catch(err){
+    console.error('lookupCD error:', err);
+    cdSetStatus('Couldn\u2019t look that up right now — check your connection and try again.', true);
+  }
+}
+
+async function mbLookupBarcode(barcode){
+  const url = 'https://musicbrainz.org/ws/2/release/?query=barcode:' + encodeURIComponent(barcode) + '&fmt=json&inc=artists+labels+recordings&limit=25';
+  const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+  if(!res.ok) throw new Error('mb_' + res.status);
+  const json = await res.json();
+  const norm = v => String(v || '').replace(/[^0-9]/g, '');
+  const releases = (json.releases || []).filter(r=>r && norm(r.barcode) === norm(barcode));
+  if(!releases.length) return null;
+  const r = releases[0];
+  let artist = '';
+  (r['artist-credit'] || []).forEach(c=>{
+    artist += ((c.artist && c.artist.name) || c.name || '');
+    if(c.joinphrase) artist += c.joinphrase;
+  });
+  const media = (r.media || []).flatMap(m=> (m.tracks || []).map(t=>({
+    position: t.position || 0,
+    title: t.title || 'Untitled',
+    duration: t.length || 0
+  })));
+  return {
+    mb_id: r.id,
+    title: r.title || 'Unknown album',
+    artist: artist || 'Unknown artist',
+    year: r.date ? String(r.date).slice(0, 4) : '',
+    country: r.country || '',
+    label: (r['label-info'] && r['label-info'][0] && r['label-info'][0].label && r['label-info'][0].label.name) || '',
+    cover_art: 'https://coverartarchive.org/release/' + r.id + '/front-500',
+    genres: [],
+    tracklist: media,
+    stream_urls: {}
+  };
+}
+
+async function enrichWithDeezer(album){
+  const q = ((album.artist || '') + ' ' + (album.title || '')).trim();
+  try{
+    const data = await cdDeezerAlbumSearch(q);
+    const hits = (data.data || []).filter(a=>a && a.title);
+    if(!hits.length){
+      album.stream_urls.deezer = 'https://www.deezer.com/search/' + encodeURIComponent(q);
+      return;
+    }
+    const lc = album.title.toLowerCase();
+    const hit = hits.find(a=>{
+      const at = String(a.title || '').toLowerCase();
+      return at === lc || at.indexOf(lc) > -1 || lc.indexOf(at) > -1;
+    }) || hits[0];
+    album.stream_urls.deezer = hit.link || null;
+    if(!album.cover_art && hit.cover_medium) album.cover_art = hit.cover_medium || null;
+    if(hit.id){
+      try{
+        const tracks = await cdDeezerAlbumTracks(hit.id);
+        const dt = (tracks.data || []);
+        album.tracklist.forEach(t=>{
+          const m = dt[t.position - 1] || dt.find(x=>Number(x.track_position) === Number(t.position));
+          if(m && m.preview) t.preview = m.preview;
+        });
+      }catch(e){}
+    }
+  }catch(err){
+    console.warn('Deezer enrichment failed:', err);
+    album.stream_urls.deezer = 'https://www.deezer.com/search/' + encodeURIComponent(q) || null;
+  }
+}
+
+function cdDeezerAlbumSearch(q){
+  return new Promise((resolve, reject)=>{
+    const cbName = 'dzAlb_' + Math.random().toString(36).slice(2);
+    const script = document.createElement('script');
+    let settled = false;
+    const cleanup = ()=>{ delete window[cbName]; script.remove(); };
+    window[cbName] = (d)=>{ settled = true; cleanup(); resolve(d); };
+    script.onerror = ()=>{ if(!settled){ settled = true; cleanup(); reject(new Error('dz_alb_failed')); } };
+    script.src = 'https://api.deezer.com/search/album?q=' + encodeURIComponent(q) + '&limit=5&output=jsonp&callback=' + cbName;
+    document.body.appendChild(script);
+    setTimeout(()=>{ if(!settled){ settled = true; cleanup(); reject(new Error('dz_alb_timeout')); } }, 6000);
+  });
+}
+function cdDeezerAlbumTracks(id){
+  return new Promise((resolve, reject)=>{
+    const cbName = 'dzTr_' + Math.random().toString(36).slice(2);
+    const script = document.createElement('script');
+    let settled = false;
+    const cleanup = ()=>{ delete window[cbName]; script.remove(); };
+    window[cbName] = (d)=>{ settled = true; cleanup(); resolve(d); };
+    script.onerror = ()=>{ if(!settled){ settled = true; cleanup(); reject(new Error('dz_tr_failed')); } };
+    script.src = 'https://api.deezer.com/album/' + encodeURIComponent(id) + '/tracks?output=jsonp&callback=' + cbName;
+    document.body.appendChild(script);
+    setTimeout(()=>{ if(!settled){ settled = true; cleanup(); reject(new Error('dz_tr_timeout')); } }, 6000);
+  });
+}
+
+function cdRenderedLookup(album, barcode){
+  const preview = document.getElementById('cdPreview');
+  const already = cdList.some(c=>c.barcode === barcode);
+  const cover = album.cover_art
+    ? `<img loading="lazy" decoding="async" class="cd-lookup-cover" src="${cdEscapeAttr(album.cover_art)}" alt="" data-title="${cdEscapeAttr(album.title || '♪')}" onerror="cdLookupCoverFallback(this)">`
+    : `<div class="cd-lookup-cover cd-cover-fallback"><span class="cd-cover-initial">${cdEscape((album.title || '♪').charAt(0).toUpperCase())}</span></div>`;
+  preview.innerHTML = `
+    <div class="cd-lookup-card">
+      ${cover}
+      <div class="cd-lookup-body">
+        <b class="cd-lookup-title">${cdEscape(album.title)}</b>
+        <span class="cd-lookup-artist">${cdEscape(album.artist)}</span>
+        <span class="cd-lookup-meta">${cdEscape([album.year, album.country, album.label].filter(Boolean).join(' · '))}${album.tracklist.length ? ' · ' + album.tracklist.length + ' tracks' : ''}</span>
+        ${album.stream_urls.deezer ? `<a class="cd-stream-link" href="${cdEscapeAttr(album.stream_urls.deezer)}" target="_blank" rel="noopener noreferrer">Listen on Deezer</a>` : ''}
+      </div>
+    </div>
+    <div class="cd-lookup-actions">
+      ${already ? `<span class="cd-already">Already in your collection</span>` : `<button type="button" class="btn-save" id="cdAddBtn">Add to my CDs</button>`}
+      <button type="button" class="btn-cancel" id="cdLookupCancelBtn">Cancel</button>
+    </div>`;
+  preview.style.display = '';
+  if(!already) document.getElementById('cdAddBtn').addEventListener('click', ()=>addCDToCollection(cdPendingAlbum, cdPendingBarcode));
+  document.getElementById('cdLookupCancelBtn').addEventListener('click', ()=>{
+    preview.style.display = 'none';
+    preview.innerHTML = '';
+    cdPendingAlbum = null;
+  });
+}
+window.cdLookupCoverFallback = function(img){
+  const cover = img.closest('.cd-lookup-cover') || img.parentElement;
+  const title = cover.getAttribute('data-title') || '♪';
+  cover.classList.add('cd-cover-fallback');
+  cover.innerHTML = `<span class="cd-cover-initial">${cdEscape(title.charAt(0).toUpperCase())}</span>`;
+};
+
+async function addCDToCollection(album, barcode){
+  if(!album || !barcode) return;
+  const btn = document.getElementById('cdAddBtn');
+  if(btn){ btn.disabled = true; btn.textContent = 'Adding…'; }
+  const row = {
+    user_id: currentUserId,
+    barcode: barcode,
+    title: (album.title || '').trim(),
+    artist: (album.artist || '').trim(),
+    year: (album.year || '').trim(),
+    label: (album.label || '').trim(),
+    country: (album.country || '').trim(),
+    cover_art: album.cover_art || '',
+    genres: album.genres || [],
+    tracklist: album.tracklist || [],
+    mb_id: album.mb_id || '',
+    stream_urls: album.stream_urls || {}
+  };
+  try{
+    const { error } = await sb.from('cd_collection').upsert(row, { onConflict: 'user_id,barcode' });
+    if(error) throw error;
+    document.getElementById('cdPreview').style.display = 'none';
+    document.getElementById('cdPreview').innerHTML = '';
+    cdPendingAlbum = null;
+    showToast('Added to your CDs 💿', 2600);
+    trackEvent('cd_added');
+    loadCDCollection();
+  }catch(err){
+    console.error('Error saving CD:', err);
+    showToast('Couldn\u2019t add — ' + (err.message || 'unknown error'), 4200);
+    if(btn){ btn.disabled = false; btn.textContent = 'Add to my CDs'; }
+  }
+}
+
+window.addEventListener('beforeunload', ()=>{ if(cdScanStream) cdScanStream.getTracks().forEach(t=>t.stop()); });
+document.addEventListener('keydown', e=>{
+  if(e.key === 'Escape'){
+    stopCDScan();
+    if(cdAudio) cdAudio.pause();
+  }
+});</script>
 <audio id="previewAudio" preload="auto" playsinline webkit-playsinline></audio>
 <div id="analyticsConsentBanner" style="display:none; position:fixed; bottom:0; left:0; right:0; background:var(--ink); border-top:1px solid rgba(238,221,149,0.15); z-index:9999; font-family:'Space Grotesk',sans-serif; padding:0;">
   <div style="max-width:720px; margin:0 auto; padding:20px 24px;">
