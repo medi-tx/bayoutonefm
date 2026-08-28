@@ -1827,7 +1827,7 @@ async function drawSongShareCard(opts){
       frontEl.scrollIntoView({behavior:'auto', block:'center', inline:'center'});
       await new Promise(r=>setTimeout(r,150));
       const c = await Promise.race([
-        html2canvas(frontEl, { backgroundColor: loadTheme().paper || '#eedd95', scale: 2, useCORS: true }),
+        html2canvas(frontEl, { backgroundColor: loadTheme().paper || '#eedd95', scale: 2, useCORS: true, ignoreElements: (el)=> !!(el && el.tagName === 'VIDEO') }),
         new Promise((_,rej)=> setTimeout(()=>rej(new Error('html2canvas timeout')), 5000))
       ]);
       applySheetToTarget('shareCanvas', c);
@@ -1924,7 +1924,7 @@ async function drawSongBackShareCard(opts, cvId){
       backEl.scrollIntoView({behavior:'auto', block:'center', inline:'center'});
       await new Promise(r=>setTimeout(r,180));
       const c = await Promise.race([
-        html2canvas(backEl, { backgroundColor: loadTheme().paper || '#eedd95', scale: 2, useCORS: true }),
+        html2canvas(backEl, { backgroundColor: loadTheme().paper || '#eedd95', scale: 2, useCORS: true, ignoreElements: (el)=> !!(el && el.tagName === 'VIDEO') }),
         new Promise((_,rej)=> setTimeout(()=>rej(new Error('html2canvas timeout')), 5000))
       ]);
       applySheetToTarget(cvId, c);

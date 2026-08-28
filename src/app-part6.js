@@ -660,6 +660,39 @@ function setSyncStatus(state){
 
 let cloudLoadFailed = false;
 
+const coverStoreCache = new Map();
+async function storeCoverArt(song){
+  if(!currentUserId || !sb || !sb.storage || !song.coverArt) return song.coverArt;
+  const src = String(song.coverArt);
+  if(!src.startsWith('data:')) return song.coverArt;
+  const key = src.slice(0, 256);
+  if(coverStoreCache.has(key)) return coverStoreCache.get(key);
+  try{
+    const blob = dataUrlToBlob(src);
+    if(!blob) return song.coverArt;
+    const ext = (blob.type || 'image/png').split('/')[1] || 'png';
+    const path = 'covers/' + currentUserId + '/' + (song.id || Date.now()) + '-' + Math.random().toString(36).slice(2,8) + '.' + ext;
+    const { error } = await sb.storage.from('stickers').upload(path, blob, { contentType: blob.type || 'image/png', upsert: true });
+    if(error){ console.error('Cover upload error:', error); return song.coverArt; }
+    const { data } = sb.storage.from('stickers').getPublicUrl(path);
+    const url = data && data.publicUrl ? data.publicUrl : song.coverArt;
+    coverStoreCache.set(key, url);
+    return url;
+  }catch(e){ console.error('Cover upload failed:', e); return song.coverArt; }
+}
+function dataUrlToBlob(dataUrl){
+  try{
+    const m = /^data:([^;,]+)?(;base64)?,(.*)$/s.exec(dataUrl);
+    if(!m) return null;
+    const mime = m[1] || 'image/png';
+    const isBase64 = !!m[2];
+    const body = isBase64 ? atob(m[3]) : decodeURIComponent(m[3]);
+    const arr = new Uint8Array(body.length);
+    for(let i=0;i<body.length;i++) arr[i] = body.charCodeAt(i);
+    return new Blob([arr], { type: mime });
+  }catch(e){ return null; }
+}
+
 async function doSync(attempt, startRevision){
   if(!currentUserId) return;
   if(syncInFlight) return; // already uploading; post-success check will re-sync if needed
@@ -672,7 +705,15 @@ async function doSync(attempt, startRevision){
   try{
     const updated = new Date().toISOString();
     const localIds = new Set(songs.map(s=>s.id));
-    let slimSongs = songs.map(slimSongForUpload);
+    // Move base64 cover art to storage first so the upload stays small and
+    // covers actually make it into the saved songs (big data: URLs used to
+    // trip the size limit and get stripped).
+    const slimSongs = [];
+    for(const s of songs){
+      const c = Object.assign({}, s);
+      c.coverArt = await storeCoverArt(c);
+      slimSongs.push(slimSongForUpload(c));
+    }
     let payload = { user_id: currentUserId, songs: slimSongs, people, wishlist, updated_at: updated };
     if(JSON.stringify(payload).length < 900000){
       await pushUserData(payload);
