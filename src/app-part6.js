@@ -836,15 +836,17 @@ function isSamAdmin(){
   return !!(myProfile && myProfile.username === 'samannleblanc');
 }
 const TESTER_FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSdfM-OtLC51PooQoj0yz5S9rHAlN7Jbvw1a97hNkGXrXqMITA/viewform?usp=publish-editor';
-// Certified testers' form link — replace with the real one when provided.
-const CERTIFIED_TESTER_FORM_URL = '';
+// Certified testers' form links — replace with the real ones when provided.
+const TESTER_BUG_URL = '';
+const TESTER_FEEDBACK_URL = '';
+const TESTER_QUESTIONS_URL = '';
 function isCertifiedTester(){
   return !!(myProfile && myProfile.certified_tester === true);
 }
 function syncTesterButton(){
   const btn = document.getElementById('testerBtn');
   if(!btn) return;
-  btn.textContent = isCertifiedTester() ? 'Tester Form' : 'Become a Tester';
+  btn.textContent = isCertifiedTester() ? 'Tester Forms' : 'Become a Tester';
 }
 async function autoFriendSam(){
   try{

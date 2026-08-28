@@ -1214,12 +1214,31 @@ document.getElementById('songDbBtn').addEventListener('click', ()=>{
 });
 document.getElementById('testerBtn').addEventListener('click', ()=>{
   const certified = (typeof isCertifiedTester === 'function') && isCertifiedTester();
-  trackEvent(certified ? 'open_tester_form' : 'become_a_tester');
+  if(certified){
+    trackEvent('open_tester_forms');
+    document.getElementById('testerFormsOverlay').classList.add('open');
+    return;
+  }
+  trackEvent('become_a_tester');
   const fallback = 'https://docs.google.com/forms/d/e/1FAIpQLSdfM-OtLC51PooQoj0yz5S9rHAlN7Jbvw1a97hNkGXrXqMITA/viewform?usp=publish-editor';
-  const url = certified
-    ? ((typeof CERTIFIED_TESTER_FORM_URL === 'string' && CERTIFIED_TESTER_FORM_URL) || fallback)
-    : ((typeof TESTER_FORM_URL === 'string' && TESTER_FORM_URL) || fallback);
-  window.open(url, '_blank', 'noopener');
+  window.open((typeof TESTER_FORM_URL === 'string' && TESTER_FORM_URL) || fallback, '_blank', 'noopener');
+});
+document.getElementById('testerFormsCloseBtn').addEventListener('click', ()=>{
+  document.getElementById('testerFormsOverlay').classList.remove('open');
+});
+document.querySelectorAll('.tester-form-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const which = btn.dataset.testerForm;
+    const url = which === 'bug' ? TESTER_BUG_URL
+      : which === 'feedback' ? TESTER_FEEDBACK_URL
+      : TESTER_QUESTIONS_URL;
+    trackEvent('open_tester_form_' + which);
+    if(typeof url === 'string' && url){
+      window.open(url, '_blank', 'noopener');
+    } else {
+      showToast('Form link coming soon', 2600);
+    }
+  });
 });
 document.getElementById('songDbInfoCloseBtn').addEventListener('click', ()=>{
   if(document.getElementById('songDbInfoDismiss').checked){
