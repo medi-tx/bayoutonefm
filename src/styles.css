@@ -2333,7 +2333,7 @@
   }
   .msg-song-share{ display:flex; gap:6px; margin-top:6px; position:relative; flex-wrap:wrap; align-items:flex-start; }
   .msg-song-share .explicit-badge{ position:absolute; top:4px; right:4px; }
-  .msg-song-share .preview-btn{ margin-left:auto; flex:0 0 auto; align-self:center; }
+  .msg-song-share .preview-btn{ flex:0 0 auto; align-self:center; }
   .msg-flip-card{ position:relative; display:block; flex:1 1 150px; max-width:220px; cursor:pointer; }
   .msg-flip-card.msg-flip-static{ cursor:default; }
   .msg-flip-inner{
