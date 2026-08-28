@@ -365,7 +365,6 @@ document.addEventListener('DOMContentLoaded', ()=>{
   }
 
   document.getElementById('themeBtn').addEventListener('click', ()=>{
-    if(!myProfile || myProfile.username !== 'samannleblanc') return;
     trackEvent('open_theme');
     applyTheme(loadTheme());
     renderThemeColorGrid();
