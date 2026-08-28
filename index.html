@@ -11779,23 +11779,6 @@ function dailySongDatabaseSync(){
         .catch(reject);
     })();
   });
-  const existingKeys = (titles) => new Promise((resolve, reject)=>{
-    const set = new Set();
-    const CHUNK = 500;
-    let chunk = 0;
-    (function nextChunk(){
-      const slice = titles.slice(chunk * CHUNK, (chunk + 1) * CHUNK);
-      if(!slice.length){ resolve(set); return; }
-      chunk++;
-      sb.from('global_songs').select('title, artist').in('title', slice)
-        .then(({ data, error })=>{
-          if(error){ reject(error); return; }
-          (data || []).forEach(r => set.add(((r.title || '').trim().toLowerCase() + '|||' + (r.artist || '').trim().toLowerCase())));
-          nextChunk();
-        })
-        .catch(reject);
-    })();
-  });
   const mapRow = (r) => {
     const links = r.streaming_links || {};
     return {
@@ -11821,13 +11804,13 @@ function dailySongDatabaseSync(){
       trackNumber: r.track_number
     };
   };
-  const upsertMissing = (missing) => new Promise((resolve)=>{
-    const BATCH = 4;
-    const DELAY = 600;
+  const syncRows = (rowsToSync) => new Promise((resolve)=>{
+    const BATCH = 5;
+    const DELAY = 500;
     let i = 0;
     (function next(){
-      if(i >= missing.length){ resolve(); return; }
-      missing.slice(i, i + BATCH).forEach(s => upsertGlobalSong(s, null));
+      if(i >= rowsToSync.length){ resolve(); return; }
+      rowsToSync.slice(i, i + BATCH).forEach(s => upsertGlobalSong(s, null));
       i += BATCH;
       setTimeout(next, DELAY);
     })();
@@ -11843,14 +11826,12 @@ function dailySongDatabaseSync(){
         if(!want.has(k)) want.set(k, mapRow(r));
       });
       if(!want.size){ done(); return; }
-      const titles = [...new Set(rows.map(r => ((r.title || '') + '').trim()).filter(Boolean))];
-      return existingKeys(titles).then(existing => {
-        const missing = [...want.entries()].filter(([k]) => !existing.has(k)).map(([, s]) => s);
-        if(!missing.length){ done(); return; }
-        return upsertMissing(missing).then(()=>{
-          done();
-          console.log('[dailySongSync] pulled', missing.length, 'songs from the song database into Discover/search');
-        });
+      // Upsert EVERY song_database row into global_songs: the upsert_global_song
+      // RPC merges on (title, artist) with coalesce, so existing rows only gain
+      // facts they were missing — nothing richer gets clobbered.
+      return syncRows([...want.values()]).then(()=>{
+        done();
+        console.log('[dailySongSync] synced', want.size, 'songs from the song database into Discover/search');
       });
     })
     .catch(e => console.error('[dailySongSync] failed:', e));
