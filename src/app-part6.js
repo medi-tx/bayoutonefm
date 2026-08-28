@@ -679,6 +679,15 @@ async function loadAppForUser(user){
     if(songs.length !== before) console.warn('Stripped ' + (before - songs.length) + ' example songs from Supabase data');
   }
   // Sync localStorage to match Supabase (Supabase is source of truth)
+  const prevLocal = localStorage.getItem(STORAGE_KEY);
+  if(songs.length === 0 && prevLocal && prevLocal.length > 10 && prevLocal !== JSON.stringify([])){
+    // Cloud came back empty but we have a real local catalogue — keep a recoverable backup
+    // before the empty state can clobber it. (Real "clear" flows re-seed examples, so this is never a legit empty.)
+    try{
+      localStorage.setItem(STORAGE_KEY + '-bak', prevLocal + '|' + Date.now());
+      console.warn('Cloud returned an empty catalogue while local had songs — backed up previous list to "' + STORAGE_KEY + '-bak".');
+    }catch(e){ /* storage full; skip */ }
+  }
   localStorage.setItem(STORAGE_KEY, JSON.stringify(songs));
   prefetchPreviews(songs);
   people = (remote && remote.people) || [];
