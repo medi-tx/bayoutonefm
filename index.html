@@ -1690,7 +1690,11 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
     font-size:12.5px;
     line-height:1.4;
     color:rgba(var(--on-paper-rgb),0.85);
-    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    white-space:normal;
+    padding-right:24px;
+    overflow-wrap:anywhere;
+    word-wrap:break-word;
+    word-break:break-word;
   }
   .cover-score{ display:flex; align-items:center; gap:6px; margin-top:4px; flex-wrap:wrap; }
   .cs-band{ font-size:10px; opacity:.55; letter-spacing:.3px; white-space:nowrap; }
@@ -3001,7 +3005,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
 .editor-section h4{ font-size:12px; font-weight:700; color:var(--text-dim,#888); text-transform:uppercase; letter-spacing:0.8px; margin:0 0 8px; }
 .back-link{ display:inline-block; font-size:12px; color:var(--teal); text-decoration:none; margin:2px 0; }
 .back-link:hover{ text-decoration:underline; }
-.card-opinions{ font-size:12.5px; line-height:1.4; color:rgba(var(--on-paper-rgb),0.85); margin:4px 0 0; font-style:italic; border-left:3px solid var(--teal); padding-left:8px; display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; overflow:hidden; }
+.card-opinions{ font-size:12.5px; line-height:1.45; color:rgba(var(--on-paper-rgb),0.85); margin:4px 0 0; font-style:italic; border-left:3px solid var(--teal); padding-left:8px; padding-right:24px; overflow-wrap:anywhere; word-wrap:break-word; word-break:break-word; }
 
 #holdTip{ position:fixed; z-index:9999; max-width:260px; padding:8px 12px; background:var(--ink,#12141c); color:#fff; font-family:'IBM Plex Mono',monospace; font-size:11.5px; line-height:1.45; border-radius:8px; pointer-events:none; opacity:0; transition:opacity .18s ease; box-shadow:0 4px 14px rgba(0,0,0,.35); }
 #holdTip.show{ opacity:1; }
@@ -3117,6 +3121,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
       <button class="theme-btn" id="editStickersBtn">🎨 Stickers</button>
       <button class="theme-btn" id="themeBtn">🎨 Theme</button>
       <button class="theme-btn" id="songDbBtn">📀 Song Database</button>
+      <button class="theme-btn" id="cdBtn" style="display:none;">💿 My CDs</button>
       <button class="theme-btn" id="testerBtn">🧪 Become a Tester</button>
       <button class="theme-btn" id="discordBtn">Discord</button>
       <button class="avatar-btn" id="myProfileBtn" title="My profile"><span id="myAvatarContent">?</span></button>
@@ -3520,6 +3525,45 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
     </div>
     <div class="modal-actions">
       <button class="btn-cancel" id="testerFormsCloseBtn">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="cdOverlay">
+  <div class="modal cd-modal">
+    <h3 id="cdModalTitle">💿 My CDs</h3>
+    <p class="cd-modal-sub" id="cdModalSub">Scan the barcode on a CD you own (or type its number) and it stays on your device — with album info and ways to listen.</p>
+    <div class="cd-scan-row">
+      <button class="add-btn secondary" id="cdScanBtn" type="button">📷 Scan barcode</button>
+      <span style="opacity:0.55; font-size:12px;">or</span>
+      <input type="text" id="cdBarcodeInput" placeholder="UPC / EAN number, e.g. 724384582527" aria-label="CD barcode number" inputmode="numeric" autocomplete="off">
+      <button class="add-btn secondary" id="cdLookupBtn" type="button">Look up</button>
+    </div>
+    <div class="cd-scan-viewport" id="cdScanViewport" style="display:none;">
+      <video id="cdScanVideo" playsinline autoplay muted style="width:100%; max-height:220px; object-fit:cover; border-radius:10px;"></video>
+      <p class="cd-scan-hint" id="cdScanHint">Point your camera at the barcode on the CD case…</p>
+      <button class="btn-cancel" id="cdScanStopBtn" type="button">Stop camera</button>
+    </div>
+    <div class="cd-lookup-status" id="cdLookupStatus" style="display:none;"></div>
+    <div class="cd-preview" id="cdPreview" style="display:none;"></div>
+    <div class="cd-grid" id="cdGrid"></div>
+    <div class="empty" id="cdEmpty" style="display:none;">
+      <div class="empty-emoji">💿</div>
+      <h2>No CDs yet</h2>
+      <p>Scan the back of a CD case and your collection will build up here — available any time on this device.</p>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="cdCloseBtn">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="cdDetailOverlay">
+  <div class="modal cd-detail-modal">
+    <div id="cdDetailBody"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="cdDetailCloseBtn">Close</button>
+      <button class="btn-save danger" id="cdDetailDeleteBtn" type="button">Remove from my CDs</button>
     </div>
   </div>
 </div>
