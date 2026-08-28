@@ -347,6 +347,70 @@
     msgPollTimer = setInterval(()=>{ refreshMsgUnread(); }, 15000);
   }
 
+  /* ---- LIVE INCOMING MESSAGES (Supabase Realtime) ---- */
+  let msgRealtimeChannel = null;
+  let msgRealtimeFor = null;
+  function senderUsername(senderId){
+    if(msgFriendProfiles){
+      const p = msgFriendProfiles.find(x=>x.user_id === senderId);
+      if(p) return p.username;
+    }
+    if(typeof allProfilesCache !== 'undefined' && allProfilesCache){
+      const p = allProfilesCache.find(x=>x.user_id === senderId);
+      if(p) return p.username;
+    }
+    return null;
+  }
+  async function handleIncomingMessage(m){
+    if(!m || !m.sender_id || m.sender_id === currentUserId) return;
+    const overlay = document.getElementById('messagesOverlay');
+    const overlayOpen = overlay && overlay.classList.contains('open');
+    if(overlayOpen && msgActiveFriend === m.sender_id){
+      msgLastRead[m.sender_id] = new Date().toISOString();
+      saveMsgLastRead();
+      msgUnreadCache[m.sender_id] = 0;
+      renderMsgFriendList();
+      loadMsgThread(m.sender_id);
+      return;
+    }
+    const uname = senderUsername(m.sender_id);
+    const body = (m.content && m.content.trim()) ? m.content : 'Sent you a song recommendation';
+    showToast('💬 New message from @' + (uname || 'a friend'), 5000);
+    if(window.btfBrowserNotify) window.btfBrowserNotify('💬 New message from @' + (uname || 'a friend'), body);
+    await refreshMsgUnread();
+  }
+  function subscribeMsgRealtime(){
+    if(!sb || !currentUserId) return;
+    if(msgRealtimeChannel){
+      if(msgRealtimeFor === currentUserId) return;
+      try{ sb.removeChannel(msgRealtimeChannel); }catch(e){}
+      msgRealtimeChannel = null;
+    }
+    msgRealtimeFor = currentUserId;
+    try{
+      msgRealtimeChannel = sb.channel('messages:' + currentUserId)
+        .on('postgres_changes', {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: 'recipient_id=eq.' + currentUserId
+        }, (payload)=> handleIncomingMessage(payload && payload.new))
+        .subscribe();
+    }catch(e){
+      console.warn('Message realtime subscribe failed:', e);
+      msgRealtimeChannel = null;
+    }
+  }
+  function stopMsgRealtime(){
+    if(msgRealtimeChannel){
+      try{ sb.removeChannel(msgRealtimeChannel); }catch(e){}
+      msgRealtimeChannel = null;
+    }
+    msgRealtimeFor = null;
+  }
+  window.startMsgRealtime = subscribeMsgRealtime;
+  window.stopMsgRealtime = stopMsgRealtime;
+
   loadMsgLastRead();
   if(document.readyState === 'loading'){
     document.addEventListener('DOMContentLoaded', initMsgEvents);
@@ -354,10 +418,15 @@
     initMsgEvents();
   }
   startMsgPolling();
+  try{
+    sb.auth.getSession().then(({ data: { session } })=>{
+      if(session && session.user) subscribeMsgRealtime();
+    });
+  }catch(e){}
   if(sb && sb.auth){
     sb.auth.onAuthStateChange(event=>{
-      if(event === 'SIGNED_IN'){ loadMsgLastRead(); msgActiveFriend = null; msgPendingSong = null; refreshMsgUnread(); }
-      if(event === 'SIGNED_OUT'){ msgActiveFriend = null; msgPendingSong = null; msgUnreadCache = {}; setMsgBadge(0); }
+      if(event === 'SIGNED_IN'){ loadMsgLastRead(); msgActiveFriend = null; msgPendingSong = null; refreshMsgUnread(); subscribeMsgRealtime(); }
+      if(event === 'SIGNED_OUT'){ msgActiveFriend = null; msgPendingSong = null; msgUnreadCache = {}; setMsgBadge(0); stopMsgRealtime(); }
     });
   }
 })();

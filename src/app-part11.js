@@ -20,6 +20,25 @@ function setNotifBadge(n){
   else { el.style.display = 'none'; }
 }
 
+function btfBrowserNotify(title, body){
+  try{
+    if(typeof Notification === 'undefined') return;
+    if(Notification.permission !== 'granted') return;
+    if(!document.hidden) return;
+    const n = new Notification(title, { body: body, icon: 'icon-192.png' });
+    setTimeout(()=>{ try{ n.close(); }catch(e){} }, 12000);
+  }catch(e){ /* iOS Safari tabs don't support web notifications — in-app toast already shown */ }
+}
+
+function requestNotifPermission(){
+  try{
+    if(typeof Notification === 'undefined') return;
+    if(Notification.permission !== 'default') return;
+    Notification.requestPermission().catch(()=>{});
+  }catch(e){ /* ignore */ }
+}
+window.btfBrowserNotify = btfBrowserNotify;
+
 async function loadNotifications(){
   if(!sb || !currentUserId) return;
   const { data, error } = await sb.from('notifications')
@@ -74,6 +93,7 @@ async function sendNotif(userId, type, message, payload){
 
 document.getElementById('notifBtn').addEventListener('click', ()=>{
   trackEvent('open_notifications');
+  requestNotifPermission();
   document.getElementById('notifOverlay').classList.add('open');
   loadNotifications();
 });
@@ -116,6 +136,7 @@ function handleNotifChange(payload){
       lastNotifToastId = n.id;
       const icon = NOTIF_ICONS[n.type] || '🔔';
       showToast(icon + ' ' + (n.message || 'New notification'), 5000);
+      btfBrowserNotify('bayoutonefm', (n.message || 'New notification'));
     }
   }
 }

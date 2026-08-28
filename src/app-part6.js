@@ -779,7 +779,8 @@ async function loadAppForUser(user){
     openOnboarding();
   }
 
-  subscribeNotifications();
+subscribeNotifications();
+  if(window.startMsgRealtime) window.startMsgRealtime();
 
   /* ---- invite link redemption ---- */
   try{
@@ -1341,6 +1342,7 @@ sb.auth.onAuthStateChange((event, session)=>{
     applyTheme(DEFAULT_THEME);
     showSotdScheduleBtn();
     unsubscribeNotifications();
+    if(window.stopMsgRealtime) window.stopMsgRealtime();
     showAuthScreen();
     return;
   }
@@ -1359,6 +1361,7 @@ sb.auth.onAuthStateChange((event, session)=>{
     applyTheme(DEFAULT_THEME);
     showSotdScheduleBtn();
     unsubscribeNotifications();
+    if(window.stopMsgRealtime) window.stopMsgRealtime();
     showAuthScreen();
   }
 });
