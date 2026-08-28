@@ -12571,6 +12571,18 @@ sb.auth.onAuthStateChange((event, session)=>{
     showRecoveryScreen();
     return;
   }
+  if(event === 'SIGNED_OUT'){
+    currentUserId = null;
+    myProfile = null;
+    appBootedFor = null;
+    localStorage.removeItem(THEME_KEY);
+    localStorage.removeItem(CUSTOM_THEMES_KEY);
+    applyTheme(DEFAULT_THEME);
+    showSotdScheduleBtn();
+    unsubscribeNotifications();
+    showAuthScreen();
+    return;
+  }
   if(session && session.user){
     document.getElementById('auth-email').value = '';
     document.getElementById('auth-password').value = '';
