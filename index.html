@@ -12279,6 +12279,7 @@ async function loadAppForUser(user){
   setTimeout(()=> enrichAllMissingArtwork(), 10000);
   setTimeout(()=> backfillSongDb(), 1500);
   setTimeout(()=> dailySongDatabaseSync(), 4000);
+  setTimeout(()=> pullTopArtistsDaily(), 6000);
 
   const accepted = await ensureTermsAccepted(user);
   if(!accepted) return; // user chose to log out instead of accepting
@@ -12389,6 +12390,97 @@ async function deezerSearch(q, limit){
     trackViewUrl: r.link || null,
     explicit: r.explicit === true || r.explicit === 1
   }));
+}
+async function deezerChartArtists(limit){
+  const data = await new Promise((resolve, reject)=>{
+    const cbName = 'dzArtCb_' + Math.random().toString(36).slice(2);
+    const script = document.createElement('script');
+    let settled = false;
+    const cleanup = ()=>{ delete window[cbName]; script.remove(); };
+    window[cbName] = (d)=>{ settled = true; cleanup(); resolve(d); };
+    script.onerror = ()=>{ if(!settled){ settled = true; cleanup(); reject(new Error('deezer_chart_jsonp_failed')); } };
+    script.src = 'https://api.deezer.com/chart/0/artists?limit=' + (limit||10) + '&output=jsonp&callback=' + cbName;
+    document.body.appendChild(script);
+    setTimeout(()=>{ if(!settled){ settled = true; cleanup(); reject(new Error('deezer_chart_timeout')); } }, 6000);
+  });
+  return (data.data || []).map(r=>({
+    artistId: r.id,
+    artistName: (r.name || '').trim(),
+    picture: r.picture_big || r.picture_medium || null
+  }));
+}
+async function deezerArtistTopTracks(artistId, limit){
+  const data = await new Promise((resolve, reject)=>{
+    const cbName = 'dzTopCb_' + Math.random().toString(36).slice(2);
+    const script = document.createElement('script');
+    let settled = false;
+    const cleanup = ()=>{ delete window[cbName]; script.remove(); };
+    window[cbName] = (d)=>{ settled = true; cleanup(); resolve(d); };
+    script.onerror = ()=>{ if(!settled){ settled = true; cleanup(); reject(new Error('deezer_top_jsonp_failed')); } };
+    script.src = 'https://api.deezer.com/artist/' + encodeURIComponent(artistId) + '/top?limit=' + (limit||5) + '&output=jsonp&callback=' + cbName;
+    document.body.appendChild(script);
+    setTimeout(()=>{ if(!settled){ settled = true; cleanup(); reject(new Error('deezer_top_timeout')); } }, 6000);
+  });
+  return (data.data || []).map(r=>({
+    title: r.title || 'Untitled',
+    artistName: (r.artist && r.artist.name) || '',
+    albumName: (r.album && r.album.title) || '',
+    coverArt: (r.album && (r.album.cover_medium || r.album.cover_small)) || null,
+    previewUrl: r.preview || '',
+    explicit: r.explicit === true || r.explicit === 1,
+    durationSec: r.duration || 0
+  }));
+}
+function pullTopArtistsDaily(){
+  if(!sb || !currentUserId) return;
+  const KEY = 'bayoutonefm-topartists-daily-' + currentUserId;
+  let last = 0;
+  try{ last = Number(localStorage.getItem(KEY) || 0); }catch(e){}
+  if(last && (Date.now() - last) < 86400000) return; // once per day
+  const done = ()=>{ try{ localStorage.setItem(KEY, String(Date.now())); }catch(e){} };
+  const ARTISTS = 10;
+  const TRACKS = 5;
+  const DELAY = 400;
+  const push = (songObj) => { syncToSongDb(songObj, null); upsertGlobalSong(songObj, null); };
+  deezerChartArtists(ARTISTS)
+    .then(artists => {
+      if(!artists || !artists.length) throw new Error('no top artists returned');
+      let total = 0, i = 0;
+      const nextArtist = ()=>{
+        if(i >= artists.length){
+          done();
+          console.log('[topArtists] pulled top tracks from', artists.length, 'artists (' + total + ' tracks) into the database');
+          return;
+        }
+        const artist = artists[i++];
+        deezerArtistTopTracks(artist.artistId, TRACKS)
+          .then(tracks => {
+            (tracks || []).forEach(t => {
+              const a = (t.artistName || artist.artistName || '').trim();
+              if(!t.title || !a) return;
+              const songObj = {
+                title: (t.title || '').trim(),
+                artists: [a],
+                album: t.albumName || '',
+                coverArt: t.coverArt || null,
+                previewUrl: t.previewUrl || '',
+                explicit: !!t.explicit,
+                duration: t.durationSec ? (
+                  t.durationSec > 3600
+                    ? Math.floor(t.durationSec/3600) + ':' + String(Math.floor((t.durationSec%3600)/60)).padStart(2,'0') + ':' + String(t.durationSec%60).padStart(2,'0')
+                    : Math.floor(t.durationSec/60) + ':' + String(t.durationSec%60).padStart(2,'0')
+                ) : ''
+              };
+              push(songObj);
+              total++;
+            });
+            setTimeout(nextArtist, DELAY);
+          })
+          .catch(()=> setTimeout(nextArtist, DELAY));
+      };
+      nextArtist();
+    })
+    .catch(e => console.error('[topArtists] pull failed:', e));
 }
 async function deezerAlbumSearch(q, limit){
   const url = 'https://api.deezer.com/search/album?q=' + encodeURIComponent(q) + '&limit=' + (limit||8);
