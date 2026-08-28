@@ -2998,6 +2998,7 @@ function finishSave(data){
   if(editingId){
     const idx = songs.findIndex(s=>s.id===editingId);
     if(idx > -1) updateGlobalSong(songs[idx]);
+    if(idx > -1) syncToSongDb(songs[idx], currentUserId);
   } else {
     upsertGlobalSong(data, currentUserId);
     syncToSongDb(data, currentUserId);

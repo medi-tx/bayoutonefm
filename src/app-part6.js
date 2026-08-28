@@ -335,67 +335,95 @@ function syncToSongDb(song, userId){
   try{
     const title = (song.title || '').trim();
     const artist = (song.artists && song.artists[0] || '').trim();
-    if(!title) return;
-    const detail = {
-      title,
-      artist: artist || '',
-      album: (song.album || '').trim(),
-      year: (song.year || '').toString().trim(),
-      genres: song.genres || [],
+    if(!title || !artist) return;
+    const genreList = Array.isArray(song.genres)
+      ? song.genres.filter(Boolean)
+      : (typeof song.genres === 'string' && song.genres ? song.genres.split(/,\s*/).filter(Boolean) : []);
+    const facts = {
+      album: String(song.album || '').trim(),
+      year: String(song.year || '').trim(),
+      genres: genreList,
+      track_number: (song.trackNumber !== '' && song.trackNumber !== null && song.trackNumber !== undefined) ? Number(song.trackNumber) : null,
+      duration: String(song.duration || ''),
+      cover_art: song.coverArt || null,
+      record_label: String(song.recordLabel || ''),
+      producer: String(song.producer || ''),
+      songwriters: String(song.songwriters || ''),
+      bpm: String(song.bpm || ''),
+      key: String(song.musicKey || ''),
       explicit: !!song.explicit,
-      cover_art: song.coverArt || null,
-      source: 'user',
-      added_by: userId || null,
-      producers: song.producer || '',
-      songwriters: song.songwriters || '',
-      bpm: song.bpm || null,
-      key: song.musicKey || '',
-      duration: song.duration || '',
-      record_label: song.recordLabel || '',
-      spotify_url: song.spotifyUrl || '',
-      apple_music_url: song.appleMusicUrl || '',
-      youtube_music_url: song.youtubeMusicUrl || '',
-      tidal_url: song.tidalUrl || '',
-      release_date: song.releaseDate || '',
-      artist_website: song.artistWebsite || '',
-      track_number: song.trackNumber ? String(song.trackNumber) : ''
+      release_date: String(song.releaseDate || ''),
+      artist_website: String(song.artistWebsite || '')
     };
-    const common = {
-      title,
-      artist: artist || '',
-      album: (song.album || '').trim(),
-      year: (song.year || '').toString().trim(),
-      genres: song.genres || [],
-      cover_art: song.coverArt || null,
-      source: 'user',
-      added_by: userId || null
+    const links = {};
+    if(song.spotifyUrl) links.spotify = song.spotifyUrl;
+    if(song.appleMusicUrl) links.apple = song.appleMusicUrl;
+    if(song.youtubeMusicUrl) links.youtube = song.youtubeMusicUrl;
+    if(song.tidalUrl) links.tidal = song.tidalUrl;
+    if(Object.keys(links).length) facts.streaming_links = links;
+    const localId = userId || null;
+
+    // Enrichment payload: only the factual fields that actually have data, so we
+    // never clobber richer values in a shared row with our empty strings.
+    const enrich = {};
+    ['album','year','cover_art','record_label','producer','songwriters','bpm','key','explicit','release_date','artist_website'].forEach(k=>{
+      if(facts[k] !== '' && facts[k] !== null && facts[k] !== undefined) enrich[k] = facts[k];
+    });
+    if(genreList.length) enrich.genres = genreList;
+    if(facts.track_number !== null && facts.track_number !== undefined) enrich.track_number = facts.track_number;
+    if(facts.duration) enrich.duration = facts.duration;
+    if(Object.keys(links).length) enrich.streaming_links = links;
+
+    // Insert ladders: full row (after migration 0004 adds the new columns),
+    // then the live songdb.html schema, then progressively smaller sets.
+    const full = { title, artist, ...facts, source: 'user', added_by: localId };
+    const compact = {
+      title, artist,
+      album: facts.album, year: facts.year, genres: genreList,
+      track_number: facts.track_number, duration: facts.duration,
+      cover_art: facts.cover_art, record_label: facts.record_label,
+      producer: facts.producer, songwriters: facts.songwriters,
+      bpm: facts.bpm, key: facts.key
     };
-    const minimal = {
-      title,
-      artist: artist || '',
-      cover_art: song.coverArt || null,
-      source: 'user',
-      added_by: userId || null
-    };
-    const fallbacks = [detail, common, minimal];
+    if(Object.keys(links).length) compact.streaming_links = links;
+    compact.source = 'user';
+    compact.added_by = localId;
+    const core = { title, artist, album: facts.album, year: facts.year, genres: genreList, cover_art: facts.cover_art, source: 'user', added_by: localId };
+    const minimal = { title, artist, cover_art: facts.cover_art, source: 'user', added_by: localId };
+    const ladder = [full, compact, core, minimal];
     let attempt = 0;
+    function schemeError(err){
+      return !!(err && (err.code === '42P10' || err.code === '42703' || err.code === '42P01' || /does not exist|undefined_column|could not find.*column/i.test(err.message || '')));
+    }
     function tryInsert(){
-      const row = fallbacks[attempt];
+      const row = ladder[attempt];
       if(!row){ console.error('[syncToSongDb] insert failed after all fallbacks'); return; }
       try{
         sb.from('song_database').insert(row).then(({error})=>{
           if(!error || error.code === '23505') return;
-          if(error.code === '42P10' || /undefined_column|column .* does not exist|does not exist/i.test(error.message || '')){
-            attempt++;
-            setTimeout(tryInsert, 0);
-          } else {
-            console.error('[syncToSongDb] insert error:', error.message);
-          }
+          if(schemeError(error)){ attempt++; setTimeout(tryInsert, 0); }
+          else console.error('[syncToSongDb] insert error:', error.message);
         }).catch(e=>{ console.error('[syncToSongDb] insert threw:', e); });
       }catch(e){ console.error('[syncToSongDb] insert threw:', e); }
     }
-    tryInsert();
-  }catch(e){}
+    // Enrich an existing matching row; only insert when no row exists yet.
+    try{
+      sb.from('song_database').select('id').ilike('title', title).ilike('artist', artist).limit(1)
+        .then(({data, error})=>{
+          if(error){ tryInsert(); return; }
+          if(data && data.length){
+            if(Object.keys(enrich).length){
+              sb.from('song_database').update(enrich).eq('id', data[0].id)
+                .then(({error: uerr})=>{ if(uerr && !schemeError(uerr)) console.error('[syncToSongDb] enrich failed:', uerr.message); })
+                .catch(e=>{ console.error('[syncToSongDb] enrich threw:', e); });
+            }
+            return;
+          }
+          tryInsert();
+        })
+        .catch(()=>{ tryInsert(); });
+    }catch(e){ tryInsert(); }
+  }catch(e){ console.error('[syncToSongDb] error:', e); }
 }
 function syncToSongDbBatch(songsList, userId){
   if(!songsList || !songsList.length) return;
