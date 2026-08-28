@@ -1,4 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
-  <rect width="512" height="512" rx="112" fill="#12141c"/>
-  <polygon fill="#eedd95" points="256,66 300.7,194.5 436.7,197.3 328.3,279.5 367.7,409.7 256,332 144.3,409.7 183.7,279.5 75.3,197.3 211.3,194.5"/>
-</svg>
+﻿<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512"><image width="512" height="512" href="icon-512.png"/></svg>
