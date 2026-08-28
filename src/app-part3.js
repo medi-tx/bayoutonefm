@@ -1227,6 +1227,18 @@ document.getElementById('discordBtn').addEventListener('click', ()=>{
   trackEvent('open_discord');
   window.open('https://discord.gg/WYj8D8NUgV', '_blank', 'noopener');
 });
+(function initBackupTip(){
+  const tip = document.getElementById('backupTip');
+  if(!tip) return;
+  if(localStorage.getItem('bayoutonefm-backup-tip-seen')){
+    return;
+  }
+  tip.classList.add('show');
+  document.getElementById('backupTipX').addEventListener('click', ()=>{
+    localStorage.setItem('bayoutonefm-backup-tip-seen', '1');
+    tip.classList.remove('show');
+  });
+})();
 document.getElementById('testerFormsCloseBtn').addEventListener('click', ()=>{
   document.getElementById('testerFormsOverlay').classList.remove('open');
 });
