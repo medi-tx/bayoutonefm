@@ -358,6 +358,7 @@
     display:none;
     align-items:flex-start;
     gap:12px;
+    flex-wrap:wrap;
     background:rgba(90,155,155,0.10);
     border:1px solid rgba(90,155,155,0.4);
     border-left:3px solid var(--teal);
@@ -369,6 +370,7 @@
     color:var(--on-ink);
   }
   .backup-tip.show{ display:flex; }
+  .backup-tip-body{ flex:1 1 auto; min-width:0; }
   .backup-tip b{ color:var(--teal); font-weight:600; }
   .backup-tip-x{
     flex-shrink:0;
@@ -384,7 +386,7 @@
     display:flex;
     gap:8px;
     flex-wrap:wrap;
-    flex-shrink:0;
+    flex-shrink:1;
   }
   .backup-tip-btn{
     font-family:'IBM Plex Mono', monospace;
