@@ -2,13 +2,13 @@
 /* =========================================================
    THEME CUSTOMIZATION
    ========================================================= */
-const DEFAULT_THEME = { ink:'#12141c', paper:'#eedd95', gold:'#d5873f', rose:'#2A9D8F', teal:'#E63946', lilac:'#8E44AD', sage:'#264653' };
+const DEFAULT_THEME = { ink:'#1a0a2e', paper:'#fff8f0', paperElevated:'#ffe8ea', border:'#d6cdcd', gold:'#ff2fa0', teal:'#ff9e00', rose:'#ffd60a', lilac:'#7cff6b', sage:'#6bd8ff' };
 
 const THEME_PRESETS = [
   { name:'bayoutonefm (default)', colors: DEFAULT_THEME },
+  { name:'Classic', colors: { ink:'#12141c', paper:'#eedd95', gold:'#d5873f', rose:'#2A9D8F', teal:'#E63946', lilac:'#8E44AD', sage:'#264653' } },
   { name:'Dark', colors: { ink:'#14151A', paper:'#1E2028', paperElevated:'#262933', border:'rgba(52,56,66,0.5)', gold:'#F4A300', teal:'#E63946', rose:'#2A9D8F', lilac:'#8E44AD', sage:'#264653' } },
   { name:'Light', colors: { ink:'#F7F5F0', paper:'#FFFFFF', paperElevated:'#FDFBF6', border:'#E5E1D8', gold:'#F4A300', teal:'#E63946', rose:'#2A9D8F', lilac:'#8E44AD', sage:'#264653' } },
-  { name:'Euphoric', colors: { ink:'#1a0a2e', paper:'#fff8f0', paperElevated:'#ffe8ea', border:'#d6cdcd', gold:'#ff2fa0', teal:'#ff9e00', rose:'#ffd60a', lilac:'#7cff6b', sage:'#6bd8ff' } },
   { name:'Calm', colors: { ink:'#0f2027', paper:'#c2c7c6', paperElevated:'#ecf6f7', border:'#cbd3d3', gold:'#8ecae6', teal:'#a8dadc', rose:'#bde0c8', lilac:'#cdeac0', sage:'#e0ece4' } },
   { name:'Melancholy', colors: { ink:'#141b2e', paper:'#eceff4', paperElevated:'#e0e4ec', border:'#c5c9d0', gold:'#5c6b8a', teal:'#4a5a78', rose:'#6b7a99', lilac:'#8c95ab', sage:'#aab0c2' } },
   { name:'Fierce', colors: { ink:'#100000', paper:'#fff2f0', paperElevated:'#ffe1df', border:'#d4c6c5', gold:'#ff7a00', teal:'#ff1e1e', rose:'#8a0f0f', lilac:'#c81d1d', sage:'#4a0a0a' } },
@@ -28,7 +28,7 @@ const THEME_PRESETS = [
   { name:'Pastel Haze', colors: { ink:'#031435', paper:'#fff8f0', paperElevated:'#e7e5ff', border:'#d6cdcd', gold:'#bf89ec', teal:'#a4daaf', rose:'#f5e69e', lilac:'#a3ade1', sage:'#eaac8a' } },
   { name:'So In Love', colors: { ink:'#ad9090', paper:'#fff8f0', paperElevated:'#ffe8ea', border:'#eed8d8', gold:'#ff0000', teal:'#c80404', rose:'#cf1717', lilac:'#9d0202', sage:'#5e0303' } }
 ];
-const THEME_UNLOCK_STEPS = [0,0,0,3,3,5,5,10,10,10,15,15,20,20,25,30,30,40,40,50,50,75];
+const THEME_UNLOCK_STEPS = [0,0,0,0,3,5,5,10,10,10,15,15,20,20,25,30,30,40,40,50,50,75];
 function themeUnlockThreshold(i){ return THEME_UNLOCK_STEPS[i] !== undefined ? THEME_UNLOCK_STEPS[i] : 0; }
 function themeLockedAt(i){ const need = themeUnlockThreshold(i); return need > 0 && songs.length < need ? need : 0; }
 function themeUnlocksLeft(i){ const need = themeUnlockThreshold(i); if(need <= 0) return 0; return Math.max(0, need - songs.length); }
