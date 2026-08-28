@@ -1212,16 +1212,64 @@ document.getElementById('songDbBtn').addEventListener('click', ()=>{
     document.getElementById('songDbInfoOverlay').classList.add('open');
   }
 });
+function testerHubItemsHtml(){
+  const isCert = (typeof isCertifiedTester === 'function') && isCertifiedTester();
+  const isAdmin = (typeof isSamAdmin === 'function') && isSamAdmin();
+  const items = [];
+  if(isCert || isAdmin){
+    items.push(`<button type="button" class="tester-form-btn" data-tester-hub="updates">
+      <span class="tester-form-title">📋 Updates Log</span>
+      <span class="tester-form-desc">What's being worked on right now.</span>
+    </button>`);
+  }
+  if(isCert){
+    items.push(`<button type="button" class="tester-form-btn" data-tester-hub="cds">
+      <span class="tester-form-title">💿 My CDs</span>
+      <span class="tester-form-desc">Your physical CD collection.</span>
+    </button>`);
+    items.push(`<button type="button" class="tester-form-btn" data-tester-hub="forms">
+      <span class="tester-form-title">🧪 Tester Forms</span>
+      <span class="tester-form-desc">Bug reports, feedback &amp; suggestions, questions.</span>
+    </button>`);
+  } else {
+    items.push(`<button type="button" class="tester-form-btn" data-tester-hub="become">
+      <span class="tester-form-title">🪪 Become a Tester</span>
+      <span class="tester-form-desc">Join the tester program.</span>
+    </button>`);
+  }
+  return items.join('');
+}
 document.getElementById('testerBtn').addEventListener('click', ()=>{
-  const certified = (typeof isCertifiedTester === 'function') && isCertifiedTester();
-  if(certified){
+  trackEvent('open_tester_hub');
+  const list = document.getElementById('testerHubList');
+  if(list) list.innerHTML = (typeof testerHubItemsHtml === 'function') ? testerHubItemsHtml() : '';
+  document.getElementById('testerHubOverlay').classList.add('open');
+});
+document.getElementById('testerHubList').addEventListener('click', e=>{
+  const item = e.target.closest('[data-tester-hub]');
+  if(!item) return;
+  const which = item.dataset.testerHub;
+  document.getElementById('testerHubOverlay').classList.remove('open');
+  if(which === 'updates'){
+    trackEvent('open_updates_log');
+    if(typeof window.openUpdatesLog === 'function') window.openUpdatesLog();
+  } else if(which === 'cds'){
+    trackEvent('open_my_cds');
+    if(typeof window.openCDCollection === 'function') window.openCDCollection();
+  } else if(which === 'forms'){
     trackEvent('open_tester_forms');
     document.getElementById('testerFormsOverlay').classList.add('open');
-    return;
+  } else if(which === 'become'){
+    trackEvent('become_a_tester');
+    const fallback = 'https://docs.google.com/forms/d/e/1FAIpQLSdfM-OtLC51PooQoj0yz5S9rHAlN7Jbvw1a97hNkGXrXqMITA/viewform?usp=publish-editor';
+    window.open((typeof TESTER_FORM_URL === 'string' && TESTER_FORM_URL) || fallback, '_blank', 'noopener');
   }
-  trackEvent('become_a_tester');
-  const fallback = 'https://docs.google.com/forms/d/e/1FAIpQLSdfM-OtLC51PooQoj0yz5S9rHAlN7Jbvw1a97hNkGXrXqMITA/viewform?usp=publish-editor';
-  window.open((typeof TESTER_FORM_URL === 'string' && TESTER_FORM_URL) || fallback, '_blank', 'noopener');
+});
+document.getElementById('testerHubCloseBtn').addEventListener('click', ()=>{
+  document.getElementById('testerHubOverlay').classList.remove('open');
+});
+document.getElementById('testerHubOverlay').addEventListener('click', e=>{
+  if(e.target === document.getElementById('testerHubOverlay')) document.getElementById('testerHubOverlay').classList.remove('open');
 });
 document.getElementById('discordBtn').addEventListener('click', ()=>{
   trackEvent('open_discord');

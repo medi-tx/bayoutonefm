@@ -887,8 +887,9 @@ function isCertifiedTester(){
 }
 function syncTesterButton(){
   const btn = document.getElementById('testerBtn');
-  if(!btn) return;
-  btn.textContent = isCertifiedTester() ? 'Tester Forms' : 'Become a Tester';
+  if(btn) btn.textContent = '🧪 Tester';
+  const hubList = document.getElementById('testerHubList');
+  if(hubList && typeof testerHubItemsHtml === 'function') hubList.innerHTML = testerHubItemsHtml();
 }
 async function autoFriendSam(){
   try{
@@ -1848,6 +1849,7 @@ sb.auth.getSession().then(({ data: { session } })=>{
     loadUpdatesLog();
     startUpdatesLogRealtime();
   }
+  window.openUpdatesLog = openUpdatesLog;
   function closeUpdatesLog(){
     const overlay = document.getElementById('updatesLogOverlay');
     if(overlay) overlay.classList.remove('open');

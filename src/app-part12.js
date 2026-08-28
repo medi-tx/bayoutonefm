@@ -9,17 +9,9 @@ let cdAudio = null;
 let cdPendingAlbum = null;
 let cdPendingBarcode = '';
 
-function syncCDButton(){
-  const btn = document.getElementById('cdBtn');
-  if(!btn) return;
-  btn.style.display = (typeof isCertifiedTester === 'function' && isCertifiedTester()) ? '' : 'none';
-}
+function syncCDButton(){}
 window.syncCDButton = syncCDButton;
-
-function cdEscapeAttr(v){ return escapeAttr(v); }
-function cdEscape(v){ return escapeHtml(v); }
-
-document.getElementById('cdBtn').addEventListener('click', ()=>{
+window.openCDCollection = function(){
   if(!(typeof isCertifiedTester === 'function' && isCertifiedTester())){
     showToast('My CDs is for certified testers only for now', 3200);
     return;
@@ -29,7 +21,11 @@ document.getElementById('cdBtn').addEventListener('click', ()=>{
   loadCDCollection();
   document.getElementById('cdBarcodeInput').value = '';
   document.getElementById('cdBarcodeInput').focus();
-});
+};
+
+function cdEscapeAttr(v){ return escapeAttr(v); }
+function cdEscape(v){ return escapeHtml(v); }
+
 document.getElementById('cdCloseBtn').addEventListener('click', ()=>{
   stopCDScan();
   document.getElementById('cdOverlay').classList.remove('open');
