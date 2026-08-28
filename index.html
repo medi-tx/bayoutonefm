@@ -9763,13 +9763,33 @@ async function fetchFriendsCount(){
   return count || 0;
 }
 async function fetchAllProfiles(){
-  const { data, error } = await sb
-    .from('profiles')
-    .select('user_id, username, bio, photo')
-    .neq('user_id', currentUserId)
-    .limit(100);
-  if(error){ console.error('Error loading people:', error); return []; }
-  return (data || []).filter(p=>p.username);
+  const rows = [];
+  const PAGE = 500;
+  let offset = 0;
+  const collect = (resolve, reject) => {
+    sb
+      .from('profiles')
+      .select('user_id, username, bio, photo')
+      .neq('user_id', currentUserId)
+      .order('username', { ascending: true })
+      .range(offset, offset + PAGE - 1)
+      .then(({ data, error })=>{
+        if(error){ reject(error); return; }
+        if(!data || !data.length){ resolve(rows); return; }
+        rows.push(...data);
+        if(data.length < PAGE){ resolve(rows); return; }
+        offset += PAGE;
+        collect(resolve, reject);
+      })
+      .catch(reject);
+  };
+  try{
+    const result = await new Promise((resolve, reject)=> collect(resolve, reject));
+    return (result || []).filter(p=>p.username);
+  }catch(e){
+    console.error('Error loading people:', e);
+    return [];
+  }
 }
 async function fetchMyFriendRows(){
   const { data, error } = await sb
