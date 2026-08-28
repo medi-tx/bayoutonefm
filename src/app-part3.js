@@ -223,7 +223,8 @@ function renderThemePresets(){
     if(locked){
       btn.title = `Unlocks at ${lockedNeed} songs — add ${lockedNeed - songs.length} more to unlock ${preset.name}.`;
       btn.addEventListener('click', ()=>{
-        showToast(`Add ${lockedNeed - songs.length} more song${lockedNeed - songs.length === 1 ? '' : 's'} to unlock ${preset.name}.`);
+        applyTheme(preset.colors);
+        showToast(`Locked theme — previewing ${preset.name}. Add ${lockedNeed - songs.length} more song${lockedNeed - songs.length === 1 ? '' : 's'} to unlock it.`);
       });
       wrap.appendChild(btn);
       return;

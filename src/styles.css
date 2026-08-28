@@ -235,7 +235,6 @@
   .theme-preset-btn.locked{
     opacity:0.5;
     filter:grayscale(55%);
-    cursor:not-allowed;
   }
   .theme-preset-btn.locked:hover{ border-color:rgba(var(--on-paper-rgb),0.15); color:rgba(var(--on-paper-rgb),0.9); }
   .theme-preset-lock{

@@ -285,7 +285,6 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
   .theme-preset-btn.locked{
     opacity:0.5;
     filter:grayscale(55%);
-    cursor:not-allowed;
   }
   .theme-preset-btn.locked:hover{ border-color:rgba(var(--on-paper-rgb),0.15); color:rgba(var(--on-paper-rgb),0.9); }
   .theme-preset-lock{
@@ -4337,7 +4336,8 @@ function renderThemePresets(){
     if(locked){
       btn.title = `Unlocks at ${lockedNeed} songs — add ${lockedNeed - songs.length} more to unlock ${preset.name}.`;
       btn.addEventListener('click', ()=>{
-        showToast(`Add ${lockedNeed - songs.length} more song${lockedNeed - songs.length === 1 ? '' : 's'} to unlock ${preset.name}.`);
+        applyTheme(preset.colors);
+        showToast(`Locked theme — previewing ${preset.name}. Add ${lockedNeed - songs.length} more song${lockedNeed - songs.length === 1 ? '' : 's'} to unlock it.`);
       });
       wrap.appendChild(btn);
       return;
