@@ -3101,7 +3101,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
 .cd-lookup-body{ display:flex; flex-direction:column; gap:2px; min-width:0; }
 .cd-lookup-title{ font-family:'Fraunces', serif; font-size:18px; font-weight:700; }
 .cd-lookup-artist{ font-size:13px; color:rgba(var(--on-paper-rgb),0.9); }
-.cd-lookup-meta{ font-family:'IBM Plex Mono', monospace; font-size:11px; color:rgba(var(--on-paper-rgb),0.7); }
+.cd-lookup-meta{ font-family:'IBM Plex Mono', monospace; font-size:11px; color:rgba(var(--on-paper-rgb),0.85); }
 .cd-lookup-actions{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:12px; }
 .cd-already{ font-size:13px; color:var(--teal); font-weight:600; }
 
@@ -3120,9 +3120,9 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
 .cd-cover.no-cover{ display:flex; }
 .cd-cover-initial{ font-family:'Fraunces', serif; font-size:34px; font-weight:700; color:var(--paper); }
 .cd-card-info{ display:flex; flex-direction:column; gap:1px; min-width:0; }
-.cd-card-title{ font-size:13px; font-weight:600; line-height:1.35; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.cd-card-artist{ font-size:11.5px; color:rgba(var(--on-paper-rgb),0.85); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.cd-card-year{ font-family:'IBM Plex Mono', monospace; font-size:10.5px; color:rgba(var(--on-paper-rgb),0.7); }
+.cd-card-title{ font-size:13px; font-weight:600; color:var(--on-paper); line-height:1.35; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .cd-card-artist{ font-size:11.5px; color:rgba(var(--on-paper-rgb),0.95); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .cd-card-year{ font-family:'IBM Plex Mono', monospace; font-size:10.5px; color:rgba(var(--on-paper-rgb),0.85); }
 .cd-loading{ font-size:13px; color:rgba(var(--on-paper-rgb),0.8); font-style:italic; padding:20px 4px; }
 
 .cd-detail-modal{ max-width:640px; }
@@ -3131,9 +3131,9 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
 .cd-vinyl-fallback{ display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,var(--ink),var(--ink-2)); }
 .cd-detail-info{ min-width:0; }
 .cd-detail-info h3{ margin:0 0 4px; }
-.cd-detail-artist{ font-size:14px; color:rgba(var(--on-paper-rgb),0.92); margin:0 0 4px; }
-.cd-detail-meta{ font-family:'IBM Plex Mono', monospace; font-size:11.5px; color:rgba(var(--on-paper-rgb),0.72); margin:0 0 4px; }
-.cd-detail-barcode{ font-family:'IBM Plex Mono', monospace; font-size:11px; color:rgba(var(--on-paper-rgb),0.6); margin:0 0 10px; }
+.cd-detail-artist{ font-size:14px; color:var(--on-paper); margin:0 0 4px; }
+  .cd-detail-meta{ font-family:'IBM Plex Mono', monospace; font-size:11.5px; color:rgba(var(--on-paper-rgb),0.88); margin:0 0 4px; }
+  .cd-detail-barcode{ font-family:'IBM Plex Mono', monospace; font-size:11px; color:rgba(var(--on-paper-rgb),0.8); margin:0 0 10px; }
 .cd-stream-links{ display:flex; flex-wrap:wrap; gap:6px; }
 .cd-stream-link{
   display:inline-block; font-size:12px; font-weight:600;
@@ -3145,9 +3145,9 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
 .cd-tracklist h4{ font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:1px; text-transform:uppercase; color:rgba(var(--on-paper-rgb),0.8); margin:0 0 8px; }
 .cd-track-row{ display:flex; align-items:center; gap:10px; padding:6px 8px; border-bottom:1px solid rgba(var(--on-paper-rgb),0.08); }
 .cd-track-row:hover{ background:rgba(var(--on-paper-rgb),0.05); }
-.cd-track-num{ font-family:'IBM Plex Mono', monospace; font-size:11px; color:rgba(var(--on-paper-rgb),0.6); width:20px; text-align:right; flex-shrink:0; }
-.cd-track-name{ flex:1; min-width:0; font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.cd-track-dur{ font-family:'IBM Plex Mono', monospace; font-size:11px; color:rgba(var(--on-paper-rgb),0.7); flex-shrink:0; }
+.cd-track-num{ font-family:'IBM Plex Mono', monospace; font-size:11px; color:rgba(var(--on-paper-rgb),0.8); width:20px; text-align:right; flex-shrink:0; }
+  .cd-track-name{ flex:1; min-width:0; font-size:13px; color:var(--on-paper); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .cd-track-dur{ font-family:'IBM Plex Mono', monospace; font-size:11px; color:rgba(var(--on-paper-rgb),0.85); flex-shrink:0; }
 .cd-track-preview-btn{
   width:28px; height:28px; border-radius:50%; border:1px solid rgba(var(--on-paper-rgb),0.25);
   background:transparent; color:var(--on-paper); font-size:11px; cursor:pointer; flex-shrink:0;
@@ -5677,24 +5677,21 @@ document.getElementById('songDbBtn').addEventListener('click', ()=>{
 });
 function testerHubItemsHtml(){
   const isCert = (typeof isCertifiedTester === 'function') && isCertifiedTester();
-  const isAdmin = (typeof isSamAdmin === 'function') && isSamAdmin();
-  const items = [];
-  if(isCert || isAdmin){
-    items.push(`<button type="button" class="tester-form-btn" data-tester-hub="updates">
+  const items = [
+    `<button type="button" class="tester-form-btn" data-tester-hub="updates">
       <span class="tester-form-title">📋 Updates Log</span>
       <span class="tester-form-desc">What's being worked on right now.</span>
-    </button>`);
-  }
-  if(isCert){
-    items.push(`<button type="button" class="tester-form-btn" data-tester-hub="cds">
+    </button>`,
+    `<button type="button" class="tester-form-btn" data-tester-hub="cds">
       <span class="tester-form-title">💿 My CDs</span>
       <span class="tester-form-desc">Your physical CD collection.</span>
-    </button>`);
-    items.push(`<button type="button" class="tester-form-btn" data-tester-hub="forms">
+    </button>`,
+    `<button type="button" class="tester-form-btn" data-tester-hub="forms">
       <span class="tester-form-title">🧪 Tester Forms</span>
       <span class="tester-form-desc">Bug reports, feedback &amp; suggestions, questions.</span>
-    </button>`);
-  } else {
+    </button>`
+  ];
+  if(!isCert){
     items.push(`<button type="button" class="tester-form-btn" data-tester-hub="become">
       <span class="tester-form-title">🪪 Become a Tester</span>
       <span class="tester-form-desc">Join the tester program.</span>

@@ -1214,24 +1214,21 @@ document.getElementById('songDbBtn').addEventListener('click', ()=>{
 });
 function testerHubItemsHtml(){
   const isCert = (typeof isCertifiedTester === 'function') && isCertifiedTester();
-  const isAdmin = (typeof isSamAdmin === 'function') && isSamAdmin();
-  const items = [];
-  if(isCert || isAdmin){
-    items.push(`<button type="button" class="tester-form-btn" data-tester-hub="updates">
+  const items = [
+    `<button type="button" class="tester-form-btn" data-tester-hub="updates">
       <span class="tester-form-title">📋 Updates Log</span>
       <span class="tester-form-desc">What's being worked on right now.</span>
-    </button>`);
-  }
-  if(isCert){
-    items.push(`<button type="button" class="tester-form-btn" data-tester-hub="cds">
+    </button>`,
+    `<button type="button" class="tester-form-btn" data-tester-hub="cds">
       <span class="tester-form-title">💿 My CDs</span>
       <span class="tester-form-desc">Your physical CD collection.</span>
-    </button>`);
-    items.push(`<button type="button" class="tester-form-btn" data-tester-hub="forms">
+    </button>`,
+    `<button type="button" class="tester-form-btn" data-tester-hub="forms">
       <span class="tester-form-title">🧪 Tester Forms</span>
       <span class="tester-form-desc">Bug reports, feedback &amp; suggestions, questions.</span>
-    </button>`);
-  } else {
+    </button>`
+  ];
+  if(!isCert){
     items.push(`<button type="button" class="tester-form-btn" data-tester-hub="become">
       <span class="tester-form-title">🪪 Become a Tester</span>
       <span class="tester-form-desc">Join the tester program.</span>
