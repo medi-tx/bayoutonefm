@@ -3053,6 +3053,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
       <button class="theme-btn" id="editStickersBtn">🎨 Stickers</button>
       <button class="theme-btn" id="themeBtn">🎨 Theme</button>
       <button class="theme-btn" id="songDbBtn">📀 Song Database</button>
+      <button class="theme-btn" id="testerBtn">🧪 Become a Tester</button>
       <button class="avatar-btn" id="myProfileBtn" title="My profile"><span id="myAvatarContent">?</span></button>
       <button class="logout-btn" id="logoutBtn">Log out</button>
     </div>
@@ -5356,6 +5357,10 @@ document.getElementById('songDbBtn').addEventListener('click', ()=>{
   } else {
     document.getElementById('songDbInfoOverlay').classList.add('open');
   }
+});
+document.getElementById('testerBtn').addEventListener('click', ()=>{
+  trackEvent('become_a_tester');
+  window.open('https://docs.google.com/forms/d/e/1FAIpQLSdfM-OtLC51PooQoj0yz5S9rHAlN7Jbvw1a97hNkGXrXqMITA/viewform?usp=publish-editor', '_blank', 'noopener');
 });
 document.getElementById('songDbInfoCloseBtn').addEventListener('click', ()=>{
   if(document.getElementById('songDbInfoDismiss').checked){

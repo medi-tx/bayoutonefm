@@ -1212,6 +1212,10 @@ document.getElementById('songDbBtn').addEventListener('click', ()=>{
     document.getElementById('songDbInfoOverlay').classList.add('open');
   }
 });
+document.getElementById('testerBtn').addEventListener('click', ()=>{
+  trackEvent('become_a_tester');
+  window.open('https://docs.google.com/forms/d/e/1FAIpQLSdfM-OtLC51PooQoj0yz5S9rHAlN7Jbvw1a97hNkGXrXqMITA/viewform?usp=publish-editor', '_blank', 'noopener');
+});
 document.getElementById('songDbInfoCloseBtn').addEventListener('click', ()=>{
   if(document.getElementById('songDbInfoDismiss').checked){
     localStorage.setItem('bayoutonefm-songdb-info-seen', '1');
