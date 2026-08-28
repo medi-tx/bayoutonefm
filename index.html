@@ -2871,6 +2871,15 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
     *{ animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; scroll-behavior:auto !important; }
   }
 
+  /* iOS safe-area (notch / Dynamic Island): keep top content visible below the cutout */
+  @media (max-width: 620px){
+    header{ padding-top: calc(env(safe-area-inset-top, 0px) + 12px); }
+    .email-confirm{
+      padding-top: calc(env(safe-area-inset-top, 0px) + 14px);
+      align-items:flex-start;
+    }
+  }
+
   /* EMAIL CONFIRM BANNER (uses app tokens so it matches) */
   .email-confirm{
     display:flex; align-items:center; gap:12px;
