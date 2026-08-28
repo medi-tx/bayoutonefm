@@ -1213,8 +1213,13 @@ document.getElementById('songDbBtn').addEventListener('click', ()=>{
   }
 });
 document.getElementById('testerBtn').addEventListener('click', ()=>{
-  trackEvent('become_a_tester');
-  window.open('https://docs.google.com/forms/d/e/1FAIpQLSdfM-OtLC51PooQoj0yz5S9rHAlN7Jbvw1a97hNkGXrXqMITA/viewform?usp=publish-editor', '_blank', 'noopener');
+  const certified = (typeof isCertifiedTester === 'function') && isCertifiedTester();
+  trackEvent(certified ? 'open_tester_form' : 'become_a_tester');
+  const fallback = 'https://docs.google.com/forms/d/e/1FAIpQLSdfM-OtLC51PooQoj0yz5S9rHAlN7Jbvw1a97hNkGXrXqMITA/viewform?usp=publish-editor';
+  const url = certified
+    ? ((typeof CERTIFIED_TESTER_FORM_URL === 'string' && CERTIFIED_TESTER_FORM_URL) || fallback)
+    : ((typeof TESTER_FORM_URL === 'string' && TESTER_FORM_URL) || fallback);
+  window.open(url, '_blank', 'noopener');
 });
 document.getElementById('songDbInfoCloseBtn').addEventListener('click', ()=>{
   if(document.getElementById('songDbInfoDismiss').checked){

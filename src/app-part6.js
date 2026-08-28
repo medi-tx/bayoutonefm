@@ -766,7 +766,7 @@ async function fetchMyProfile(userId){
   for(let attempt = 0; attempt < 3; attempt++){
     const { data, error } = await sb
       .from('profiles')
-      .select('user_id, username, bio, photo, theme, custom_themes')
+      .select('user_id, username, bio, photo, theme, custom_themes, certified_tester')
       .eq('user_id', userId)
       .maybeSingle();
     if(error){
@@ -835,6 +835,17 @@ function showLoginBanner(){
 function isSamAdmin(){
   return !!(myProfile && myProfile.username === 'samannleblanc');
 }
+const TESTER_FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSdfM-OtLC51PooQoj0yz5S9rHAlN7Jbvw1a97hNkGXrXqMITA/viewform?usp=publish-editor';
+// Certified testers' form link — replace with the real one when provided.
+const CERTIFIED_TESTER_FORM_URL = '';
+function isCertifiedTester(){
+  return !!(myProfile && myProfile.certified_tester === true);
+}
+function syncTesterButton(){
+  const btn = document.getElementById('testerBtn');
+  if(!btn) return;
+  btn.textContent = isCertifiedTester() ? 'Tester Form' : 'Become a Tester';
+}
 async function autoFriendSam(){
   try{
     if(!sb || !currentUserId) return;
@@ -897,6 +908,7 @@ async function loadAppForUser(user){
   }
   renderThemePresets();
   if(typeof syncThemeEditorVisibility === 'function') syncThemeEditorVisibility();
+  if(typeof syncTesterButton === 'function') syncTesterButton();
   await ensureUserRow(user.id);
   const remote = await fetchUserData(user.id);
   cloudLoadFailed = remote == null;
