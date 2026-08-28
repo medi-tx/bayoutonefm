@@ -467,9 +467,15 @@ function setSyncStatus(state){
   else { el.textContent = ''; el.className = 'sync-status'; }
 }
 
+let cloudLoadFailed = false;
+
 async function doSync(attempt, startRevision){
   if(!currentUserId) return;
   if(syncInFlight) return; // already uploading; post-success check will re-sync if needed
+  if(cloudLoadFailed){
+    console.warn('Cloud sync skipped: previous load from Supabase failed. Nothing was overwritten. Reload the page to reconnect before saving.');
+    return;
+  }
   syncInFlight = true;
   setSyncStatus('syncing');
   try{
@@ -664,6 +670,8 @@ async function loadAppForUser(user){
   renderThemePresets();
   await ensureUserRow(user.id);
   const remote = await fetchUserData(user.id);
+  cloudLoadFailed = remote == null;
+  if(cloudLoadFailed) console.error('Cloud load failed — cataloguex shown empty for safety. Your data has NOT been deleted; it is still safe in Supabase.');
   songs = (remote && remote.songs) || [];
   if(examplesRemoved()){
     const before = songs.length;
