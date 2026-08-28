@@ -435,7 +435,7 @@ function syncToSongDbBatch(songsList, userId){
 
 function backfillSongDb(){
   if(!sb || !currentUserId) return;
-  if(localStorage.getItem('bayoutonefm-songdb-backfill-' + currentUserId)) return;
+  if(localStorage.getItem('bayoutonefm-songdb-backfill-v2-' + currentUserId)) return;
   const candidates = (typeof songs !== 'undefined' ? songs : [])
     .filter(s => s && s.title && s.artists && s.artists[0]);
   if(!candidates.length) return;
@@ -463,7 +463,7 @@ function backfillSongDb(){
     let i = 0;
     (function next(){
       if(i >= missing.length){
-        localStorage.setItem('bayoutonefm-songdb-backfill-' + currentUserId, '1');
+        localStorage.setItem('bayoutonefm-songdb-backfill-v2-' + currentUserId, '1');
         console.log('[backfill] pushed', missing.length, 'existing songs into the song database');
         return;
       }
@@ -477,7 +477,7 @@ function backfillSongDb(){
 
 function dailySongDatabaseSync(){
   if(!sb || !currentUserId) return;
-  const KEY = 'bayoutonefm-songdb-daily-' + currentUserId;
+  const KEY = 'bayoutonefm-songdb-daily-v2-' + currentUserId;
   let last = 0;
   try{ last = Number(localStorage.getItem(KEY) || 0); }catch(e){}
   if(last && (Date.now() - last) < 86400000) return; // once per day
@@ -1169,7 +1169,7 @@ async function deezerArtistTopTracks(artistId, limit){
 }
 function pullTopArtistsDaily(){
   if(!sb || !currentUserId) return;
-  const KEY = 'bayoutonefm-topartists-daily-' + currentUserId;
+  const KEY = 'bayoutonefm-topartists-daily-v2-' + currentUserId;
   let last = 0;
   try{ last = Number(localStorage.getItem(KEY) || 0); }catch(e){}
   if(last && (Date.now() - last) < 86400000) return; // once per day
