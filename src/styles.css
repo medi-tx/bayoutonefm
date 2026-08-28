@@ -1858,8 +1858,8 @@
   /* UPDATES LOG (testers read it, samannleblanc posts) */
   .updates-log-modal{ max-width:520px; }
   .updates-log-sub{ font-size:12px; line-height:1.5; color:rgba(var(--on-paper-rgb),0.78); margin:-8px 0 14px; }
-  .updates-log-legend-broken{ color:var(--rose); font-weight:700; }
-  .updates-log-legend-fixing{ color:var(--gold); font-weight:700; }
+  .updates-log-legend-broken{ color:#ff5a5a; font-weight:700; }
+  .updates-log-legend-fixing{ color:#ff9f43; font-weight:700; }
   .updates-log-legend-working{ color:var(--teal); font-weight:700; }
   .updates-log-composer{
     border:1px solid rgba(var(--on-paper-rgb),0.18);
@@ -1890,8 +1890,8 @@
   }
   .updates-log-status.clickable{ cursor:pointer; }
   .updates-log-status.clickable:hover{ transform:scale(1.1); }
-  .updates-log-status.broken{ border-color:var(--rose); color:var(--rose); }
-  .updates-log-status.fixing{ border-color:var(--gold); color:var(--gold); }
+  .updates-log-status.broken{ border-color:#ff5a5a; color:#ff5a5a; }
+  .updates-log-status.fixing{ border-color:#ff9f43; color:#ff9f43; }
   .updates-log-status.working{ border-color:var(--teal); color:var(--teal); }
   .updates-log-main{ flex:1; min-width:0; }
   .updates-log-title{ font-weight:700; font-size:14px; color:var(--on-paper); overflow-wrap:anywhere; }
