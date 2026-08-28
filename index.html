@@ -1830,6 +1830,11 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
   }
   .theme-preset-x:hover{ color:var(--rose); }
 
+  /* Custom-color editor: admin (samannleblanc) only */
+  body:not(.is-theme-admin) #themeCustomColorsLabel,
+  body:not(.is-theme-admin) #themeColorGrid,
+  body:not(.is-theme-admin) #themeSaveRow{ display:none !important; }
+
   /* AVATAR / PROFILE */
   .avatar-btn{
     width:38px; height:38px;
@@ -4293,6 +4298,11 @@ function currentThemeFromInputs(){
 function renderThemeColorGrid(){
   const grid = document.getElementById('themeColorGrid');
   if(!grid) return;
+  if(!((typeof isSamAdmin === 'function') && isSamAdmin())){
+    grid.innerHTML = '';
+    if(typeof syncThemeEditorVisibility === 'function') syncThemeEditorVisibility();
+    return;
+  }
   grid.innerHTML = '';
   const cur = loadTheme();
   Object.keys(THEME_COLOR_LABELS).forEach(key=>{
@@ -4353,6 +4363,7 @@ function saveCustomThemes(list){
 }
 function syncThemeEditorVisibility(){
   const isAdmin = (typeof isSamAdmin === 'function') && isSamAdmin();
+  document.body.classList.toggle('is-theme-admin', isAdmin);
   const grid = document.getElementById('themeColorGrid');
   const label = document.getElementById('themeCustomColorsLabel');
   const row = document.getElementById('themeSaveRow');

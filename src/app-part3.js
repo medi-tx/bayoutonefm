@@ -153,6 +153,11 @@ function currentThemeFromInputs(){
 function renderThemeColorGrid(){
   const grid = document.getElementById('themeColorGrid');
   if(!grid) return;
+  if(!((typeof isSamAdmin === 'function') && isSamAdmin())){
+    grid.innerHTML = '';
+    if(typeof syncThemeEditorVisibility === 'function') syncThemeEditorVisibility();
+    return;
+  }
   grid.innerHTML = '';
   const cur = loadTheme();
   Object.keys(THEME_COLOR_LABELS).forEach(key=>{
@@ -213,6 +218,7 @@ function saveCustomThemes(list){
 }
 function syncThemeEditorVisibility(){
   const isAdmin = (typeof isSamAdmin === 'function') && isSamAdmin();
+  document.body.classList.toggle('is-theme-admin', isAdmin);
   const grid = document.getElementById('themeColorGrid');
   const label = document.getElementById('themeCustomColorsLabel');
   const row = document.getElementById('themeSaveRow');

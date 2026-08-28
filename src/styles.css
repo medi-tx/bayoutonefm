@@ -1780,6 +1780,11 @@
   }
   .theme-preset-x:hover{ color:var(--rose); }
 
+  /* Custom-color editor: admin (samannleblanc) only */
+  body:not(.is-theme-admin) #themeCustomColorsLabel,
+  body:not(.is-theme-admin) #themeColorGrid,
+  body:not(.is-theme-admin) #themeSaveRow{ display:none !important; }
+
   /* AVATAR / PROFILE */
   .avatar-btn{
     width:38px; height:38px;
