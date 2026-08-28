@@ -1227,13 +1227,16 @@ document.getElementById('discordBtn').addEventListener('click', ()=>{
   trackEvent('open_discord');
   window.open('https://discord.gg/WYj8D8NUgV', '_blank', 'noopener');
 });
+function showBackupTip(){
+  const tip = document.getElementById('backupTip');
+  if(tip) tip.classList.add('show');
+}
 (function initBackupTip(){
   const tip = document.getElementById('backupTip');
   if(!tip) return;
-  if(localStorage.getItem('bayoutonefm-backup-tip-seen')){
-    return;
+  if(!localStorage.getItem('bayoutonefm-backup-tip-seen')){
+    showBackupTip();
   }
-  tip.classList.add('show');
   document.getElementById('backupTipX').addEventListener('click', ()=>{
     localStorage.setItem('bayoutonefm-backup-tip-seen', '1');
     tip.classList.remove('show');
@@ -3051,6 +3054,7 @@ function finishSave(data){
     }
   } else {
     songs.unshift({ id: uid(), pinned:false, createdAt: Date.now(), ...data });
+    showBackupTip();
   }
   save();
   if(editingId){
@@ -3300,6 +3304,7 @@ function handleMultiSave(){
   const doMultiSave = ()=>{
     trackEvent('save_album', { count: newSongs.length });
     songs = [...newSongs, ...songs];
+    showBackupTip();
     save();
     upsertGlobalSongBatch(newSongs, currentUserId);
     syncToSongDbBatch(newSongs, currentUserId);
@@ -3976,6 +3981,7 @@ async function handleSingleUrl(url){
             const newSongs = allImported.filter(s=>!dupeKeys.has(songKey(s)));
             dupes.forEach(d=>{ const ex=songs.find(s=>songKey(s)===songKey(d)); if(ex && !ex.coverArt && d.coverArt) ex.coverArt=d.coverArt; });
             songs = [...newSongs, ...songs];
+            showBackupTip();
             save();
             upsertGlobalSongBatch(newSongs, currentUserId);
             syncToSongDbBatch(newSongs, currentUserId);
@@ -4245,6 +4251,7 @@ function importAlbumBuildTracks(){
   const newSongs = allImported.filter(s=>!dupeKeys.has(songKey(s)));
   dupes.forEach(d=>{ const ex=songs.find(s=>songKey(s)===songKey(d)); if(ex && !ex.coverArt && d.coverArt) ex.coverArt=d.coverArt; });
   songs = [...newSongs, ...songs];
+  showBackupTip();
   save();
   upsertGlobalSongBatch(newSongs, currentUserId);
   syncToSongDbBatch(newSongs, currentUserId);
@@ -4872,6 +4879,7 @@ document.getElementById('spotifyImportConfirmBtn').addEventListener('click', ()=
     });
     const doImportSave = ()=>{
       songs = [...newSongs, ...songs];
+      showBackupTip();
       save();
     upsertGlobalSongBatch(newSongs, currentUserId);
     syncToSongDbBatch(newSongs, currentUserId);
