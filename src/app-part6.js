@@ -472,6 +472,110 @@ function backfillSongDb(){
   fetchChunk();
 }
 
+function dailySongDatabaseSync(){
+  if(!sb || !currentUserId) return;
+  const KEY = 'bayoutonefm-songdb-daily-' + currentUserId;
+  let last = 0;
+  try{ last = Number(localStorage.getItem(KEY) || 0); }catch(e){}
+  if(last && (Date.now() - last) < 86400000) return; // once per day
+  const done = ()=>{
+    try{ localStorage.setItem(KEY, String(Date.now())); }catch(e){}
+  };
+  const fetchAll = () => new Promise((resolve, reject)=>{
+    const rows = [];
+    const PAGE = 500;
+    let offset = 0;
+    const fields = 'title, artist, album, year, genres, cover_art, explicit, producer, songwriters, bpm, key, duration, record_label, track_number, streaming_links, release_date, artist_website';
+    (function nextPage(){
+      sb.from('song_database').select(fields).order('created_at', { ascending: true }).range(offset, offset + PAGE - 1)
+        .then(({ data, error })=>{
+          if(error){ reject(error); return; }
+          if(!data || !data.length){ resolve(rows); return; }
+          rows.push(...data);
+          if(data.length < PAGE){ resolve(rows); return; }
+          offset += PAGE;
+          nextPage();
+        })
+        .catch(reject);
+    })();
+  });
+  const existingKeys = (titles) => new Promise((resolve, reject)=>{
+    const set = new Set();
+    const CHUNK = 500;
+    let chunk = 0;
+    (function nextChunk(){
+      const slice = titles.slice(chunk * CHUNK, (chunk + 1) * CHUNK);
+      if(!slice.length){ resolve(set); return; }
+      chunk++;
+      sb.from('global_songs').select('title, artist').in('title', slice)
+        .then(({ data, error })=>{
+          if(error){ reject(error); return; }
+          (data || []).forEach(r => set.add(((r.title || '').trim().toLowerCase() + '|||' + (r.artist || '').trim().toLowerCase())));
+          nextChunk();
+        })
+        .catch(reject);
+    })();
+  });
+  const mapRow = (r) => {
+    const links = r.streaming_links || {};
+    return {
+      title: ((r.title || '') + '').trim(),
+      artists: [((r.artist || '') + '').trim()],
+      album: r.album || '',
+      year: r.year || '',
+      genres: Array.isArray(r.genres) ? r.genres : [],
+      coverArt: r.cover_art || '',
+      explicit: !!r.explicit,
+      producer: r.producer || '',
+      songwriters: r.songwriters || '',
+      bpm: r.bpm ? (Number(r.bpm) || null) : null,
+      musicKey: r.key || '',
+      duration: r.duration || '',
+      recordLabel: r.record_label || '',
+      spotifyUrl: links.spotify || '',
+      appleMusicUrl: links.apple || '',
+      youtubeMusicUrl: links.youtube || '',
+      tidalUrl: links.tidal || '',
+      releaseDate: r.release_date || '',
+      artistWebsite: r.artist_website || '',
+      trackNumber: r.track_number
+    };
+  };
+  const upsertMissing = (missing) => new Promise((resolve)=>{
+    const BATCH = 4;
+    const DELAY = 600;
+    let i = 0;
+    (function next(){
+      if(i >= missing.length){ resolve(); return; }
+      missing.slice(i, i + BATCH).forEach(s => upsertGlobalSong(s, null));
+      i += BATCH;
+      setTimeout(next, DELAY);
+    })();
+  });
+  fetchAll()
+    .then(rows => {
+      const want = new Map();
+      rows.forEach(r => {
+        const t = ((r.title || '') + '').trim();
+        const a = ((r.artist || '') + '').trim();
+        if(!t || !a) return;
+        const k = t.toLowerCase() + '|||' + a.toLowerCase();
+        if(!want.has(k)) want.set(k, mapRow(r));
+      });
+      if(!want.size){ done(); return; }
+      const titles = [...new Set(rows.map(r => ((r.title || '') + '').trim()).filter(Boolean))];
+      return existingKeys(titles).then(existing => {
+        const missing = [...want.entries()].filter(([k]) => !existing.has(k)).map(([, s]) => s);
+        if(!missing.length){ done(); return; }
+        return upsertMissing(missing).then(()=>{
+          done();
+          console.log('[dailySongSync] pulled', missing.length, 'songs from the song database into Discover/search');
+        });
+      });
+    })
+    .catch(e => console.error('[dailySongSync] failed:', e));
+}
+
 function enrichExplicitStatus(){
   const missingExplicit = songs.filter(s => typeof s.explicit === 'undefined' && s.title && s.artists && s.artists[0]);
   if(!missingExplicit.length) return;
@@ -909,6 +1013,7 @@ async function loadAppForUser(user){
   render();
   setTimeout(()=> enrichAllMissingArtwork(), 10000);
   setTimeout(()=> backfillSongDb(), 1500);
+  setTimeout(()=> dailySongDatabaseSync(), 4000);
 
   const accepted = await ensureTermsAccepted(user);
   if(!accepted) return; // user chose to log out instead of accepting
