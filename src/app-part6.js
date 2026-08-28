@@ -691,10 +691,20 @@ async function loadAppForUser(user){
   localStorage.setItem(STORAGE_KEY, JSON.stringify(songs));
   prefetchPreviews(songs);
   people = (remote && remote.people) || [];
-  if(examplesRemoved()){
+  {
     const before = people.length;
     people = people.filter(p=>!String(p.id||'').startsWith('ex-'));
     if(people.length !== before) savePeople();
+  }
+  {
+    let stripped = false;
+    songs.forEach(s=>{
+      if(s.remindsOf && s.remindsOf.some(id=>String(id||'').startsWith('ex-'))){
+        s.remindsOf = s.remindsOf.filter(id=>!String(id||'').startsWith('ex-'));
+        stripped = true;
+      }
+    });
+    if(stripped) save();
   }
   wishlist = (remote && remote.wishlist) || [];
 

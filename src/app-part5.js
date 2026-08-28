@@ -1829,16 +1829,9 @@ function setExamplesRemoved(v){
   else { localStorage.removeItem(examplesRemovedKey()); }
 }
 
-// seed with a couple of example people on first run, so the "reminds me of" feature has real names to show
+// no example people are seeded anymore — "reminds me of" stays empty until real people are added
 function seedPeopleIfEmpty(){
-  if(examplesRemoved()) return;
-  if(people.length === 0){
-    people = [
-      { id:"ex-alli", name:"Alli", photo:null },
-      { id:"ex-jamie", name:"CW Jamie", photo:null }
-    ];
-    savePeople();
-  }
+  return;
 }
 
 // seed with a couple of example entries on first run

@@ -11214,16 +11214,9 @@ function setExamplesRemoved(v){
   else { localStorage.removeItem(examplesRemovedKey()); }
 }
 
-// seed with a couple of example people on first run, so the "reminds me of" feature has real names to show
+// no example people are seeded anymore — "reminds me of" stays empty until real people are added
 function seedPeopleIfEmpty(){
-  if(examplesRemoved()) return;
-  if(people.length === 0){
-    people = [
-      { id:"ex-alli", name:"Alli", photo:null },
-      { id:"ex-jamie", name:"CW Jamie", photo:null }
-    ];
-    savePeople();
-  }
+  return;
 }
 
 // seed with a couple of example entries on first run
@@ -11928,10 +11921,20 @@ async function loadAppForUser(user){
   localStorage.setItem(STORAGE_KEY, JSON.stringify(songs));
   prefetchPreviews(songs);
   people = (remote && remote.people) || [];
-  if(examplesRemoved()){
+  {
     const before = people.length;
     people = people.filter(p=>!String(p.id||'').startsWith('ex-'));
     if(people.length !== before) savePeople();
+  }
+  {
+    let stripped = false;
+    songs.forEach(s=>{
+      if(s.remindsOf && s.remindsOf.some(id=>String(id||'').startsWith('ex-'))){
+        s.remindsOf = s.remindsOf.filter(id=>!String(id||'').startsWith('ex-'));
+        stripped = true;
+      }
+    });
+    if(stripped) save();
   }
   wishlist = (remote && remote.wishlist) || [];
 
