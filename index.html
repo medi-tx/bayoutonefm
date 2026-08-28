@@ -2381,16 +2381,27 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
     background:rgba(var(--on-paper-rgb),0.08);
     text-decoration:none; color:inherit;
   }
-  .msg-song-share{ display:flex; gap:6px; margin-top:6px; position:relative; flex-wrap:wrap; }
+  .msg-song-share{ display:flex; gap:6px; margin-top:6px; position:relative; flex-wrap:wrap; align-items:flex-start; }
   .msg-song-share .explicit-badge{ position:absolute; top:4px; right:4px; }
-  .msg-song-cell{ position:relative; display:block; flex:1 1 120px; max-width:180px; }
-  .msg-song-cell img{ width:100%; border-radius:10px; display:block; }
-  .msg-song-cell .msg-song-cell-label{
+  .msg-song-share .preview-btn{ margin-left:auto; flex:0 0 auto; align-self:center; }
+  .msg-flip-card{ position:relative; display:block; flex:1 1 150px; max-width:220px; cursor:pointer; }
+  .msg-flip-card.msg-flip-static{ cursor:default; }
+  .msg-flip-inner{
+    position:relative; width:100%; aspect-ratio:4 / 5;
+    transform-style:preserve-3d; transition:transform 0.5s ease;
+  }
+  .msg-flip-card.flipped .msg-flip-inner{ transform:rotateY(180deg); }
+  .msg-flip-face{
+    position:absolute; inset:0; border-radius:10px; overflow:hidden;
+    backface-visibility:hidden; -webkit-backface-visibility:hidden;
+  }
+  .msg-flip-face img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .msg-flip-back{ transform:rotateY(180deg); }
+  .msg-flip-hint{
     position:absolute; left:6px; bottom:6px; padding:2px 7px;
     font-family:'IBM Plex Mono', monospace; font-size:9px; font-weight:700;
-    background:rgba(0,0,0,0.55); color:#fff; border-radius:4px;
+    background:rgba(0,0,0,0.55); color:#fff; border-radius:4px; pointer-events:none;
   }
-  .msg-song-cell a{ text-decoration:none; color:inherit; }
   .msg-song-save{
     border:1px solid rgba(var(--on-ink-rgb),0.4); border-radius:8px;
     padding:5px 9px; cursor:pointer; font-family:'IBM Plex Mono', monospace; font-size:10px; font-weight:600;
@@ -2408,7 +2419,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
   .msg-song-meta{ min-width:0; }
   .msg-song-title{ font-size:12px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .msg-song-artist{ font-size:11px; opacity:0.85; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .msg-song-album{ font-size:10px; opacity:0.75; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .msg-song-album{ font-size:10px; opacity:0.75; word-break:break-word; overflow-wrap:anywhere; line-height:1.35; white-space:normal; }
   .msg-composer{ display:flex; gap:8px; align-items:flex-end; padding:14px 16px; border-top:1px solid var(--line-on-paper); }
   .msg-error{ color:#d6455f; font-size:12px; padding:6px 16px 0; }
   .msg-composer textarea{
@@ -13907,16 +13918,24 @@ document.getElementById('passwordSaveBtn').addEventListener('click', async ()=>{
   }
   function msgSongCardHtml(song, msgId){
     if(song.cardImage){
-      const back = song.cardBackImage
-        ? `<img loading="lazy" decoding="async" class="msg-song-card-face" src="${escapeAttr(song.cardBackImage)}" alt="Card back">`
+      const backFace = song.cardBackImage
+        ? `<div class="msg-flip-face msg-flip-back"><img loading="lazy" decoding="async" src="${escapeAttr(song.cardBackImage)}" alt="Card back"></div>`
         : '';
+      const flipHint = song.cardBackImage ? '<span class="msg-flip-hint">Tap to flip</span>' : '';
+      const cardEl = song.cardBackImage
+        ? `<div class="msg-flip-card" data-flip-msg-card="${escapeAttr(msgId)}" role="button" tabindex="0" title="Click to flip the card" aria-label="Cataloguex song card — tap to flip">
+          <div class="msg-flip-inner">
+            <div class="msg-flip-face msg-flip-front"><img loading="lazy" decoding="async" src="${escapeAttr(song.cardImage)}" alt="${escapeAttr((song.title||'Song')+' card')}">${flipHint}</div>
+            ${backFace}
+          </div>
+        </div>`
+        : `<div class="msg-flip-card msg-flip-static">
+          <div class="msg-flip-face msg-flip-front"><img loading="lazy" decoding="async" src="${escapeAttr(song.cardImage)}" alt="${escapeAttr((song.title||'Song')+' card')}"></div>
+        </div>`;
       return `<div class="msg-song-share">
-        <a class="msg-song-cell" href="${escapeAttr(song.url || '#')}" target="_blank" rel="noopener">
-          <img loading="lazy" decoding="async" src="${escapeAttr(song.cardImage)}" alt="${escapeAttr((song.title||'Song')+' card')}">
-          <span class="msg-song-cell-label">Front</span>
-        </a>
-        ${back ? `<div class="msg-song-cell"><img loading="lazy" decoding="async" src="${escapeAttr(song.cardBackImage)}" alt="Card back"><span class="msg-song-cell-label">Back</span></div>` : ''}
+        ${cardEl}
         ${song.explicit ? '<span class="explicit-badge" title="Explicit content">E</span>' : ''}
+        <span class="preview-btn" data-preview="msg:${escapeAttr(msgId)}" title="Play a 30-second preview" aria-label="Play 30-second preview">▶︎</span>
         <button type="button" class="msg-song-save" data-save-msg-song="${escapeAttr(msgId)}" title="Add this song to your cataloguex">＋ Add to cataloguex</button>
       </div>`;
     }
@@ -13952,6 +13971,13 @@ document.getElementById('passwordSaveBtn').addEventListener('click', async ()=>{
     thread.scrollTop = thread.scrollHeight;
   }
   document.addEventListener('click', function(e){
+    const flipCard = e.target.closest('[data-flip-msg-card]');
+    if(flipCard){
+      e.preventDefault();
+      e.stopPropagation();
+      flipCard.classList.toggle('flipped');
+      return;
+    }
     const btn = e.target.closest('[data-save-msg-song]');
     if(!btn) return;
     e.preventDefault();

@@ -2,6 +2,7 @@
 let cdList = [];
 let cdScanActive = false;
 let cdScanDetector = null;
+let cdZxReader = null;
 let cdScanStream = null;
 let cdScanRaf = 0;
 let cdAudio = null;
@@ -260,25 +261,83 @@ function startCDScan(){
     video.srcObject = stream;
     return video.play();
   }).then(()=>{
-    if('BarcodeDetector' in window){
+    if(window['BarcodeDetector']){
       try{
         cdScanDetector = new BarcodeDetector({ formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39', 'itf'] });
       }catch(e){ cdScanDetector = null; }
-    } else {
+      if(cdScanDetector){
+        cdScanActive = true;
+        hint.textContent = 'Point the camera at the barcode on the back of the CD case…';
+        cdScanLoop(document.getElementById('cdScanVideo'));
+        return;
+      }
       cdScanDetector = null;
     }
-    if(cdScanDetector){
-      hint.textContent = 'Point the camera at the barcode on the back of the CD case…';
-      cdScanActive = true;
-      cdScanLoop(document.getElementById('cdScanVideo'));
-    } else {
-      hint.textContent = 'Camera is on, but this browser can\u2019t auto-read barcodes — find the number under the barcode and type it above.';
-      setTimeout(()=>{ viewport.style.display = 'none'; }, 6000);
-    }
+    cdLoadZXingFallback();
   }).catch(err=>{
     console.warn('Camera failed:', err);
     hint.textContent = 'Camera unavailable — type the barcode number above instead.';
   });
+}
+function cdLoadZXingFallback(){
+  const hint = document.getElementById('cdScanHint');
+  hint.textContent = 'Loading scanner…';
+  if(window['ZXing']){ cdStartZXingScan(); return; }
+  const s = document.createElement('script');
+  s.src = 'https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js';
+  s.async = true;
+  const done = ()=>{ s.onload = s.onerror = null; };
+  s.onload = ()=>{ done(); cdStartZXingScan(); };
+  s.onerror = ()=>{ done(); hint.textContent = 'Camera is on, but this browser can\u2019t auto-read barcodes — find the number under the barcode and type it above.'; };
+  document.head.appendChild(s);
+}
+function cdStartZXingScan(){
+  if(!cdScanStream) return;
+  const hint = document.getElementById('cdScanHint');
+  if(!window['ZXing'] || !window['ZXing'].BrowserMultiFormatReader){
+    hint.textContent = 'Camera is on, but this browser can\u2019t auto-read barcodes — find the number under the barcode and type it above.';
+    return;
+  }
+  hint.textContent = 'Point the camera at the barcode on the back of the CD case…';
+  cdScanActive = true;
+  try{
+    cdZxReader = new window.ZXing.BrowserMultiFormatReader();
+    const handles = { tried: 0 };
+    const tick = ()=>{
+      if(!cdScanActive || !cdZxReader) return;
+      cdZxReader.decodeOnceFromStream(cdScanStream, document.getElementById('cdScanVideo')).then(result=>{
+        if(!cdScanActive) return;
+        const val = String(result && (result.getText ? result.getText() : result.text) || '').replace(/[^0-9]/g, '');
+        if(val.length >= 8 && val.length <= 14){
+          stopCDScan();
+          document.getElementById('cdBarcodeInput').value = val;
+          lookupCD(val);
+          return;
+        }
+        handles.tried++;
+        if(handles.tried > 20){
+          stopCDScan();
+          hint.textContent = 'Couldn\u2019t read that barcode — type the number under it above instead.';
+          return;
+        }
+        setTimeout(tick, 250);
+      }).catch(()=>{
+        if(!cdScanActive) return;
+        handles.tried++;
+        if(handles.tried > 20){
+          stopCDScan();
+          hint.textContent = 'Couldn\u2019t read that barcode — type the number under it above instead.';
+          return;
+        }
+        setTimeout(tick, 250);
+      });
+    };
+    tick();
+  }catch(e){
+    cdScanActive = false;
+    console.warn('ZXing scan failed:', e);
+    hint.textContent = 'Camera is on, but this browser can\u2019t auto-read barcodes — find the number under the barcode and type it above.';
+  }
 }
 async function cdScanLoop(video){
   if(!cdScanActive) return;
@@ -299,6 +358,7 @@ async function cdScanLoop(video){
 function stopCDScan(){
   cdScanActive = false;
   if(cdScanRaf){ cancelAnimationFrame(cdScanRaf); cdScanRaf = 0; }
+  if(cdZxReader){ cdZxReader.reset(); cdZxReader = null; }
   if(cdScanStream){
     cdScanStream.getTracks().forEach(t=>t.stop());
     cdScanStream = null;

@@ -174,16 +174,24 @@
   }
   function msgSongCardHtml(song, msgId){
     if(song.cardImage){
-      const back = song.cardBackImage
-        ? `<img loading="lazy" decoding="async" class="msg-song-card-face" src="${escapeAttr(song.cardBackImage)}" alt="Card back">`
+      const backFace = song.cardBackImage
+        ? `<div class="msg-flip-face msg-flip-back"><img loading="lazy" decoding="async" src="${escapeAttr(song.cardBackImage)}" alt="Card back"></div>`
         : '';
+      const flipHint = song.cardBackImage ? '<span class="msg-flip-hint">Tap to flip</span>' : '';
+      const cardEl = song.cardBackImage
+        ? `<div class="msg-flip-card" data-flip-msg-card="${escapeAttr(msgId)}" role="button" tabindex="0" title="Click to flip the card" aria-label="Cataloguex song card — tap to flip">
+          <div class="msg-flip-inner">
+            <div class="msg-flip-face msg-flip-front"><img loading="lazy" decoding="async" src="${escapeAttr(song.cardImage)}" alt="${escapeAttr((song.title||'Song')+' card')}">${flipHint}</div>
+            ${backFace}
+          </div>
+        </div>`
+        : `<div class="msg-flip-card msg-flip-static">
+          <div class="msg-flip-face msg-flip-front"><img loading="lazy" decoding="async" src="${escapeAttr(song.cardImage)}" alt="${escapeAttr((song.title||'Song')+' card')}"></div>
+        </div>`;
       return `<div class="msg-song-share">
-        <a class="msg-song-cell" href="${escapeAttr(song.url || '#')}" target="_blank" rel="noopener">
-          <img loading="lazy" decoding="async" src="${escapeAttr(song.cardImage)}" alt="${escapeAttr((song.title||'Song')+' card')}">
-          <span class="msg-song-cell-label">Front</span>
-        </a>
-        ${back ? `<div class="msg-song-cell"><img loading="lazy" decoding="async" src="${escapeAttr(song.cardBackImage)}" alt="Card back"><span class="msg-song-cell-label">Back</span></div>` : ''}
+        ${cardEl}
         ${song.explicit ? '<span class="explicit-badge" title="Explicit content">E</span>' : ''}
+        <span class="preview-btn" data-preview="msg:${escapeAttr(msgId)}" title="Play a 30-second preview" aria-label="Play 30-second preview">▶︎</span>
         <button type="button" class="msg-song-save" data-save-msg-song="${escapeAttr(msgId)}" title="Add this song to your cataloguex">＋ Add to cataloguex</button>
       </div>`;
     }
@@ -219,6 +227,13 @@
     thread.scrollTop = thread.scrollHeight;
   }
   document.addEventListener('click', function(e){
+    const flipCard = e.target.closest('[data-flip-msg-card]');
+    if(flipCard){
+      e.preventDefault();
+      e.stopPropagation();
+      flipCard.classList.toggle('flipped');
+      return;
+    }
     const btn = e.target.closest('[data-save-msg-song]');
     if(!btn) return;
     e.preventDefault();
