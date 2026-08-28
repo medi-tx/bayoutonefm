@@ -1905,6 +1905,49 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
   .tester-form-title{ font-family:'Fraunces', serif; font-style:italic; font-weight:700; font-size:16px; color:var(--on-paper); }
   .tester-form-desc{ font-size:12px; line-height:1.45; color:rgba(var(--on-paper-rgb),0.8); }
 
+  /* UPDATES LOG (testers read it, samannleblanc posts) */
+  .updates-log-modal{ max-width:520px; }
+  .updates-log-sub{ font-size:12px; line-height:1.5; color:rgba(var(--on-paper-rgb),0.78); margin:-8px 0 14px; }
+  .updates-log-legend-broken{ color:var(--rose); font-weight:700; }
+  .updates-log-legend-fixing{ color:var(--gold); font-weight:700; }
+  .updates-log-legend-working{ color:var(--teal); font-weight:700; }
+  .updates-log-composer{
+    border:1px solid rgba(var(--on-paper-rgb),0.18);
+    border-radius:12px; padding:12px; margin-bottom:14px;
+    background:rgba(var(--on-paper-rgb),0.05);
+    display:flex; flex-direction:column; gap:9px;
+  }
+  .updates-log-composer input, .updates-log-composer textarea{
+    font-family:inherit; font-size:13px; color:var(--on-paper);
+    border:1px solid rgba(var(--on-paper-rgb),0.4); border-radius:8px;
+    background:var(--field-bg); padding:9px 11px; resize:vertical;
+  }
+  .updates-log-composer input:focus, .updates-log-composer textarea:focus{ outline:none; border-color:var(--teal); }
+  .updates-log-composer-actions{ display:flex; justify-content:flex-end; }
+  .updates-log-list{ display:flex; flex-direction:column; gap:10px; max-height:55vh; overflow-y:auto; padding-right:2px; }
+  .updates-log-empty{ font-size:13px; line-height:1.5; color:rgba(var(--on-paper-rgb),0.75); padding:10px 0; }
+  .updates-log-entry{
+    display:flex; gap:12px; padding:12px;
+    border:1px solid rgba(var(--on-paper-rgb),0.15); border-radius:12px;
+    background:rgba(var(--on-paper-rgb),0.05);
+  }
+  .updates-log-status{
+    width:32px; height:32px; border-radius:50%; flex:0 0 auto;
+    border:2px solid; background:transparent;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'IBM Plex Mono', monospace; font-size:15px; font-weight:700;
+    line-height:1; padding:0; cursor:default;
+  }
+  .updates-log-status.clickable{ cursor:pointer; }
+  .updates-log-status.clickable:hover{ transform:scale(1.1); }
+  .updates-log-status.broken{ border-color:var(--rose); color:var(--rose); }
+  .updates-log-status.fixing{ border-color:var(--gold); color:var(--gold); }
+  .updates-log-status.working{ border-color:var(--teal); color:var(--teal); }
+  .updates-log-main{ flex:1; min-width:0; }
+  .updates-log-title{ font-weight:700; font-size:14px; color:var(--on-paper); overflow-wrap:anywhere; }
+  .updates-log-body{ font-size:12px; line-height:1.5; color:rgba(var(--on-paper-rgb),0.85); margin-top:3px; white-space:pre-wrap; overflow-wrap:anywhere; }
+  .updates-log-meta{ font-size:10px; color:rgba(var(--on-paper-rgb),0.5); margin-top:6px; }
+
   /* AVATAR / PROFILE */
   .avatar-btn{
     width:38px; height:38px;
@@ -3226,6 +3269,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
       <button class="theme-btn" id="songDbBtn">📀 Song Database</button>
       <button class="theme-btn" id="cdBtn" style="display:none;">💿 My CDs</button>
       <button class="theme-btn" id="testerBtn">🧪 Become a Tester</button>
+      <button class="theme-btn" id="updatesLogBtn" style="display:none;">📋 Updates Log</button>
       <button class="theme-btn" id="discordBtn">Discord</button>
       <button class="avatar-btn" id="myProfileBtn" title="My profile"><span id="myAvatarContent">?</span></button>
       <button class="logout-btn" id="logoutBtn">Log out</button>
@@ -3726,6 +3770,24 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
     <p class="share-note" id="shareNote">Tip: share it in a story, group chat, or wherever you swap music.</p>
     <div class="modal-actions">
       <button class="btn-cancel" id="shareCloseBtn">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="updatesLogOverlay">
+  <div class="modal updates-log-modal">
+    <h3>📋 Updates Log</h3>
+    <p class="updates-log-sub">What's being worked on right now — <span class="updates-log-legend-broken">✕ not working</span>, <span class="updates-log-legend-fixing">○ actively fixing</span>, <span class="updates-log-legend-working">✓ working</span>.</p>
+    <div class="updates-log-composer" id="updatesLogComposer" style="display:none;">
+      <input type="text" id="updatesLogTitle" placeholder="Title (e.g. Share card on mobile)" maxlength="140" autocomplete="off">
+      <textarea id="updatesLogBody" placeholder="What's the update?" rows="3"></textarea>
+      <div class="updates-log-composer-actions">
+        <button class="btn-save" id="updatesLogPostBtn">📝 Post entry</button>
+      </div>
+    </div>
+    <div class="updates-log-list" id="updatesLogList"><p class="updates-log-empty">Loading…</p></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="updatesLogCloseBtn">Close</button>
     </div>
   </div>
 </div>
@@ -12576,6 +12638,7 @@ async function loadAppForUser(user){
   if(typeof syncThemeEditorVisibility === 'function') syncThemeEditorVisibility();
   if(typeof syncTesterButton === 'function') syncTesterButton();
   if(typeof syncCDButton === 'function') syncCDButton();
+  if(typeof syncUpdatesLogButton === 'function') syncUpdatesLogButton();
   await ensureUserRow(user.id);
   const remote = await fetchUserData(user.id);
   cloudLoadFailed = remote == null;
@@ -13348,7 +13411,6 @@ sb.auth.onAuthStateChange((event, session)=>{
     unsubscribeNotifications();
     if(window.stopMsgRealtime) window.stopMsgRealtime();
     showAuthScreen();
-    return;
   }
   if(session && session.user){
     document.getElementById('auth-email').value = '';
@@ -13365,6 +13427,7 @@ sb.auth.onAuthStateChange((event, session)=>{
     applyTheme(DEFAULT_THEME);
     showSotdScheduleBtn();
     if(typeof syncCDButton === 'function') syncCDButton();
+    if(typeof syncUpdatesLogButton === 'function') syncUpdatesLogButton();
     unsubscribeNotifications();
     if(window.stopMsgRealtime) window.stopMsgRealtime();
     showAuthScreen();
@@ -13383,6 +13446,170 @@ sb.auth.getSession().then(({ data: { session } })=>{
     }
   }
 });
+
+/* ---- UPDATES LOG (testers read it, samannleblanc posts) ---- */
+(function(){
+  const LOG_SYMBOLS = { broken:'✕', fixing:'○', working:'✓' };
+  const LOG_NEXT = { broken:'fixing', fixing:'working', working:'broken' };
+  const LOG_STATES = ['broken','fixing','working'];
+  let updatesLogEntries = [];
+  let updatesLogRealtime = null;
+
+  function updatesLogOwner(){
+    return !!(myProfile && myProfile.username === 'samannleblanc');
+  }
+  function canSeeUpdatesLog(){
+    return updatesLogOwner()
+      || ((typeof isCertifiedTester === 'function') && isCertifiedTester());
+  }
+  window.syncUpdatesLogButton = function(){
+    const btn = document.getElementById('updatesLogBtn');
+    if(!btn) return;
+    btn.style.display = canSeeUpdatesLog() ? '' : 'none';
+  };
+
+  function updatesLogDate(iso){
+    try{ return new Date(iso).toLocaleString(undefined, { month:'short', day:'numeric', hour:'numeric', minute:'2-digit' }); }
+    catch(e){ return ''; }
+  }
+  function renderUpdatesLogEntry(entry){
+    const status = LOG_STATES.indexOf(entry.status) !== -1 ? entry.status : 'broken';
+    const sym = LOG_SYMBOLS[status];
+    const isOwner = updatesLogOwner();
+    return `<div class="updates-log-entry">
+      <div class="updates-log-main">
+        <div class="updates-log-title">${escapeHtml(entry.title || 'Untitled')}</div>
+        ${entry.body ? `<div class="updates-log-body">${escapeHtml(entry.body)}</div>` : ''}
+        <div class="updates-log-meta">${updatesLogDate(entry.updated_at || entry.created_at)}</div>
+      </div>
+      <button type="button" class="updates-log-status ${status}${isOwner ? ' clickable' : ''}" data-log-status="${escapeAttr(entry.id)}" title="${isOwner ? 'Click to cycle: ✕ broken → ○ fixing → ✓ working' : status}" aria-label="Status: ${status}">${sym}</button>
+    </div>`;
+  }
+  function rerenderLogList(){
+    const list = document.getElementById('updatesLogList');
+    if(!list) return;
+    if(updatesLogEntries.length === 0){
+      list.innerHTML = '<p class="updates-log-empty">No updates yet — they\'ll show up here as soon as they\'re posted.</p>';
+      return;
+    }
+    list.innerHTML = updatesLogEntries.map(renderUpdatesLogEntry).join('');
+  }
+  async function loadUpdatesLog(){
+    const list = document.getElementById('updatesLogList');
+    if(!list) return;
+    list.innerHTML = '<p class="updates-log-empty">Loading…</p>';
+    try{
+      const { data, error } = await sb
+        .from('updates_log')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(100);
+      if(error) throw error;
+      updatesLogEntries = data || [];
+      rerenderLogList();
+    }catch(err){
+      console.error('Could not load updates log:', err);
+      list.innerHTML = '<p class="updates-log-empty">Couldn\'t load the updates log — try again in a bit.</p>';
+    }
+  }
+  function startUpdatesLogRealtime(){
+    if(!sb || !currentUserId || updatesLogRealtime) return;
+    try{
+      updatesLogRealtime = sb.channel('updates-log')
+        .on('postgres_changes', { event:'*', schema:'public', table:'updates_log' }, ()=>{
+          const ov = document.getElementById('updatesLogOverlay');
+          if(ov && ov.classList.contains('open')) loadUpdatesLog();
+        })
+        .subscribe();
+    }catch(e){ updatesLogRealtime = null; }
+  }
+  function openUpdatesLog(){
+    trackEvent('open_updates_log');
+    const composer = document.getElementById('updatesLogComposer');
+    if(composer) composer.style.display = updatesLogOwner() ? '' : 'none';
+    const overlay = document.getElementById('updatesLogOverlay');
+    if(overlay) overlay.classList.add('open');
+    loadUpdatesLog();
+    startUpdatesLogRealtime();
+  }
+  function closeUpdatesLog(){
+    const overlay = document.getElementById('updatesLogOverlay');
+    if(overlay) overlay.classList.remove('open');
+  }
+  async function postUpdatesLogEntry(){
+    if(!updatesLogOwner()) return;
+    const titleEl = document.getElementById('updatesLogTitle');
+    const bodyEl = document.getElementById('updatesLogBody');
+    const btn = document.getElementById('updatesLogPostBtn');
+    if(!titleEl || !bodyEl || !btn) return;
+    const title = titleEl.value.trim();
+    const body = bodyEl.value.trim();
+    if(!title){ titleEl.focus(); return; }
+    btn.disabled = true;
+    try{
+      const { data, error } = await sb.from('updates_log').insert({
+        title: title,
+        body: body,
+        status: 'fixing',
+        created_by: currentUserId
+      }).select().single();
+      if(error) throw error;
+      titleEl.value = '';
+      bodyEl.value = '';
+      updatesLogEntries.unshift(data);
+      rerenderLogList();
+      trackEvent('updates_log_post');
+    }catch(err){
+      console.error('Could not post update:', err);
+      if(typeof showToast === 'function') showToast('Couldn\'t post the update — try again.', 3200);
+    }finally{
+      btn.disabled = false;
+    }
+  }
+  async function cycleUpdatesLogStatus(id){
+    if(!updatesLogOwner()) return;
+    const entry = updatesLogEntries.find(e=>e.id === id);
+    if(!entry) return;
+    const next = LOG_NEXT[entry.status] || 'fixing';
+    const prev = entry.status;
+    entry.status = next;
+    rerenderLogList();
+    try{
+      const { error } = await sb.from('updates_log').update({ status: next }).eq('id', id);
+      if(error){
+        console.error('Could not update status:', error);
+        entry.status = prev;
+        rerenderLogList();
+      }
+    }catch(e){
+      entry.status = prev;
+      rerenderLogList();
+    }
+  }
+  function initUpdatesLogEvents(){
+    const openBtn = document.getElementById('updatesLogBtn');
+    if(openBtn) openBtn.addEventListener('click', openUpdatesLog);
+    const closeBtn = document.getElementById('updatesLogCloseBtn');
+    if(closeBtn) closeBtn.addEventListener('click', closeUpdatesLog);
+    const postBtn = document.getElementById('updatesLogPostBtn');
+    if(postBtn) postBtn.addEventListener('click', postUpdatesLogEntry);
+    const list = document.getElementById('updatesLogList');
+    if(list) list.addEventListener('click', e=>{
+      const st = e.target.closest('[data-log-status]');
+      if(st) cycleUpdatesLogStatus(st.getAttribute('data-log-status'));
+    });
+    const overlay = document.getElementById('updatesLogOverlay');
+    if(overlay) overlay.addEventListener('click', e=>{ if(e.target === overlay) closeUpdatesLog(); });
+    document.addEventListener('keydown', e=>{
+      if(e.key === 'Escape' && overlay && overlay.classList.contains('open')) closeUpdatesLog();
+    });
+  }
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', initUpdatesLogEvents);
+  } else {
+    initUpdatesLogEvents();
+  }
+})();
 
 
 </script>

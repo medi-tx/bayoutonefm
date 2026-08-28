@@ -954,6 +954,7 @@ async function loadAppForUser(user){
   if(typeof syncThemeEditorVisibility === 'function') syncThemeEditorVisibility();
   if(typeof syncTesterButton === 'function') syncTesterButton();
   if(typeof syncCDButton === 'function') syncCDButton();
+  if(typeof syncUpdatesLogButton === 'function') syncUpdatesLogButton();
   await ensureUserRow(user.id);
   const remote = await fetchUserData(user.id);
   cloudLoadFailed = remote == null;
@@ -1726,7 +1727,6 @@ sb.auth.onAuthStateChange((event, session)=>{
     unsubscribeNotifications();
     if(window.stopMsgRealtime) window.stopMsgRealtime();
     showAuthScreen();
-    return;
   }
   if(session && session.user){
     document.getElementById('auth-email').value = '';
@@ -1743,6 +1743,7 @@ sb.auth.onAuthStateChange((event, session)=>{
     applyTheme(DEFAULT_THEME);
     showSotdScheduleBtn();
     if(typeof syncCDButton === 'function') syncCDButton();
+    if(typeof syncUpdatesLogButton === 'function') syncUpdatesLogButton();
     unsubscribeNotifications();
     if(window.stopMsgRealtime) window.stopMsgRealtime();
     showAuthScreen();
@@ -1761,5 +1762,169 @@ sb.auth.getSession().then(({ data: { session } })=>{
     }
   }
 });
+
+/* ---- UPDATES LOG (testers read it, samannleblanc posts) ---- */
+(function(){
+  const LOG_SYMBOLS = { broken:'✕', fixing:'○', working:'✓' };
+  const LOG_NEXT = { broken:'fixing', fixing:'working', working:'broken' };
+  const LOG_STATES = ['broken','fixing','working'];
+  let updatesLogEntries = [];
+  let updatesLogRealtime = null;
+
+  function updatesLogOwner(){
+    return !!(myProfile && myProfile.username === 'samannleblanc');
+  }
+  function canSeeUpdatesLog(){
+    return updatesLogOwner()
+      || ((typeof isCertifiedTester === 'function') && isCertifiedTester());
+  }
+  window.syncUpdatesLogButton = function(){
+    const btn = document.getElementById('updatesLogBtn');
+    if(!btn) return;
+    btn.style.display = canSeeUpdatesLog() ? '' : 'none';
+  };
+
+  function updatesLogDate(iso){
+    try{ return new Date(iso).toLocaleString(undefined, { month:'short', day:'numeric', hour:'numeric', minute:'2-digit' }); }
+    catch(e){ return ''; }
+  }
+  function renderUpdatesLogEntry(entry){
+    const status = LOG_STATES.indexOf(entry.status) !== -1 ? entry.status : 'broken';
+    const sym = LOG_SYMBOLS[status];
+    const isOwner = updatesLogOwner();
+    return `<div class="updates-log-entry">
+      <div class="updates-log-main">
+        <div class="updates-log-title">${escapeHtml(entry.title || 'Untitled')}</div>
+        ${entry.body ? `<div class="updates-log-body">${escapeHtml(entry.body)}</div>` : ''}
+        <div class="updates-log-meta">${updatesLogDate(entry.updated_at || entry.created_at)}</div>
+      </div>
+      <button type="button" class="updates-log-status ${status}${isOwner ? ' clickable' : ''}" data-log-status="${escapeAttr(entry.id)}" title="${isOwner ? 'Click to cycle: ✕ broken → ○ fixing → ✓ working' : status}" aria-label="Status: ${status}">${sym}</button>
+    </div>`;
+  }
+  function rerenderLogList(){
+    const list = document.getElementById('updatesLogList');
+    if(!list) return;
+    if(updatesLogEntries.length === 0){
+      list.innerHTML = '<p class="updates-log-empty">No updates yet — they\'ll show up here as soon as they\'re posted.</p>';
+      return;
+    }
+    list.innerHTML = updatesLogEntries.map(renderUpdatesLogEntry).join('');
+  }
+  async function loadUpdatesLog(){
+    const list = document.getElementById('updatesLogList');
+    if(!list) return;
+    list.innerHTML = '<p class="updates-log-empty">Loading…</p>';
+    try{
+      const { data, error } = await sb
+        .from('updates_log')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(100);
+      if(error) throw error;
+      updatesLogEntries = data || [];
+      rerenderLogList();
+    }catch(err){
+      console.error('Could not load updates log:', err);
+      list.innerHTML = '<p class="updates-log-empty">Couldn\'t load the updates log — try again in a bit.</p>';
+    }
+  }
+  function startUpdatesLogRealtime(){
+    if(!sb || !currentUserId || updatesLogRealtime) return;
+    try{
+      updatesLogRealtime = sb.channel('updates-log')
+        .on('postgres_changes', { event:'*', schema:'public', table:'updates_log' }, ()=>{
+          const ov = document.getElementById('updatesLogOverlay');
+          if(ov && ov.classList.contains('open')) loadUpdatesLog();
+        })
+        .subscribe();
+    }catch(e){ updatesLogRealtime = null; }
+  }
+  function openUpdatesLog(){
+    trackEvent('open_updates_log');
+    const composer = document.getElementById('updatesLogComposer');
+    if(composer) composer.style.display = updatesLogOwner() ? '' : 'none';
+    const overlay = document.getElementById('updatesLogOverlay');
+    if(overlay) overlay.classList.add('open');
+    loadUpdatesLog();
+    startUpdatesLogRealtime();
+  }
+  function closeUpdatesLog(){
+    const overlay = document.getElementById('updatesLogOverlay');
+    if(overlay) overlay.classList.remove('open');
+  }
+  async function postUpdatesLogEntry(){
+    if(!updatesLogOwner()) return;
+    const titleEl = document.getElementById('updatesLogTitle');
+    const bodyEl = document.getElementById('updatesLogBody');
+    const btn = document.getElementById('updatesLogPostBtn');
+    if(!titleEl || !bodyEl || !btn) return;
+    const title = titleEl.value.trim();
+    const body = bodyEl.value.trim();
+    if(!title){ titleEl.focus(); return; }
+    btn.disabled = true;
+    try{
+      const { data, error } = await sb.from('updates_log').insert({
+        title: title,
+        body: body,
+        status: 'fixing',
+        created_by: currentUserId
+      }).select().single();
+      if(error) throw error;
+      titleEl.value = '';
+      bodyEl.value = '';
+      updatesLogEntries.unshift(data);
+      rerenderLogList();
+      trackEvent('updates_log_post');
+    }catch(err){
+      console.error('Could not post update:', err);
+      if(typeof showToast === 'function') showToast('Couldn\'t post the update — try again.', 3200);
+    }finally{
+      btn.disabled = false;
+    }
+  }
+  async function cycleUpdatesLogStatus(id){
+    if(!updatesLogOwner()) return;
+    const entry = updatesLogEntries.find(e=>e.id === id);
+    if(!entry) return;
+    const next = LOG_NEXT[entry.status] || 'fixing';
+    const prev = entry.status;
+    entry.status = next;
+    rerenderLogList();
+    try{
+      const { error } = await sb.from('updates_log').update({ status: next }).eq('id', id);
+      if(error){
+        console.error('Could not update status:', error);
+        entry.status = prev;
+        rerenderLogList();
+      }
+    }catch(e){
+      entry.status = prev;
+      rerenderLogList();
+    }
+  }
+  function initUpdatesLogEvents(){
+    const openBtn = document.getElementById('updatesLogBtn');
+    if(openBtn) openBtn.addEventListener('click', openUpdatesLog);
+    const closeBtn = document.getElementById('updatesLogCloseBtn');
+    if(closeBtn) closeBtn.addEventListener('click', closeUpdatesLog);
+    const postBtn = document.getElementById('updatesLogPostBtn');
+    if(postBtn) postBtn.addEventListener('click', postUpdatesLogEntry);
+    const list = document.getElementById('updatesLogList');
+    if(list) list.addEventListener('click', e=>{
+      const st = e.target.closest('[data-log-status]');
+      if(st) cycleUpdatesLogStatus(st.getAttribute('data-log-status'));
+    });
+    const overlay = document.getElementById('updatesLogOverlay');
+    if(overlay) overlay.addEventListener('click', e=>{ if(e.target === overlay) closeUpdatesLog(); });
+    document.addEventListener('keydown', e=>{
+      if(e.key === 'Escape' && overlay && overlay.classList.contains('open')) closeUpdatesLog();
+    });
+  }
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', initUpdatesLogEvents);
+  } else {
+    initUpdatesLogEvents();
+  }
+})();
 
 
