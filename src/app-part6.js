@@ -837,8 +837,8 @@ function isSamAdmin(){
 }
 const TESTER_FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSdfM-OtLC51PooQoj0yz5S9rHAlN7Jbvw1a97hNkGXrXqMITA/viewform?usp=publish-editor';
 // Certified testers' form links — replace with the real ones when provided.
-const TESTER_BUG_URL = '';
-const TESTER_FEEDBACK_URL = '';
+const TESTER_BUG_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSdnpkYw1R0bmcihAJ_8LWOVgvGXHva3S47RdwfnlFsr1yO1LA/viewform?usp=header';
+const TESTER_FEEDBACK_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSc0_nHWNov42KuchI1LRchUS2Cdg3DR3b67wueXY-rQDjdoyQ/viewform?usp=header';
 const TESTER_QUESTIONS_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSd_h2sp0dSkxhgPK2DX0XlSjjDVBWE0VLAhniq8cEExv6ImxQ/viewform?usp=publish-editor';
 function isCertifiedTester(){
   return !!(myProfile && myProfile.certified_tester === true);
