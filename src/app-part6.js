@@ -326,7 +326,7 @@ function syncToSongDb(song, userId){
     const title = (song.title || '').trim();
     const artist = (song.artists && song.artists[0] || '').trim();
     if(!title) return;
-    const base = {
+    const detail = {
       title,
       artist: artist || '',
       album: (song.album || '').trim(),
@@ -335,10 +335,7 @@ function syncToSongDb(song, userId){
       explicit: !!song.explicit,
       cover_art: song.coverArt || null,
       source: 'user',
-      added_by: userId || null
-    };
-    const detail = {
-      ...base,
+      added_by: userId || null,
       producers: song.producer || '',
       songwriters: song.songwriters || '',
       bpm: song.bpm || null,
@@ -353,22 +350,88 @@ function syncToSongDb(song, userId){
       artist_website: song.artistWebsite || '',
       track_number: song.trackNumber ? String(song.trackNumber) : ''
     };
-    sb.from('song_database').insert(detail).then(({error})=>{
-      if(!error || error.code === '23505') return;
-      if(error.code === '42P10' || /undefined_column|column .* does not exist/i.test(error.message || '')){
-        // Schema may not have migration 0002 (extended columns) yet — retry with the base column set.
-        sb.from('song_database').insert(base).then(({error: e2})=>{
-          if(e2 && e2.code !== '23505') console.error('[syncToSongDb] insert error:', e2.message);
-        });
-      } else {
-        console.error('[syncToSongDb] insert error:', error.message);
-      }
-    });
+    const common = {
+      title,
+      artist: artist || '',
+      album: (song.album || '').trim(),
+      year: (song.year || '').toString().trim(),
+      genres: song.genres || [],
+      cover_art: song.coverArt || null,
+      source: 'user',
+      added_by: userId || null
+    };
+    const minimal = {
+      title,
+      artist: artist || '',
+      cover_art: song.coverArt || null,
+      source: 'user',
+      added_by: userId || null
+    };
+    const fallbacks = [detail, common, minimal];
+    let attempt = 0;
+    function tryInsert(){
+      const row = fallbacks[attempt];
+      if(!row){ console.error('[syncToSongDb] insert failed after all fallbacks'); return; }
+      try{
+        sb.from('song_database').insert(row).then(({error})=>{
+          if(!error || error.code === '23505') return;
+          if(error.code === '42P10' || /undefined_column|column .* does not exist|does not exist/i.test(error.message || '')){
+            attempt++;
+            setTimeout(tryInsert, 0);
+          } else {
+            console.error('[syncToSongDb] insert error:', error.message);
+          }
+        }).catch(e=>{ console.error('[syncToSongDb] insert threw:', e); });
+      }catch(e){ console.error('[syncToSongDb] insert threw:', e); }
+    }
+    tryInsert();
   }catch(e){}
 }
 function syncToSongDbBatch(songsList, userId){
   if(!songsList || !songsList.length) return;
   songsList.forEach(s => syncToSongDb(s, userId));
+}
+
+function backfillSongDb(){
+  if(!sb || !currentUserId) return;
+  if(localStorage.getItem('bayoutonefm-songdb-backfill-' + currentUserId)) return;
+  const candidates = (typeof songs !== 'undefined' ? songs : [])
+    .filter(s => s && s.title && s.artists && s.artists[0]);
+  if(!candidates.length) return;
+  const keyOf = s => (s.title || '').trim().toLowerCase() + '|||' + (s.artists[0] || '').trim().toLowerCase();
+  const want = new Map(candidates.map(s => [keyOf(s), s]));
+  const titles = [...new Set(candidates.map(s => (s.title || '').trim()))];
+  const existing = new Set();
+  const CHUNK = 500;
+  let chunk = 0;
+  function fetchChunk(){
+    const slice = titles.slice(chunk * CHUNK, (chunk + 1) * CHUNK);
+    if(!slice.length){ done(); return; }
+    chunk++;
+    sb.from('song_database').select('title, artist').in('title', slice)
+      .then(({ data })=>{
+        (data || []).forEach(r => existing.add((r.title || '').trim().toLowerCase() + '|||' + (r.artist || '').trim().toLowerCase()));
+        fetchChunk();
+      })
+      .catch(()=> fetchChunk());
+  }
+  function done(){
+    const missing = [...want.entries()].filter(([k])=> !existing.has(k)).map(([,s])=> s);
+    if(!missing.length) return;
+    const BATCH = 3, DELAY = 700;
+    let i = 0;
+    (function next(){
+      if(i >= missing.length){
+        localStorage.setItem('bayoutonefm-songdb-backfill-' + currentUserId, '1');
+        console.log('[backfill] pushed', missing.length, 'existing songs into the song database');
+        return;
+      }
+      missing.slice(i, i + BATCH).forEach(s => syncToSongDb(s, currentUserId));
+      i += BATCH;
+      setTimeout(next, DELAY);
+    })();
+  }
+  fetchChunk();
 }
 
 function enrichExplicitStatus(){
@@ -767,6 +830,7 @@ async function loadAppForUser(user){
   await loadStickers();
   render();
   setTimeout(()=> enrichAllMissingArtwork(), 10000);
+  setTimeout(()=> backfillSongDb(), 1500);
 
   const accepted = await ensureTermsAccepted(user);
   if(!accepted) return; // user chose to log out instead of accepting
