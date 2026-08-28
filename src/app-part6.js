@@ -246,13 +246,23 @@ document.getElementById('recoverySubmitBtn').addEventListener('click', async ()=
 });
 
   document.getElementById('logoutBtn').addEventListener('click', async ()=>{
-    trackEvent('logout');
-    unsubscribeNotifications();
+    try{
+      trackEvent('logout');
+    }catch(e){}
+    try{
+      await sb.auth.signOut();
+    }catch(e){ console.warn('signOut failed — forcing local logout:', e); }
+    currentUserId = null;
     myProfile = null;
-  localStorage.removeItem(THEME_KEY);
-  localStorage.removeItem(CUSTOM_THEMES_KEY);
-  await sb.auth.signOut();
-});
+    appBootedFor = null;
+    localStorage.removeItem(THEME_KEY);
+    localStorage.removeItem(CUSTOM_THEMES_KEY);
+    applyTheme(DEFAULT_THEME);
+    showSotdScheduleBtn();
+    unsubscribeNotifications();
+    if(window.stopMsgRealtime) window.stopMsgRealtime();
+    showAuthScreen();
+  });
 
 async function fetchUserData(userId){
   const { data, error } = await sb
@@ -698,10 +708,11 @@ function showLoginBanner(){
   var x = document.createElement('button');
   x.textContent = '\u00d7';
   x.style.cssText = 'position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:20px;cursor:pointer;color:var(--on-paper);padding:4px 8px;line-height:1;';
-  x.addEventListener('click', function(){ d.remove(); });
+  x.addEventListener('click', function(ev){ ev.stopPropagation(); d.remove(); });
+  d.addEventListener('click', function(){ d.remove(); });
   d.appendChild(x);
   document.body.appendChild(d);
-  setTimeout(function(){ d.style.transition='opacity 0.3s'; d.style.opacity='0'; setTimeout(function(){ d.remove(); }, 300); }, 8000);
+  setTimeout(function(){ d.style.transition='opacity 0.3s'; d.style.opacity='0'; setTimeout(function(){ d.remove(); }, 300); }, 6000);
 }
 
 async function loadAppForUser(user){
