@@ -257,7 +257,7 @@ function feedCardHtml(entry){
           ${reminds}
           ${when}
           ${edits}
-          ${isMe ? '' : '<button type="button" class="feed-add-btn" data-feed-add="1">+ Add to my library</button>'}
+          ${isMe ? '' : '<button type="button" class="feed-add-btn" data-feed-add="1">+ Add to Cataloguex</button>'}
         </div>
       </div>
       ${reactionsHtml}
