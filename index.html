@@ -4333,7 +4333,7 @@ function renderThemePresets(){
     btn.className = 'theme-preset-btn' + (locked ? ' locked' : '');
     btn.setAttribute('data-theme-idx', String(i));
     const c = preset.colors;
-    btn.innerHTML = `<span class="theme-preset-swatch"><span style="background:${c.ink}"></span><span style="background:${c.gold}"></span><span style="background:${c.rose}"></span><span style="background:${c.teal}"></span><span style="background:${c.lilac||'#c9a0dc'}"></span><span style="background:${c.sage||'#7a8b6a'}"></span></span>${preset.name}${locked ? `<span class="theme-preset-lock" title="Unlocks at ${lockedNeed} songs">🔒 ${remaining} more ${remaining === 1 ? 'song' : 'songs'}</span>` : ''}`;
+    btn.innerHTML = `<span class="theme-preset-swatch"><span style="background:${c.ink}"></span><span style="background:${c.gold}"></span><span style="background:${c.rose}"></span><span style="background:${c.teal}"></span><span style="background:${c.lilac||'#c9a0dc'}"></span><span style="background:${c.sage||'#7a8b6a'}"></span></span>${preset.name}${locked ? `<span class="theme-preset-lock" title="Unlocks at ${lockedNeed} songs">🔒 ${remaining}</span>` : ''}`;
     if(locked){
       btn.title = `${preset.name} unlocks at ${lockedNeed} songs — add ${remaining} more song${remaining === 1 ? '' : 's'} to your list.`;
       btn.addEventListener('click', ()=>{
