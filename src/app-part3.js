@@ -1820,7 +1820,7 @@ async function drawSongShareCard(opts){
   let frontEl = null;
   if(s.id){
     const card = document.querySelector('.card[data-id="' + escapeCss(s.id) + '"]');
-    if(card) frontEl = card.querySelector('.card-front');
+    if(card) frontEl = card;
   }
   if(window.html2canvas && frontEl){
     try{
@@ -1913,7 +1913,7 @@ async function drawSongBackShareCard(opts, cvId){
   let backingCard = null;
   if(s.id){
     backingCard = document.querySelector('.card[data-id="' + escapeCss(s.id) + '"]');
-    if(backingCard) backEl = backingCard.querySelector('.card-back');
+    if(backingCard) backEl = backingCard;
   }
   if(window.html2canvas && backEl){
     const wasFlipped = backingCard.classList.contains('flipped');
