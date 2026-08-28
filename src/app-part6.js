@@ -285,7 +285,7 @@ async function upsertGlobalSong(song, userId){
   try{
     const title = (song.title || '').trim();
     const artist = (song.artists && song.artists[0] || '').trim();
-    if(!title || !artist) return;
+    if(!title || !artist) return false;
     const base = {
       p_title: title,
       p_artist: artist,
@@ -314,12 +314,14 @@ async function upsertGlobalSong(song, userId){
       p_track_number: song.trackNumber ? String(song.trackNumber) : ''
     };
     let res = await sb.rpc('upsert_global_song', full);
-    if(res && res.error && (/does not exist|could not find the function|could not match|schema cache|argument/i.test(res.error.message || ''))){
-      // Schema may not have migration 0002 (extended fields) yet — retry with the base column set.
+    if(res && res.error && (/does not exist|could not find the function|could not match|schema cache|argument|could not choose the best candidate/i.test(res.error.message || ''))){
+      // Schema may be missing migration 0002 (extended fields) or have duplicate
+      // RPC overloads — retry with the base column set against whatever resolves.
       res = await sb.rpc('upsert_global_song', base);
     }
-    if(res && res.error) console.error('global_songs upsert failed:', res.error.message);
-  }catch(e){ console.error('global_songs upsert failed:', e); }
+    if(res && res.error){ console.error('global_songs upsert failed:', res.error.message); return false; }
+    return true;
+  }catch(e){ console.error('global_songs upsert failed:', e); return false; }
 }
 
 function upsertGlobalSongBatch(songsList, userId){
@@ -527,12 +529,18 @@ function dailySongDatabaseSync(){
   const syncRows = (rowsToSync) => new Promise((resolve)=>{
     const BATCH = 5;
     const DELAY = 500;
-    let i = 0;
+    let i = 0, ok = 0, fail = 0;
     (function next(){
-      if(i >= rowsToSync.length){ resolve(); return; }
-      rowsToSync.slice(i, i + BATCH).forEach(s => upsertGlobalSong(s, null));
-      i += BATCH;
-      setTimeout(next, DELAY);
+      if(i >= rowsToSync.length){
+        console.log('[dailySongSync] synced', ok, 'of', rowsToSync.length, 'songs' + (fail ? ' (' + fail + ' failed)' : ''));
+        resolve();
+        return;
+      }
+      Promise.all(rowsToSync.slice(i, i + BATCH).map(s => upsertGlobalSong(s, null))).then(results => {
+        results.forEach(r => { if(r) ok++; else fail++; });
+        i += BATCH;
+        setTimeout(next, DELAY);
+      });
     })();
   });
   fetchAll()
@@ -546,12 +554,8 @@ function dailySongDatabaseSync(){
         if(!want.has(k)) want.set(k, mapRow(r));
       });
       if(!want.size){ done(); return; }
-      // Upsert EVERY song_database row into global_songs: the upsert_global_song
-      // RPC merges on (title, artist) with coalesce, so existing rows only gain
-      // facts they were missing — nothing richer gets clobbered.
       return syncRows([...want.values()]).then(()=>{
         done();
-        console.log('[dailySongSync] synced', want.size, 'songs from the song database into Discover/search');
       });
     })
     .catch(e => console.error('[dailySongSync] failed:', e));
