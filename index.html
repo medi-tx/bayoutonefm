@@ -4257,6 +4257,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
     <div class="field"><label>Username</label><input id="ep-username" type="text" placeholder="e.g. mixtape_maria" autocomplete="off"></div>
     <div class="field"><label>Bio</label><textarea id="ep-bio" placeholder="Tell other listeners a little about you…"></textarea></div>
     <div id="ep-error" class="auth-error" style="display:none;"></div>
+    <button type="button" class="btn-save" id="becomeTesterBtn" style="width:100%; margin:0 0 14px;">🪪 Become a Tester</button>
     <div class="modal-actions">
       <button class="btn-cancel" id="editProfileCancelBtn">Cancel</button>
       <button class="btn-save" id="editProfileSaveBtn">Save</button>
@@ -5680,7 +5681,6 @@ document.getElementById('songDbBtn').addEventListener('click', ()=>{
   }
 });
 function testerHubItemsHtml(){
-  const isCert = (typeof isCertifiedTester === 'function') && isCertifiedTester();
   const items = [
     `<button type="button" class="tester-form-btn" data-tester-hub="updates">
       <span class="tester-form-title">📋 Updates Log</span>
@@ -5695,14 +5695,13 @@ function testerHubItemsHtml(){
       <span class="tester-form-desc">Bug reports, feedback &amp; suggestions, questions.</span>
     </button>`
   ];
-  if(!isCert){
-    items.push(`<button type="button" class="tester-form-btn" data-tester-hub="become">
-      <span class="tester-form-title">🪪 Become a Tester</span>
-      <span class="tester-form-desc">Join the tester program.</span>
-    </button>`);
-  }
   return items.join('');
 }
+document.getElementById('becomeTesterBtn').addEventListener('click', ()=>{
+  trackEvent('become_a_tester');
+  const fallback = 'https://docs.google.com/forms/d/e/1FAIpQLSdfM-OtLC51PooQoj0yz5S9rHAlN7Jbvw1a97hNkGXrXqMITA/viewform?usp=publish-editor';
+  window.open((typeof TESTER_FORM_URL === 'string' && TESTER_FORM_URL) || fallback, '_blank', 'noopener');
+});
 document.getElementById('testerBtn').addEventListener('click', ()=>{
   trackEvent('open_tester_hub');
   const list = document.getElementById('testerHubList');
@@ -5723,10 +5722,6 @@ document.getElementById('testerHubList').addEventListener('click', e=>{
   } else if(which === 'forms'){
     trackEvent('open_tester_forms');
     document.getElementById('testerFormsOverlay').classList.add('open');
-  } else if(which === 'become'){
-    trackEvent('become_a_tester');
-    const fallback = 'https://docs.google.com/forms/d/e/1FAIpQLSdfM-OtLC51PooQoj0yz5S9rHAlN7Jbvw1a97hNkGXrXqMITA/viewform?usp=publish-editor';
-    window.open((typeof TESTER_FORM_URL === 'string' && TESTER_FORM_URL) || fallback, '_blank', 'noopener');
   }
 });
 document.getElementById('testerHubCloseBtn').addEventListener('click', ()=>{
@@ -13820,6 +13815,10 @@ function openEditProfile(){
   document.getElementById('ep-bio').value = (myProfile && myProfile.bio) || '';
   setImagePreview('ep-photo', currentEditProfilePhoto);
   document.getElementById('ep-error').style.display = 'none';
+  const becomeBtn = document.getElementById('becomeTesterBtn');
+  if(becomeBtn){
+    becomeBtn.style.display = (typeof isCertifiedTester === 'function' && isCertifiedTester()) ? 'none' : '';
+  }
   document.getElementById('editProfileOverlay').classList.add('open');
 }
 document.getElementById('openEditProfileBtn').addEventListener('click', ()=>{ trackEvent('open_edit_profile'); openEditProfile(); });

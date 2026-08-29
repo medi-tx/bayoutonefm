@@ -162,6 +162,10 @@ function openEditProfile(){
   document.getElementById('ep-bio').value = (myProfile && myProfile.bio) || '';
   setImagePreview('ep-photo', currentEditProfilePhoto);
   document.getElementById('ep-error').style.display = 'none';
+  const becomeBtn = document.getElementById('becomeTesterBtn');
+  if(becomeBtn){
+    becomeBtn.style.display = (typeof isCertifiedTester === 'function' && isCertifiedTester()) ? 'none' : '';
+  }
   document.getElementById('editProfileOverlay').classList.add('open');
 }
 document.getElementById('openEditProfileBtn').addEventListener('click', ()=>{ trackEvent('open_edit_profile'); openEditProfile(); });
