@@ -921,19 +921,6 @@ function songCardHtml(s, clusterCounts){
     `;
 }
 
-function pageWindow(cur, total){
-  if(total <= 7) return Array.from({ length: total }, (_, i)=> i + 1);
-  const out = [];
-  const push = (p)=>{
-    if(p >= 1 && p <= total && out[out.length-1] !== p && out[out.length-1] !== '…') out.push(p);
-  };
-  push(1);
-  if(cur - 1 > 2) out.push('…');
-  for(let p = Math.max(2, cur - 1); p <= Math.min(total - 1, cur + 1); p++) out.push(p);
-  if(cur + 1 < total - 1) out.push('…');
-  push(total);
-  return out;
-}
 function renderGridPagination(totalPages){
   const bar = document.getElementById('gridPagination');
   if(!bar) return;
@@ -944,10 +931,9 @@ function renderGridPagination(totalPages){
   }
   bar.style.display = 'flex';
   let html = `<button type="button" class="pgn-btn pgn-prev" data-page="${currentPage - 1}" ${currentPage === 1 ? 'disabled' : ''}>‹ Prev</button>`;
-  pageWindow(currentPage, totalPages).forEach(p=>{
-    if(p === '…'){ html += '<span class="pgn-gap">…</span>'; }
-    else { html += `<button type="button" class="pgn-btn${p === currentPage ? ' active' : ''}" data-page="${p}">${p}</button>`; }
-  });
+  for(let p = 1; p <= totalPages; p++){
+    html += `<button type="button" class="pgn-btn${p === currentPage ? ' active' : ''}" data-page="${p}">${p}</button>`;
+  }
   html += `<button type="button" class="pgn-btn pgn-next" data-page="${currentPage + 1}" ${currentPage === totalPages ? 'disabled' : ''}>Next ›</button>`;
   html += `<span class="pgn-total">Page ${currentPage} of ${totalPages}</span>`;
   bar.innerHTML = html;
