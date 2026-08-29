@@ -1614,11 +1614,14 @@
   .card:has(> .sticker-drag){ overflow:visible; }
   /* DUAL-FACE CARD (details flip) */
   .card-back{
-    display:none;
+    visibility:hidden; pointer-events:none;
+    display:flex; flex-direction:column; gap:8px;
+    color:var(--on-paper); text-align:left;
+    opacity:0;
   }
-  .card.flipped{ overflow:visible; border-top-color:var(--gold); height:auto; }
-  .card.flipped > .card-front{ display:none; }
-  .card.flipped > .card-back{ display:flex; flex-direction:column; gap:8px; color:var(--on-paper); text-align:left; opacity:1; pointer-events:auto; z-index:1; }
+  .card.flipped{ overflow:visible; border-top-color:var(--gold); }
+  .card.flipped > .card-front{ visibility:hidden; pointer-events:none; opacity:0; }
+  .card.flipped > .card-back{ visibility:visible; pointer-events:auto; opacity:1; z-index:1; }
   .card.flipped .sticker-drag{ visibility:hidden; }
   .cb-fields{ display:flex; flex-direction:column; gap:4px; }
   .cb-field{ display:flex; gap:8px; font-size:12px; line-height:1.45; }
@@ -1642,6 +1645,7 @@
     background:rgba(var(--on-paper-rgb),0.06);
     color:rgba(var(--on-paper-rgb),0.75);
     font-size:13px; line-height:1; cursor:pointer;
+    touch-action:manipulation; -webkit-tap-highlight-color:transparent;
   }
   .cb-head-flip:hover{ background:color-mix(in srgb, var(--gold) 22%, transparent); border-color:var(--gold); }
   .cb-close:hover{ color:var(--rose); }
@@ -1662,6 +1666,7 @@
     background:rgba(var(--on-paper-rgb),0.06);
     color:rgba(var(--on-paper-rgb),0.75);
     font-size:13px; line-height:1; cursor:pointer;
+    touch-action:manipulation; -webkit-tap-highlight-color:transparent;
   }
   .cb-flip-fab:hover{ background:color-mix(in srgb, var(--gold) 22%, transparent); border-color:var(--gold); }
   /* COMPACT RATINGS STRIP ON CARD FRONT */
