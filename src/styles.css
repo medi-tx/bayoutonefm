@@ -2473,7 +2473,7 @@
   .msg-song-card img{ width:44px; height:44px; border-radius:6px; flex:0 0 44px; object-fit:cover; }
   .msg-song-meta{ min-width:0; }
   .msg-song-title{ font-size:12px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .msg-song-artist{ font-size:11px; opacity:0.85; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .msg-song-artist{ font-size:11px; opacity:0.85; word-break:break-word; overflow-wrap:anywhere; line-height:1.35; white-space:normal; }
   .msg-song-album{ font-size:10px; opacity:0.75; word-break:break-word; overflow-wrap:anywhere; line-height:1.35; white-space:normal; }
   .msg-composer{ display:flex; gap:8px; align-items:flex-end; padding:14px 16px; border-top:1px solid var(--line-on-paper); }
   .msg-error{ color:#d6455f; font-size:12px; padding:6px 16px 0; }
@@ -2497,7 +2497,8 @@
   .msg-pending-song img{ width:36px; height:36px; border-radius:6px; object-fit:cover; }
   .msg-pending-meta{ flex:1; min-width:0; }
   .msg-pending-title{ font-size:12px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .msg-pending-artist{ font-size:11px; opacity:0.8; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .msg-pending-artist{ font-size:11px; opacity:0.8; word-break:break-word; overflow-wrap:anywhere; line-height:1.35; white-space:normal; }
+  .msg-pending-album{ font-size:10px; opacity:0.65; word-break:break-word; overflow-wrap:anywhere; line-height:1.35; white-space:normal; }
   .msg-pending-x{ background:none; border:none; color:var(--on-paper); font-size:16px; cursor:pointer; line-height:1; }
   .msg-song-results{ display:flex; flex-direction:column; gap:8px; max-height:44vh; overflow-y:auto; margin-top:12px; }
   .msg-song-result{
@@ -2509,7 +2510,7 @@
   .msg-song-result img{ width:48px; height:48px; border-radius:6px; object-fit:cover; }
   .msg-song-result-meta{ min-width:0; }
   .msg-song-result-title{ font-size:13px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .msg-song-result-artist{ font-size:11px; opacity:0.75; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .msg-song-result-artist{ font-size:11px; opacity:0.75; word-break:break-word; overflow-wrap:anywhere; line-height:1.35; white-space:normal; }
   .msg-song-result .preview-btn{ margin-left:auto; flex:0 0 auto; }
   .msg-no-friends{ padding:24px; text-align:center; color:rgba(var(--on-paper-rgb),0.72); font-size:13px; }
   @media (max-width:620px){

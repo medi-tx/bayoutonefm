@@ -263,6 +263,7 @@
       <div class="msg-pending-meta">
         <div class="msg-pending-title">${escapeHtml(song.title || 'Unknown song')}</div>
         <div class="msg-pending-artist">${escapeHtml(song.artist || '')}</div>
+        <div class="msg-pending-album">${song.album ? escapeHtml(song.album) : ''}</div>
       </div>
       <button type="button" class="msg-pending-x" id="msgPendingX" title="Remove">✕</button>
     </div>`;
