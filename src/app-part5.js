@@ -150,6 +150,7 @@ function renderDiscoverList(filter){
 document.getElementById('discoverBtn').addEventListener('click', async ()=>{
   trackEvent('open_friends');
   document.getElementById('discoverOverlay').classList.add('open');
+  fillInviteLink();
   document.getElementById('friend-username-search').value = '';
   document.getElementById('discoverList').innerHTML = '<p class="profile-empty-note">Loading…</p>';
   document.getElementById('friendRequestsWrap').style.display = 'none';

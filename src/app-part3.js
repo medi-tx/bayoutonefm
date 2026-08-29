@@ -2337,61 +2337,42 @@ document.getElementById('shareCopyBtn').addEventListener('click', async ()=>{
 });
 
 /* ---- invite friends ---- */
-document.getElementById('inviteBtn').addEventListener('click', ()=>{
-  trackEvent('invite_open');
-  if(!currentUserId){ alert('Please sign in first.'); return; }
-  const inviteUrl = location.origin + location.pathname + '?invite=' + encodeURIComponent(currentUserId);
-  document.getElementById('inviteLinkInput').value = inviteUrl;
-  document.getElementById('inviteOverlay').classList.add('open');
-  loadInviteHistory();
-});
-document.getElementById('inviteCopyBtn').addEventListener('click', ()=>{
+function getInviteUrl(){
+  return location.origin + location.pathname + '?invite=' + encodeURIComponent(currentUserId);
+}
+function fillInviteLink(){
+  const input = document.getElementById('discoverInviteLink');
+  if(input && currentUserId) input.value = getInviteUrl();
+}
+document.getElementById('discoverInviteCopyBtn').addEventListener('click', ()=>{
   trackEvent('invite_copy');
-  const url = document.getElementById('inviteLinkInput').value;
+  let url = document.getElementById('discoverInviteLink').value;
+  if(!url){ fillInviteLink(); url = document.getElementById('discoverInviteLink').value; }
   navigator.clipboard.writeText(url).then(()=>{
-    document.getElementById('inviteCopyBtn').textContent = '✓ Copied!';
-    setTimeout(()=>{ document.getElementById('inviteCopyBtn').textContent = '📋 Copy'; }, 2000);
+    const btn = document.getElementById('discoverInviteCopyBtn');
+    btn.textContent = '✓ Copied!';
+    setTimeout(()=>{ btn.textContent = 'Copy'; }, 2000);
   }).catch(()=>{
     prompt('Copy this invite link:', url);
   });
 });
-document.getElementById('inviteShareNativeBtn').addEventListener('click', ()=>{
+document.getElementById('discoverInviteShareBtn').addEventListener('click', ()=>{
   trackEvent('invite_share_native');
-  const url = document.getElementById('inviteLinkInput').value;
+  let url = document.getElementById('discoverInviteLink').value;
+  if(!url){ fillInviteLink(); url = document.getElementById('discoverInviteLink').value; }
   const text = 'Join me on bayoutonefm — your personal music cataloguex! ' + url;
   if(navigator.share){
     navigator.share({ title: 'Join bayoutonefm', text, url }).catch(()=>{});
   } else {
     navigator.clipboard.writeText(text).then(()=>{
-      document.getElementById('inviteShareNativeBtn').textContent = '✓ Copied to clipboard!';
-      setTimeout(()=>{ document.getElementById('inviteShareNativeBtn').textContent = '📤 Share via…'; }, 2000);
+      const btn = document.getElementById('discoverInviteShareBtn');
+      btn.textContent = '✓ Copied to clipboard!';
+      setTimeout(()=>{ btn.textContent = '📤 Invite via…'; }, 2000);
     }).catch(()=>{
       prompt('Share this invite:', text);
     });
   }
 });
-document.getElementById('inviteCloseBtn').addEventListener('click', ()=>{
-  document.getElementById('inviteOverlay').classList.remove('open');
-});
-async function loadInviteHistory(){
-  if(!currentUserId || !sb) return;
-  const listEl = document.getElementById('inviteSentList');
-  try{
-    const { data, error } = await sb.from('profiles').select('user_id, username, photo, created_at').order('created_at', {ascending:false}).limit(20);
-    if(error || !data) return;
-    const myFriends = Array.from(myFriendIds || []);
-    const invitees = data.filter(p => myFriends.includes(p.user_id));
-    if(!invitees.length){
-      listEl.innerHTML = '<p style="font-size:12px; color:rgba(var(--on-paper-rgb),0.55); text-align:center;">Share the link above to invite friends!</p>';
-    } else {
-      listEl.innerHTML = '<p class="theme-section-label" style="margin-bottom:8px;">Recent friends</p>' +
-        invitees.slice(0,8).map(p => {
-          const photo = p.photo ? `<img src="${escapeAttr(p.photo)}" alt="" style="width:24px;height:24px;border-radius:50%;object-fit:cover;">` : `<span class="drow-fallback is-pfp" style="width:24px;height:24px;font-size:10px;"></span>`;
-          return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;">${photo}<span style="font-size:13px;color:var(--on-paper);">@${escapeHtml(p.username)}</span></div>`;
-        }).join('');
-    }
-  }catch(e){}
-}
 
 /* ---- 30-second audio previews (official Apple Music previews via iTunes Search API) ---- */
 const previewCache = {};
