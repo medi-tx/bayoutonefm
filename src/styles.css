@@ -2528,7 +2528,6 @@
     .msg-friend-name{ font-size:11px; }
     .msg-thread{ min-height:260px; }
     .msg-bubble{ max-width:88%; }
-    .msg-song-share .msg-flip-card{ flex:1 1 100%; max-width:100%; margin-top:4px; }
   }
 
   /* ADD MUSIC PICKER */
