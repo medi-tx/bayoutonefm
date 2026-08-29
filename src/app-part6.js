@@ -1179,7 +1179,29 @@ function itunesJsonp(url){
     }, 10000);
   });
 }
+// Shared iTunes backoff: sets a floor cooldown that also survives page reloads,
+// so even after a refresh we don't immediately re-hit a warm rate-limit.
+function itunesBackoff(ms){
+  itunesCooldownUntil = Math.max(itunesCooldownUntil, Date.now() + ms);
+  try{ localStorage.setItem('bayt-itunes-cooldown-until', String(itunesCooldownUntil)); }catch(e){}
+}
+// Serial + min-gap gate so concurrent callers (preview prefetch, cover enrich,
+// album search, SOTD) never fire more than one request per ITUNES_MIN_GAP ms.
+let itunesRequestTail = Promise.resolve();
+let itunesLastSentAt = 0;
+const ITUNES_MIN_GAP = 1200;
+function itunesThrottled(task){
+  const run = itunesRequestTail.then(async ()=>{
+    const wait = Math.max(0, itunesLastSentAt + ITUNES_MIN_GAP - Date.now());
+    if(wait > 0) await new Promise(r => setTimeout(r, wait));
+    itunesLastSentAt = Date.now();
+    return await task();
+  });
+  itunesRequestTail = run.catch(()=>{});
+  return run;
+}
 async function itunesSearch(term, entity, limit){
+  if(Date.now() < itunesCooldownUntil) throw new Error('itunes_on_cooldown');
   const url = 'https://itunes.apple.com/search?media=music&entity=' + entity + '&limit=' + (limit||8) + '&term=' + encodeURIComponent(term);
   const filterResults = (data)=>{
     const results = (data && data.results) || [];
@@ -1189,25 +1211,24 @@ async function itunesSearch(term, entity, limit){
   };
   // Primary path: JSONP sidesteps the CORS that the plain fetch endpoint has.
   try{
-    return filterResults(await itunesJsonp(url));
+    return filterResults(await itunesThrottled(()=> itunesJsonp(url)));
   }catch(e){
     // JSONP failed (rate-limit, blocker, or network). One cheap fetch retry tells
     // us the real HTTP status so we can tell "slow down" apart from "blocked" —
     // cascading a whole stack of alternate requests is what trips the 429s.
     try{
-      const res = await fetch(url.replace(/&callback=[^&]*/, ''), { headers: { 'Accept': 'application/json' } });
+      const res = await itunesThrottled(()=> fetch(url.replace(/&callback=[^&]*/, ''), { headers: { 'Accept': 'application/json' } }));
       if(res.ok) return filterResults(await res.json());
       if(res.status === 429){
-        itunesCooldownUntil = Math.max(itunesCooldownUntil, Date.now() + 300000);
+        itunesBackoff(300000);
         console.warn('iTunes is rate-limiting requests — backing off for 5 minutes.');
       } else {
-        itunesCooldownUntil = Math.max(itunesCooldownUntil, Date.now() + 60000);
+        itunesBackoff(60000);
       }
       throw new Error('itunes_http_' + res.status);
     }catch(e2){
-      // No usable HTTP status (CORS/network/server hiccup) — gentle cooldown so a
-      // whole queue of songs doesn't hammer the API.
-      itunesCooldownUntil = Math.max(itunesCooldownUntil, Date.now() + 60000);
+      // No usable HTTP status (CORS/network/server hiccup) — gentle cooldown.
+      itunesBackoff(60000);
       throw e2;
     }
   }

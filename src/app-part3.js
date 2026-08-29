@@ -2372,7 +2372,9 @@ document.getElementById('discoverInviteShareBtn').addEventListener('click', ()=>
 const previewCache = {};
 const previewFailed = new Set();
 const previewInflight = new Set();
-let itunesCooldownUntil = 0;
+// iTunes cooldown survives page reloads so a warm rate-limit isn't re-triggered
+// by the boot-time prefetch.
+let itunesCooldownUntil = (()=>{ try{ return Number(localStorage.getItem('bayt-itunes-cooldown-until') || '0') || 0; }catch(e){ return 0; } })();
 let deezerCooldownUntil = 0;
 let previewAudio = null;
 let nowPlayingId = null;
@@ -2445,7 +2447,7 @@ async function fetchPreviewUrl(song){
     jobs.push(
       itunesSearch(term, 'song', 10)
         .then(rows=> pickHit(rows))
-        .catch(()=>{ itunesCooldownUntil = Math.max(itunesCooldownUntil, Date.now() + 60000); return null; })
+        .catch(()=>{ itunesBackoff(60000); return null; })
     );
   }
   let url = null;
