@@ -2438,14 +2438,14 @@ async function fetchPreviewUrl(song){
     jobs.push(
       deezerSearch(term, 10)
         .then(rows=> pickHit(rows))
-        .catch(()=>{ deezerCooldownUntil = Date.now() + 60000; return null; })
+        .catch(()=>{ deezerCooldownUntil = Math.max(deezerCooldownUntil, Date.now() + 60000); return null; })
     );
   }
   if(now > itunesCooldownUntil){
     jobs.push(
       itunesSearch(term, 'song', 10)
         .then(rows=> pickHit(rows))
-        .catch(()=>{ itunesCooldownUntil = Date.now() + 60000; return null; })
+        .catch(()=>{ itunesCooldownUntil = Math.max(itunesCooldownUntil, Date.now() + 60000); return null; })
     );
   }
   let url = null;
@@ -2483,7 +2483,13 @@ function prefetchPreviews(songList){
   function next(){
     if(idx >= todo.length) return;
     const s = todo[idx++];
-    fetchPreviewUrl(s).catch(()=>{}).then(()=> setTimeout(next, 3000));
+    fetchPreviewUrl(s).catch(()=>{}).then(()=>{
+      // Wait at least 3s per song, and stretch the gap while a source is on
+      // cooldown so we stop hammering rate-limited APIs.
+      const far = Math.max(itunesCooldownUntil, deezerCooldownUntil) - Date.now();
+      const wait = Math.max(3000, Math.min(30000, far + 1000));
+      setTimeout(next, wait);
+    });
   }
   next();
 }

@@ -1179,31 +1179,38 @@ function itunesJsonp(url){
     }, 10000);
   });
 }
-async function itunesFetch(url){
-  const cleanUrl = url.replace(/&callback=[^&]*/, '');
-  const res = await fetch(cleanUrl, { headers: { 'Accept': 'application/json' } });
-  if(!res.ok) throw new Error('itunes_http_' + res.status);
-  return await res.json();
-}
-async function itunesFetchProxy(url){
-  const cleanUrl = url.replace(/&callback=[^&]*/, '');
-  const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(cleanUrl);
-  const res = await fetch(proxyUrl);
-  if(!res.ok) throw new Error('itunes_proxy_' + res.status);
-  return await res.json();
-}
 async function itunesSearch(term, entity, limit){
   const url = 'https://itunes.apple.com/search?media=music&entity=' + entity + '&limit=' + (limit||8) + '&term=' + encodeURIComponent(term);
-  let data = null;
-  try{ data = await itunesJsonp(url); }catch(e){
-    try{ data = await itunesFetch(url); }catch(e2){
-      try{ data = await itunesFetchProxy(url); }catch(e3){ throw e3; }
+  const filterResults = (data)=>{
+    const results = (data && data.results) || [];
+    if(entity === 'song') return results.filter(r=>r.wrapperType==='track' && r.kind!=='music-video');
+    if(entity === 'album') return results.filter(r=>r.wrapperType==='collection');
+    return results;
+  };
+  // Primary path: JSONP sidesteps the CORS that the plain fetch endpoint has.
+  try{
+    return filterResults(await itunesJsonp(url));
+  }catch(e){
+    // JSONP failed (rate-limit, blocker, or network). One cheap fetch retry tells
+    // us the real HTTP status so we can tell "slow down" apart from "blocked" —
+    // cascading a whole stack of alternate requests is what trips the 429s.
+    try{
+      const res = await fetch(url.replace(/&callback=[^&]*/, ''), { headers: { 'Accept': 'application/json' } });
+      if(res.ok) return filterResults(await res.json());
+      if(res.status === 429){
+        itunesCooldownUntil = Math.max(itunesCooldownUntil, Date.now() + 300000);
+        console.warn('iTunes is rate-limiting requests — backing off for 5 minutes.');
+      } else {
+        itunesCooldownUntil = Math.max(itunesCooldownUntil, Date.now() + 60000);
+      }
+      throw new Error('itunes_http_' + res.status);
+    }catch(e2){
+      // No usable HTTP status (CORS/network/server hiccup) — gentle cooldown so a
+      // whole queue of songs doesn't hammer the API.
+      itunesCooldownUntil = Math.max(itunesCooldownUntil, Date.now() + 60000);
+      throw e2;
     }
   }
-  const results = (data && data.results) || [];
-  if(entity === 'song') return results.filter(r=>r.wrapperType==='track' && r.kind!=='music-video');
-  if(entity === 'album') return results.filter(r=>r.wrapperType==='collection');
-  return results;
 }
 async function deezerSearch(q, limit){
   const url = 'https://api.deezer.com/search?q=' + encodeURIComponent(q) + '&limit=' + (limit||25);
