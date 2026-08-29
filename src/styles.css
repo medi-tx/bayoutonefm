@@ -730,9 +730,9 @@
     min-width:34px;
     padding:7px 11px;
     border-radius:8px;
-    border:1px solid rgba(var(--on-paper-rgb),0.14);
-    background:rgba(var(--on-paper-rgb),0.04);
-    color:rgba(var(--on-paper-rgb),0.72);
+    border:1px solid rgba(var(--on-paper-rgb),0.28);
+    background:rgba(var(--on-paper-rgb),0.06);
+    color:rgba(var(--on-paper-rgb),0.88);
     cursor:pointer;
   }
   .grid-pagination .pgn-btn:hover:not(:disabled){
