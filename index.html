@@ -12423,8 +12423,8 @@ function dataUrlToBlob(dataUrl){
 
 // Keep every song's cover art in its own row (song_covers) so a large library
 // sync that has to strip covers from the user_data payload never loses them.
-async function syncCovers(songList){
-  if(!currentUserId || !sb || !songList || !songList.length) return;
+async function syncCovers(songList, uid){
+  if(!uid || !sb || !songList || !songList.length) return;
   try{
     const rows = [];
     const withCover = new Set();
@@ -12434,7 +12434,7 @@ async function syncCovers(songList){
       presentIds.push(s.id);
       if(s.coverArt){
         withCover.add(s.id);
-        rows.push({ user_id: currentUserId, song_id: s.id, cover_art: String(s.coverArt), updated_at: new Date().toISOString() });
+        rows.push({ user_id: uid, song_id: s.id, cover_art: String(s.coverArt), updated_at: new Date().toISOString() });
       }
     }
     for(let i = 0; i < rows.length; i += 200){
@@ -12445,14 +12445,23 @@ async function syncCovers(songList){
     const noCover = presentIds.filter(id => !withCover.has(id));
     for(let i = 0; i < noCover.length; i += 50){
       const ids = noCover.slice(i, i + 50);
-      const { error } = await sb.from('song_covers').delete().eq('user_id', currentUserId).in('song_id', ids);
+      const { error } = await sb.from('song_covers').delete().eq('user_id', uid).in('song_id', ids);
       if(error) throw error;
     }
   }catch(e){ console.error('Cover sync to song_covers failed (covers stay stored locally):', e); }
 }
 
+async function resolveCurrentUserId(){
+  if(currentUserId) return currentUserId;
+  try{
+    const { data } = await sb.auth.getSession();
+    if(data && data.session && data.session.user) return data.session.user.id;
+  }catch(e){}
+  return null;
+}
 async function doSync(attempt, startRevision){
-  if(!currentUserId) return;
+  const uid = await resolveCurrentUserId();
+  if(!uid) return;
   if(syncInFlight) return; // already uploading; post-success check will re-sync if needed
   if(cloudLoadFailed){
     console.warn('Cloud sync skipped: previous load from Supabase failed. Nothing was overwritten. Reload the page to reconnect before saving.');
@@ -12473,17 +12482,17 @@ async function doSync(attempt, startRevision){
       slimSongs.push(slimSongForUpload(c));
     }
     // Covers persist outside the (size-limited) user_data row.
-    await syncCovers(slimSongs);
-    let payload = { user_id: currentUserId, songs: slimSongs, people, wishlist, updated_at: updated };
+    await syncCovers(slimSongs, uid);
+    let payload = { user_id: uid, songs: slimSongs, people, wishlist, updated_at: updated };
     if(JSON.stringify(payload).length < 900000){
       await pushUserData(payload);
     } else {
       // Large cataloguex: save people+wishlist first, then merge songs with remote
-      await pushUserData({ user_id: currentUserId, people, wishlist, updated_at: updated });
-      const { data: existing } = await sb.from('user_data').select('songs').eq('user_id', currentUserId).maybeSingle();
+      await pushUserData({ user_id: uid, people, wishlist, updated_at: updated });
+      const { data: existing } = await sb.from('user_data').select('songs').eq('user_id', uid).maybeSingle();
       const remoteOnly = (((existing && existing.songs) || [])).filter(s => !localIds.has(s.id));
       const merged = [...slimSongs, ...remoteOnly];
-      payload = { user_id: currentUserId, songs: merged, updated_at: updated };
+      payload = { user_id: uid, songs: merged, updated_at: updated };
       if(JSON.stringify(payload).length < 900000){
         await pushUserData(payload);
       } else {
@@ -12689,6 +12698,7 @@ async function loadAppForUser(user){
   if(appBootedFor === user.id) return;
   appBootedFor = user.id;
   currentUserId = user.id;
+  window.currentUserId = user.id;
   currentUserEmail = user.email || null;
   updateEmailConfirmBanner(user);
   // Per-user localStorage keys to prevent cross-account data bleed
@@ -13497,6 +13507,7 @@ sb.auth.onAuthStateChange((event, session)=>{
   }
   if(event === 'SIGNED_OUT'){
     currentUserId = null;
+    window.currentUserId = null;
     myProfile = null;
     appBootedFor = null;
     localStorage.removeItem(THEME_KEY);
@@ -13516,6 +13527,7 @@ sb.auth.onAuthStateChange((event, session)=>{
     loadAppForUser(session.user);
   } else {
     currentUserId = null;
+    window.currentUserId = null;
     myProfile = null;
     appBootedFor = null;
     localStorage.removeItem(THEME_KEY);
