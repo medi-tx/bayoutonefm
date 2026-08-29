@@ -368,7 +368,7 @@ document.getElementById('passwordSaveBtn').addEventListener('click', async ()=>{
         return;
       }
     }
-    const { error } = await sb.auth.updateUser({ password: pw1 });
+    const { error } = await sb.auth.updateUser({ password: pw1, current_password: cur });
     if(error){ errEl.textContent = error.message; errEl.style.display=''; saveBtn.disabled = false; return; }
     msgEl.textContent = 'Password updated.';
     msgEl.style.display = '';
