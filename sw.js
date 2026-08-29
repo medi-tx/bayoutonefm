@@ -4,7 +4,7 @@
 //   for instant repeat loads.
 // - Google Fonts: cache-first (font files are immutable).
 // - Supabase + external music APIs: cross-origin, always straight to the network.
-const CACHE = 'bayoutonefm-shell-v2';
+const CACHE = 'bayoutonefm-shell-v3';
 const FONT_CACHE = 'bayoutonefm-fonts-v2';
 
 self.addEventListener('install', () => self.skipWaiting());
@@ -61,10 +61,10 @@ self.addEventListener('fetch', (event) => {
   const accept = req.headers.get('accept') || '';
   const isHtml = req.mode === 'navigate' || accept.includes('text/html');
 
-  // App shell: network-first, fall back to cache when offline.
+  // App shell: network-first with no-store so we never serve a stale page.
   if (isHtml) {
     event.respondWith(
-      fetch(req)
+      fetch(req, { cache: 'no-store' })
         .then(res => {
           if (res && res.status === 200) {
             const copy = res.clone();
