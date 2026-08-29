@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { spawnSync } = require('child_process');
 const ROOT = __dirname;
 const htmlPath = path.join(ROOT, 'index.html');
 const map = [
@@ -63,5 +64,8 @@ inline2.forEach((sc, i) => {
   cursor = sc.close + 9;
 });
 result += out.slice(cursor);
+const g = spawnSync('git', ['rev-parse', '--short', 'HEAD'], { encoding: 'utf8' });
+const version = (g.status === 0 && g.stdout && g.stdout.trim()) ? g.stdout.trim() : 'build-' + Date.now().toString(36);
+result = result.replace(/__BTF_VERSION__/g, version);
 fs.writeFileSync(htmlPath, result);
 console.log('Built index.html (' + result.length + ' bytes) from ' + map.length + ' src files.');

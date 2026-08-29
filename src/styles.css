@@ -315,6 +315,14 @@
   }
   .stats b{ color:var(--on-ink); font-weight:500;}
 
+  .btf-version{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:9px;
+    letter-spacing:1px;
+    color:rgba(var(--on-paper-rgb),0.35);
+    user-select:none;
+  }
+
   /* LAST ADDED */
   .last-added{
     display:flex;

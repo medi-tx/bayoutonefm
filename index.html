@@ -33,11 +33,14 @@
 const SUPABASE_URL = 'https://aaqlnjdooeydtaihhdia.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
 
+const BTF_VERSION = '0069629';
+
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
       navigator.serviceWorker.register('sw.js').catch(function () {});
     });
   }
+  (function(){ const v = document.getElementById('btfVersion'); if(v) v.textContent = BTF_VERSION; })();
 </script>
 <meta name="mobile-web-app-capable" content="yes">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -364,6 +367,14 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
     overflow:hidden;
   }
   .stats b{ color:var(--on-ink); font-weight:500;}
+
+  .btf-version{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:9px;
+    letter-spacing:1px;
+    color:rgba(var(--on-paper-rgb),0.35);
+    user-select:none;
+  }
 
   /* LAST ADDED */
   .last-added{
@@ -3330,6 +3341,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
       <h1 style="margin:0; width:100%; display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap;"><div class="header-text-group"><span class="side-a">SIDE A · PERSONAL MIXTAPE</span><span style="color:var(--star);">Your Music Cataloguex</span></div></h1>
     </div>
     <div class="stats" id="stats"></div>
+    <span class="btf-version" id="btfVersion"></span>
     <span id="syncStatus" class="sync-status"></span>
     <div class="header-actions">
       <button class="theme-btn" id="notifBtn">🔔<span class="msg-btn-badge" id="notifBadge" style="display:none;"></span></button>
