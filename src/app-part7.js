@@ -330,6 +330,7 @@ document.getElementById('onboardingSaveBtn').addEventListener('click', async ()=
 document.getElementById('openChangePasswordBtn').addEventListener('click', ()=>{
   trackEvent('open_change_password');
   document.getElementById('myProfileOverlay').classList.remove('open');
+  document.getElementById('cp-current').value = '';
   document.getElementById('cp-password').value = '';
   document.getElementById('cp-password-2').value = '';
   document.getElementById('cp-error').style.display = 'none';
@@ -344,15 +345,40 @@ document.getElementById('passwordSaveBtn').addEventListener('click', async ()=>{
   const errEl = document.getElementById('cp-error');
   const msgEl = document.getElementById('cp-message');
   errEl.style.display = 'none'; msgEl.style.display = 'none';
+  const cur = document.getElementById('cp-current').value;
   const pw1 = document.getElementById('cp-password').value;
   const pw2 = document.getElementById('cp-password-2').value;
+  if(!cur){ errEl.textContent = 'Enter your current password.'; errEl.style.display=''; return; }
   if(!pw1 || pw1.length < 6){ errEl.textContent = 'Password must be at least 6 characters.'; errEl.style.display=''; return; }
   if(pw1 !== pw2){ errEl.textContent = 'Passwords do not match.'; errEl.style.display=''; return; }
-  const { error } = await sb.auth.updateUser({ password: pw1 });
-  if(error){ errEl.textContent = error.message; errEl.style.display=''; return; }
-  msgEl.textContent = 'Password updated.';
-  msgEl.style.display = '';
-  document.getElementById('cp-password').value = '';
-  document.getElementById('cp-password-2').value = '';
+  const saveBtn = document.getElementById('passwordSaveBtn');
+  saveBtn.disabled = true;
+  try{
+    const { data: { user } } = await sb.auth.getUser();
+    const email = (user && user.email) ? user.email : null;
+    if(email){
+      const checkClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
+      });
+      const check = await checkClient.auth.signInWithPassword({ email, password: cur });
+      if(check.error){
+        errEl.textContent = 'Current password is incorrect.';
+        errEl.style.display = '';
+        saveBtn.disabled = false;
+        return;
+      }
+    }
+    const { error } = await sb.auth.updateUser({ password: pw1 });
+    if(error){ errEl.textContent = error.message; errEl.style.display=''; saveBtn.disabled = false; return; }
+    msgEl.textContent = 'Password updated.';
+    msgEl.style.display = '';
+    document.getElementById('cp-current').value = '';
+    document.getElementById('cp-password').value = '';
+    document.getElementById('cp-password-2').value = '';
+  }catch(e){
+    errEl.textContent = e.message || 'Could not update your password.';
+    errEl.style.display = '';
+  }
+  saveBtn.disabled = false;
 });
 
