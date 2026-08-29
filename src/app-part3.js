@@ -841,12 +841,12 @@ function renderLastAdded(){
   `;
 }
 
-/* ---- windowed grid rendering (avoids building thousands of DOM nodes at once) ---- */
-const GRID_BATCH_SIZE = 60;
+/* ---- paged grid rendering (numbered pages instead of one long scroll) ---- */
+const PAGE_SIZE = 48;
 let currentGridList = [];
 let currentClusterCounts = {};
-let renderedCount = 0;
-let gridObserver = null;
+let currentPage = 1;
+let lastListKey = '';
 
 function stringHue(str){
   let h = 0;
@@ -921,26 +921,61 @@ function songCardHtml(s, clusterCounts){
     `;
 }
 
-function renderNextGridBatch(){
+function pageWindow(cur, total){
+  if(total <= 7) return Array.from({ length: total }, (_, i)=> i + 1);
+  const out = [];
+  const push = (p)=>{
+    if(p >= 1 && p <= total && out[out.length-1] !== p && out[out.length-1] !== '…') out.push(p);
+  };
+  push(1);
+  if(cur - 1 > 2) out.push('…');
+  for(let p = Math.max(2, cur - 1); p <= Math.min(total - 1, cur + 1); p++) out.push(p);
+  if(cur + 1 < total - 1) out.push('…');
+  push(total);
+  return out;
+}
+function renderGridPagination(totalPages){
+  const bar = document.getElementById('gridPagination');
+  if(!bar) return;
+  if(totalPages <= 1){
+    bar.style.display = 'none';
+    bar.innerHTML = '';
+    return;
+  }
+  bar.style.display = 'flex';
+  let html = `<button type="button" class="pgn-btn pgn-prev" data-page="${currentPage - 1}" ${currentPage === 1 ? 'disabled' : ''}>‹ Prev</button>`;
+  pageWindow(currentPage, totalPages).forEach(p=>{
+    if(p === '…'){ html += '<span class="pgn-gap">…</span>'; }
+    else { html += `<button type="button" class="pgn-btn${p === currentPage ? ' active' : ''}" data-page="${p}">${p}</button>`; }
+  });
+  html += `<button type="button" class="pgn-btn pgn-next" data-page="${currentPage + 1}" ${currentPage === totalPages ? 'disabled' : ''}>Next ›</button>`;
+  html += `<span class="pgn-total">Page ${currentPage} of ${totalPages}</span>`;
+  bar.innerHTML = html;
+  bar.querySelectorAll('button[data-page]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const p = parseInt(btn.getAttribute('data-page'), 10);
+      if(!p || p === currentPage) return;
+      currentPage = p;
+      renderCurrentPage();
+      const grid = document.getElementById('grid');
+      if(grid) grid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+}
+function renderCurrentPage(){
   const grid = document.getElementById('grid');
   const sentinel = document.getElementById('gridSentinel');
-  const slice = currentGridList.slice(renderedCount, renderedCount + GRID_BATCH_SIZE);
+  grid.innerHTML = '';
+  const totalPages = Math.max(1, Math.ceil(currentGridList.length / PAGE_SIZE));
+  if(currentPage > totalPages) currentPage = totalPages;
+  const start = (currentPage - 1) * PAGE_SIZE;
+  const slice = currentGridList.slice(start, start + PAGE_SIZE);
   if(slice.length){
     grid.insertAdjacentHTML('beforeend', slice.map(s=>songCardHtml(s, currentClusterCounts)).join(''));
-    renderedCount += slice.length;
     if(typeof renderStickerLayer === 'function' && stickers && stickers.some(s=>s&&s.url)) renderStickerLayer();
   }
-  if(renderedCount < currentGridList.length){
-    sentinel.style.display = 'block';
-    if(!gridObserver){
-      gridObserver = new IntersectionObserver(entries=>{
-        if(entries[0].isIntersecting) renderNextGridBatch();
-      }, { rootMargin: '800px' });
-      gridObserver.observe(sentinel);
-    }
-  } else {
-    sentinel.style.display = 'none';
-  }
+  if(sentinel) sentinel.style.display = 'none';
+  renderGridPagination(totalPages);
 }
 
 /* ---- timeline / scrapbook view: chronological feed grouped by day ---- */
@@ -2615,6 +2650,7 @@ function render(){
   if(viewingTimeline){
     document.getElementById('grid').style.display = 'none';
     document.getElementById('gridSentinel').style.display = 'none';
+    document.getElementById('gridPagination').style.display = 'none';
     document.getElementById('emptyState').style.display = 'none';
     document.getElementById('tierBoard').style.display = 'none';
     document.getElementById('tierBoardToolbar').style.display = 'none';
@@ -2637,6 +2673,7 @@ function render(){
   if(viewingTierBoard){
     document.getElementById('grid').style.display = 'none';
     document.getElementById('gridSentinel').style.display = 'none';
+    document.getElementById('gridPagination').style.display = 'none';
     document.getElementById('emptyState').style.display = 'none';
     document.getElementById('timeline').style.display = 'none';
     document.getElementById('timelineEmptyState').style.display = 'none';
@@ -2687,8 +2724,9 @@ function render(){
   if(list.length === 0){
     grid.innerHTML = '';
     currentGridList = [];
-    renderedCount = 0;
+    currentPage = 1;
     document.getElementById('gridSentinel').style.display = 'none';
+    document.getElementById('gridPagination').style.display = 'none';
     empty.style.display = 'block';
     if(showArchived){
       empty.querySelector('h2').textContent = 'Archive is empty';
@@ -2701,11 +2739,16 @@ function render(){
     empty.style.display = 'none';
     const clusterCounts = {};
     songs.forEach(s=>{ songStackIds(s).forEach(cid=>{ clusterCounts[cid] = (clusterCounts[cid]||0)+1; }); });
+    // Jump back to page 1 whenever the search/filter/sort/view changes.
+    const listKey = [q, fGenre, fMood, sortBy, showArchived, clusterFilterId||'', remindsFilterId||''].join('|');
+    if(listKey !== lastListKey){
+      lastListKey = listKey;
+      currentPage = 1;
+    }
     grid.innerHTML = '';
     currentGridList = list;
     currentClusterCounts = clusterCounts;
-    renderedCount = 0;
-    renderNextGridBatch();
+    renderCurrentPage();
     prefetchPreviews(list);
   }
 
@@ -2746,6 +2789,7 @@ function renderWishlistGrid(){
   document.getElementById('lastAdded').style.display = 'none';
   document.getElementById('clusterBar').style.display = 'none';
   document.getElementById('remindsBar').style.display = 'none';
+  document.getElementById('gridPagination').style.display = 'none';
   const grid = document.getElementById('grid');
   const empty = document.getElementById('emptyState');
   const q = document.getElementById('search').value.trim().toLowerCase();
