@@ -1200,6 +1200,9 @@ function itunesThrottled(task){
   itunesRequestTail = run.catch(()=>{});
   return run;
 }
+// Tracks how many times in a row iTunes has refused us, so the backoff escalates
+// and the API gets real breathing room instead of being re-poked every minute.
+let itunesFailStreak = (()=>{ try{ return Number(localStorage.getItem('bayt-itunes-fails') || '0') || 0; }catch(e){ return 0; } })();
 async function itunesSearch(term, entity, limit){
   if(Date.now() < itunesCooldownUntil) throw new Error('itunes_on_cooldown');
   const url = 'https://itunes.apple.com/search?media=music&entity=' + entity + '&limit=' + (limit||8) + '&term=' + encodeURIComponent(term);
@@ -1209,28 +1212,20 @@ async function itunesSearch(term, entity, limit){
     if(entity === 'album') return results.filter(r=>r.wrapperType==='collection');
     return results;
   };
-  // Primary path: JSONP sidesteps the CORS that the plain fetch endpoint has.
+  // JSONP is the only usable path — the plain fetch endpoint is CORS-blocked from
+  // bayoutonefm.com, so a fallback would just waste another request on the same
+  // rate-limit. Any failure is treated as a rate-limit hit and escalates backoff.
   try{
-    return filterResults(await itunesThrottled(()=> itunesJsonp(url)));
+    const data = await itunesThrottled(()=> itunesJsonp(url));
+    itunesFailStreak = 0;
+    try{ localStorage.setItem('bayt-itunes-fails', '0'); }catch(e){}
+    return filterResults(data);
   }catch(e){
-    // JSONP failed (rate-limit, blocker, or network). One cheap fetch retry tells
-    // us the real HTTP status so we can tell "slow down" apart from "blocked" —
-    // cascading a whole stack of alternate requests is what trips the 429s.
-    try{
-      const res = await itunesThrottled(()=> fetch(url.replace(/&callback=[^&]*/, ''), { headers: { 'Accept': 'application/json' } }));
-      if(res.ok) return filterResults(await res.json());
-      if(res.status === 429){
-        itunesBackoff(300000);
-        console.warn('iTunes is rate-limiting requests — backing off for 5 minutes.');
-      } else {
-        itunesBackoff(60000);
-      }
-      throw new Error('itunes_http_' + res.status);
-    }catch(e2){
-      // No usable HTTP status (CORS/network/server hiccup) — gentle cooldown.
-      itunesBackoff(60000);
-      throw e2;
-    }
+    itunesFailStreak = Math.min(8, itunesFailStreak + 1);
+    try{ localStorage.setItem('bayt-itunes-fails', String(itunesFailStreak)); }catch(e2){}
+    itunesBackoff(Math.min(1200000, 120000 * Math.pow(2, itunesFailStreak - 1)));
+    console.warn('iTunes request failed (attempt ' + itunesFailStreak + ') — backing off ' + Math.round((itunesCooldownUntil - Date.now())/60000) + ' min (' + String((e && e.message) || e) + ')');
+    throw e;
   }
 }
 async function deezerSearch(q, limit){
