@@ -3028,6 +3028,8 @@
 .cd-modal{ max-width:780px; }
 .cd-modal-sub{ font-size:13px; color:rgba(var(--on-paper-rgb),0.82); margin:-4px 0 16px; line-height:1.5; }
 .cd-scan-row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
+  .cd-scan-row .add-btn.secondary{ color:var(--on-paper); background:rgba(var(--on-paper-rgb),0.07); border-color:rgba(var(--on-paper-rgb),0.45); }
+  .cd-scan-row .add-btn.secondary:hover{ background:rgba(var(--on-paper-rgb),0.16); }
 .cd-scan-row input{
   flex:1; min-width:180px;
   background:var(--field-bg);
