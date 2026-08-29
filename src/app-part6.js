@@ -693,6 +693,36 @@ function dataUrlToBlob(dataUrl){
   }catch(e){ return null; }
 }
 
+// Keep every song's cover art in its own row (song_covers) so a large library
+// sync that has to strip covers from the user_data payload never loses them.
+async function syncCovers(songList){
+  if(!currentUserId || !sb || !songList || !songList.length) return;
+  try{
+    const rows = [];
+    const withCover = new Set();
+    const presentIds = [];
+    for(const s of songList){
+      if(!s || !s.id) continue;
+      presentIds.push(s.id);
+      if(s.coverArt){
+        withCover.add(s.id);
+        rows.push({ user_id: currentUserId, song_id: s.id, cover_art: String(s.coverArt), updated_at: new Date().toISOString() });
+      }
+    }
+    for(let i = 0; i < rows.length; i += 200){
+      const { error } = await sb.from('song_covers').upsert(rows.slice(i, i + 200), { onConflict: 'user_id,song_id' });
+      if(error) throw error;
+    }
+    // Current songs that no longer carry a cover should drop their saved row too.
+    const noCover = presentIds.filter(id => !withCover.has(id));
+    for(let i = 0; i < noCover.length; i += 50){
+      const ids = noCover.slice(i, i + 50);
+      const { error } = await sb.from('song_covers').delete().eq('user_id', currentUserId).in('song_id', ids);
+      if(error) throw error;
+    }
+  }catch(e){ console.error('Cover sync to song_covers failed (covers stay stored locally):', e); }
+}
+
 async function doSync(attempt, startRevision){
   if(!currentUserId) return;
   if(syncInFlight) return; // already uploading; post-success check will re-sync if needed
@@ -714,6 +744,8 @@ async function doSync(attempt, startRevision){
       c.coverArt = await storeCoverArt(c);
       slimSongs.push(slimSongForUpload(c));
     }
+    // Covers persist outside the (size-limited) user_data row.
+    await syncCovers(slimSongs);
     let payload = { user_id: currentUserId, songs: slimSongs, people, wishlist, updated_at: updated };
     if(JSON.stringify(payload).length < 900000){
       await pushUserData(payload);
@@ -976,6 +1008,25 @@ async function loadAppForUser(user){
       console.warn('Cloud returned an empty catalogue while local had songs — backed up previous list to "' + STORAGE_KEY + '-bak".');
     }catch(e){ /* storage full; skip */ }
   }
+  // Reattach cover art that lives outside the user_data row (song_covers) plus
+  // any covers still cached locally, so a large-library sync never wipes them.
+  try{
+    const localCovers = new Map();
+    try{
+      const prev = JSON.parse(prevLocal || '[]');
+      if(Array.isArray(prev)) prev.forEach(s => { if(s && s.id && s.coverArt) localCovers.set(s.id, s.coverArt); });
+    }catch(e){}
+    const { data: coverRows } = await sb.from('song_covers').select('song_id, cover_art').eq('user_id', user.id);
+    const cloudCovers = new Map((coverRows || []).map(r => [r.song_id, r.cover_art]).filter(([id, url]) => id && url));
+    let reattached = 0;
+    for(const s of songs){
+      if(!s || s.coverArt) continue;
+      const fromCloud = cloudCovers.get(s.id);
+      if(fromCloud){ s.coverArt = fromCloud; reattached++; }
+      else if(localCovers.has(s.id)){ s.coverArt = localCovers.get(s.id); reattached++; }
+    }
+    if(reattached) console.log('Reattached cover art for ' + reattached + ' songs.');
+  }catch(e){ console.warn('Could not reattach saved cover art:', e); }
   localStorage.setItem(STORAGE_KEY, JSON.stringify(songs));
   prefetchPreviews(songs);
   people = (remote && remote.people) || [];

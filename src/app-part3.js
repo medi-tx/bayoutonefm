@@ -4350,7 +4350,8 @@ async function loadAppleMusicPlaylist(url){
               ? (Array.isArray(t.byArtist) ? t.byArtist : [t.byArtist]).map(a=>a.name).filter(Boolean)
               : [];
             const album = (t.inAlbum && t.inAlbum.name) || '';
-            const trackCover = (t.inAlbum && t.inAlbum.image) || t.image || coverArt;
+            const normImg = (img) => (typeof img === 'string' ? img : (img && img.url) || null);
+            const trackCover = normImg((t.inAlbum && t.inAlbum.image) || t.image || coverArt);
             tracks.push({ title:t.name, artists, album, coverArt:trackCover, durationMs:0 });
           }
         }
@@ -4507,6 +4508,9 @@ async function loadTidalPlaylist(url){
         const albumAttr = (albumRel && albumRel[0] && albumMap[albumRel[0].id]) || {};
         const album = albumAttr.title || '';
         const year = albumAttr.releaseDate ? parseInt(albumAttr.releaseDate.slice(0,4), 10) : null;
+        const albumCover = albumAttr.cover
+          ? 'https://resources.tidal.com/images/' + String(albumAttr.cover).replace('/','-') + '/640x640.jpg'
+          : null;
         const durationStr = attrs.duration || '';
         let durationMs = 0;
         const durMatch = durationStr.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
@@ -4517,7 +4521,7 @@ async function loadTidalPlaylist(url){
           title: attrs.title || 'Unknown',
           artists: artists.length ? artists : ['Unknown Artist'],
           album,
-          coverArt: null,
+          coverArt: albumCover,
           durationMs,
           year: year || null,
         });
@@ -4780,11 +4784,11 @@ function enrichSongsFromSearch(toEnrich, abort, saveEvery){
   saveEvery = saveEvery || 50;
   async function enrichLoop(){
     for(let i = 0; i < toEnrich.length; i++){
-      if(abort && abort.aborted) return;
+      if(abort && abort.aborted){ save(); render(); return; }
       const s = toEnrich[i];
       if(failed.has(s.id)) continue;
       const now = Date.now();
-      if(now < deezerCooldownUntil && now < itunesCooldownUntil){ failed.add(s.id); continue; }
+      if(now < deezerCooldownUntil && now < itunesCooldownUntil){ failed.add(s.id); done++; continue; }
       const term = (s.title || '').replace(/\//g, ' ') + ' ' + (s.artists[0] || '');
       try{
         let gotArt = false;
