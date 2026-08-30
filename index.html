@@ -33,7 +33,7 @@
 const SUPABASE_URL = 'https://aaqlnjdooeydtaihhdia.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
 
-const BTF_VERSION = '8dbfb55';
+const BTF_VERSION = '36ec591';
 
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
@@ -3271,6 +3271,18 @@ const BTF_VERSION = '8dbfb55';
   background:var(--rose,#2A9D8F); color:#fff; font-weight:700; cursor:pointer; }
 .wt-btn:hover{ filter:brightness(1.08); }
 .wt-btn.secondary{ background:none; color:var(--on-paper,#12141c); border-color:rgba(var(--on-paper-rgb,18,20,28),.35); }
+
+/* ---- TOUR BUTTON (star tier color) ---- */
+#tourBtn{
+  color:var(--star,#d5873f);
+  border-color:var(--star,#d5873f);
+  background:color-mix(in srgb, var(--star,#d5873f) 14%, transparent);
+}
+#tourBtn:hover{
+  color:var(--gold,#eedd95);
+  border-color:var(--gold,#eedd95);
+  background:color-mix(in srgb, var(--star,#d5873f) 26%, transparent);
+}
 </style>
 </head>
 <body>
@@ -16962,9 +16974,6 @@ document.addEventListener('keydown', e=>{
     { target:'#notifBtn', title:'Notifications', body:'The <b>bell</b> is your notifications — when friends like your songs, comment on them, or send a friendship request, it shows up here.' },
     { target:'#messagesBtn', title:'Messages', body:'Chat with friends and trade song recommendations. Your conversations and reactions all live here.' },
     { target:'#feedBtn', title:'Feed', body:'A stream of what your friends are adding to their cataloguex — flip to <b>🌐 Discover</b> to see songs from everyone on bayoutonefm.' },
-    { target:'#sotdBtn', title:'Song of the Day', body:'A daily spotlight pick for you and your crew. See today\u2019s song, vote on tomorrow\u2019s, and compare what everyone\u2019s playing.' },
-    { target:'#leaderboardBtn', title:'Leaderboards', body:'Weekly rankings for you and your friends — points, tiers, and bragging rights for the best ears.' },
-    { target:'#statsBtn', title:'Stats', body:'Your listening stats and breakdowns — how you rate, what you replay, and where your taste lives.' },
     { target:'#toggleTierBoard', title:'Tier board', body:'Rate a song and it lands on your tier board — your personal ★ to C ranking of everything you love.' },
     { target:'#toggleTimeline', title:'Timeline', body:'Your music story in the order you added it — scroll through the journey from first song to latest.' },
     { target:'#viewClustersBtn', title:'Stacks', body:'Group songs into stacks — mixtapes, moods, eras. Hit <b>+ Create Stack</b> to start one, then pull it up anytime from View Stacks.' },
@@ -16978,7 +16987,13 @@ document.addEventListener('keydown', e=>{
     { overlay:'overlay', target:'#f-score', title:'Add your first song!', body:'Drop in a score from <b>30–100</b> and the tier sets itself — 95+ is <b>★</b>, 85+ is <b>S</b>, 70+ is <b>A</b>, 50+ is <b>B</b>, and below is <b>C</b>.' },
     { overlay:'overlay', target:'#tierPicker', title:'Add your first song!', body:'Tiers power your tier board and leaderboards. Pick a tier by hand here and the score fills itself in — either way works.' },
     { overlay:'overlay', target:'#f-why', title:'Add your first song!', body:'The opinions are the heart of it — write why you love it, how it hits, what it reminds you of. That part only comes from you.' },
-    { overlay:'overlay', target:'#saveBtn', finish:true, title:'Add your first song!', body:'Hit <b>Save song</b> and your cataloguex has its first entry. Welcome — now make it yours.' },
+    { overlay:'overlay', target:'#saveBtn', title:'Add your first song!', body:'Hit <b>Save song</b> and your cataloguex has its first entry. Welcome — now make it yours.' },
+  ];
+
+  const AFTER_FIRST_SLIDES = [
+    { overlay:'overlay', target:'#f-stars-lyrics', title:'Category ratings', body:'Give it up to <b>5 stars</b> for <b>🎤 Lyrics</b>, <b>🎶 Vocals</b>, and <b>🔁 Replay-ability</b> — friends see them on the back of your song cards.' },
+    { overlay:'overlay', target:'#f-vibe-energy', title:'Song vibes', body:'Slide <b>⚡ Energy</b> (chill ↔ electric), <b>🌗 Mood</b> (stormy ↔ sunny), and <b>🕰️ Nostalgia</b> (new ↔ familiar) — they show a song\u2019s feel at a glance.' },
+    { overlay:'songDbInfoOverlay', target:'#songDbInfoOverlay h3', title:'Song Database', finish:true, body:'Your song is now part of the <b>Song Database</b> — the shared library built by everyone on bayoutonefm, ready for others to discover. That\u2019s it — happy cataloging!' },
   ];
 
   function el(id){ return document.getElementById(id); }
@@ -16990,7 +17005,7 @@ document.addEventListener('keydown', e=>{
     p.style.height = Math.max(0, h) + 'px';
   }
   function closeTourOverlays(){
-    ['overlay','addMusicOverlay','spotifyImportOverlay','messagesOverlay','notifOverlay','feedOverlay','statsOverlay','sotdOverlay','leaderboardOverlay'].forEach(id=>{
+    ['overlay','addMusicOverlay','spotifyImportOverlay','messagesOverlay','notifOverlay','feedOverlay','statsOverlay','sotdOverlay','leaderboardOverlay','songDbInfoOverlay'].forEach(id=>{
       const ov = el(id);
       if(ov) ov.classList.remove('open');
     });
@@ -17110,7 +17125,7 @@ document.addEventListener('keydown', e=>{
     viewingTimeline = false;
     if(typeof updateViewUI === 'function'){ try{ updateViewUI(); }catch(e){} }
     if(typeof render === 'function'){ try{ render(); }catch(e){} }
-    slides = TOUR_SLIDES.concat(ADD_MUSIC_SLIDES);
+    slides = TOUR_SLIDES.concat(ADD_MUSIC_SLIDES).concat(AFTER_FIRST_SLIDES);
     idx = 0;
     active = true;
     currentOverlay = null;

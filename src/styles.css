@@ -3218,3 +3218,15 @@
   background:var(--rose,#2A9D8F); color:#fff; font-weight:700; cursor:pointer; }
 .wt-btn:hover{ filter:brightness(1.08); }
 .wt-btn.secondary{ background:none; color:var(--on-paper,#12141c); border-color:rgba(var(--on-paper-rgb,18,20,28),.35); }
+
+/* ---- TOUR BUTTON (star tier color) ---- */
+#tourBtn{
+  color:var(--star,#d5873f);
+  border-color:var(--star,#d5873f);
+  background:color-mix(in srgb, var(--star,#d5873f) 14%, transparent);
+}
+#tourBtn:hover{
+  color:var(--gold,#eedd95);
+  border-color:var(--gold,#eedd95);
+  background:color-mix(in srgb, var(--star,#d5873f) 26%, transparent);
+}
