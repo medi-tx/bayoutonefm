@@ -3599,7 +3599,7 @@ function openImportUrlScreen(mode){
   document.getElementById('albumSearchField').style.display = isAlbum ? 'block' : 'none';
   document.getElementById('albumSearchInput').value = '';
   document.getElementById('albumSearchResults').innerHTML = '';
-  document.getElementById('spotify-url-input').placeholder = isAlbum ? 'Paste an Apple Music album link…' : 'Paste an Apple Music, YouTube, or Tidal playlist URL…';
+  document.getElementById('spotify-url-input').placeholder = isAlbum ? 'Paste an Apple Music, Spotify, or Tidal album link…' : 'Paste an Apple Music, Spotify, YouTube, or Tidal playlist URL…';
   document.getElementById('spotify-url-input').value = '';
   document.getElementById('spotifyImportResults').style.display = 'none';
   document.getElementById('spotifyImportError').style.display = 'none';
@@ -3933,6 +3933,8 @@ async function handleSingleUrl(url){
   const isTidalTrack = /tidal\.com\/(?:browse\/)?track\/(\d+)/.test(url);
   const isTidalAlbum = /tidal\.com\/(?:browse\/)?album\/(\d+)/.test(url);
   const ytMatch = url.match(/(?:music\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]+)|youtu\.be\/([a-zA-Z0-9_-]+)/);
+  const spotTrackMatch = url.match(/open\.spotify\.com\/track\/([a-zA-Z0-9]+)/);
+  const spotAlbumMatch = url.match(/open\.spotify\.com\/album\/([a-zA-Z0-9]+)/);
   try{
     if(appleMatch && appleMatch[2]){
       const resp = await fetch('https://itunes.apple.com/lookup?id=' + appleMatch[2] + '&entity=song');
@@ -3952,6 +3954,104 @@ async function handleSingleUrl(url){
       const albumId = appleMatch[1];
       const ok = await buildAlbumFromItunesId(albumId);
       if(ok) return;
+    }
+    if(spotTrackMatch){
+      const trackId = spotTrackMatch[1];
+      try{
+        const token = await getSpotifyToken();
+        const resp = await fetch('https://api.spotify.com/v1/tracks/' + trackId, {
+          headers:{ Authorization:'Bearer '+token }
+        });
+        if(resp.ok){
+          const d = await resp.json();
+          const albumName = (d.album && d.album.name) || '';
+          const trackData = {
+            title: d.name || '',
+            artists: (d.artists || []).map(a=>a.name).filter(Boolean),
+            album: albumName,
+            year: (d.album && d.album.release_date) ? d.album.release_date.substring(0,4) : '',
+            releaseDate: (d.album && d.album.release_date) || '',
+            coverArt: (d.album && d.album.images && d.album.images[0] && d.album.images[0].url) || null,
+            spotifyUrl: (d.external_urls && d.external_urls.spotify) || url,
+            explicit: !!d.explicit,
+          };
+          document.getElementById('spotifyImportOverlay').classList.remove('open');
+          openAddFromData(trackData);
+          if(trackData.spotifyUrl) document.getElementById('f-spotify').value = trackData.spotifyUrl;
+          return;
+        }
+      }catch(e){ console.error('Spotify track lookup error:', e); }
+      document.getElementById('spotifyImportOverlay').classList.remove('open');
+      openAddFromData({ title:'', artists:[], spotifyUrl:url });
+      document.getElementById('f-spotify').value = url;
+      return;
+    }
+    if(spotAlbumMatch){
+      const albumId = spotAlbumMatch[1];
+      try{
+        const token = await getSpotifyToken();
+        const resp = await fetch('https://api.spotify.com/v1/albums/' + albumId, {
+          headers:{ Authorization:'Bearer '+token }
+        });
+        if(resp.ok){
+          const d = await resp.json();
+          const albumName = d.name || '';
+          const albumArtists = (d.artists || []).map(a=>a.name).filter(Boolean);
+          const coverArt = (d.images && d.images[0] && d.images[0].url) || null;
+          const releaseDate = d.release_date || '';
+          const albumYear = releaseDate.substring(0,4);
+          const totalTracks = d.total_tracks || 0;
+          const trTracks = [];
+          let offset = 0;
+          while(offset < totalTracks || offset === 0){
+            const trResp = await fetch('https://api.spotify.com/v1/albums/' + albumId + '/tracks?limit=50&offset=' + offset, {
+              headers:{ Authorization:'Bearer '+token }
+            });
+            if(!trResp.ok) break;
+            const td = await trResp.json();
+            const items = td.items || [];
+            if(!items.length) break;
+            for(const t of items){
+              trTracks.push({
+                title: t.name || '',
+                trackNumber: t.track_number || (trTracks.length + 1),
+                spotifyUrl: (t.external_urls && t.external_urls.spotify) || url,
+              });
+            }
+            offset += items.length;
+            if(!td.next) break;
+          }
+          if(trTracks.length === 0) throw new Error('Could not load tracks from this Spotify album.');
+          const clusterId = uid();
+          const now = Date.now();
+          const allImported = trTracks.map(t=>({
+            id: uid(), pinned:false, createdAt:now, clusterId, clusterName:albumName||'Album Import',
+            title:t.title, artists:albumArtists.length?albumArtists:[], album:albumName,
+            genres:[], why:'', credit:'', coverArt, tier:null, remindsOf:[], year:albumYear||null,
+            trackNumber:t.trackNumber, spotifyUrl:t.spotifyUrl,
+            releaseDate:releaseDate||null,
+          }));
+          const dupes = findDuplicates(allImported);
+          const dupeKeys = new Set(dupes.map(d=>songKey(d)));
+          const newSongs = allImported.filter(s=>!dupeKeys.has(songKey(s)));
+          dupes.forEach(d=>{ const ex=songs.find(s=>songKey(s)===songKey(d)); if(ex && !ex.coverArt && d.coverArt) ex.coverArt=d.coverArt; });
+          songs = [...newSongs, ...songs];
+          showBackupTip();
+          save();
+          upsertGlobalSongBatch(newSongs, currentUserId);
+          syncToSongDbBatch(newSongs, currentUserId);
+          document.getElementById('spotifyImportOverlay').classList.remove('open');
+          render();
+          enrichImportedSongs(clusterId, 'Spotify');
+          if(dupes.length>0) showToast('Imported '+newSongs.length+' songs. Skipped '+dupes.length+' duplicates.');
+          else showToast('Imported '+newSongs.length+' songs from "'+albumName+'".');
+          return;
+        }
+      }catch(e){ console.error('Spotify album lookup error:', e); }
+      document.getElementById('spotifyImportOverlay').classList.remove('open');
+      openAddFromData({ title:'', artists:[], spotifyUrl:url });
+      document.getElementById('f-spotify').value = url;
+      return;
     }
     if(isTidalTrack){
       const trackId = url.match(/tidal\.com\/(?:browse\/)?track\/(\d+)/)[1];
@@ -4363,6 +4463,7 @@ function detectPlaylistService(url){
   if(/music\.apple\.com\/.*\/playlist\//.test(url)) return 'apple';
   if(/tidal\.com\/(browse\/)?playlist\//.test(url)) return 'tidal';
   if(/music\.youtube\.com\/playlist|youtube\.com\/playlist/.test(url)) return 'youtube';
+  if(/open\.spotify\.com\/playlist\//.test(url)) return 'spotify';
   return null;
 }
 
@@ -4422,6 +4523,32 @@ async function getTidalToken(){
   tidalToken = data.access_token;
   tidalTokenExpiry = Date.now() + (data.expires_in - 60) * 1000;
   return tidalToken;
+}
+
+const SPOTIFY_CLIENT_ID = 'b46dfce1f67d4faea598d0ae02e42c50';
+const SPOTIFY_FUNCTION_URL = SUPABASE_URL + '/functions/v1/spotify-token';
+let spotifyToken = null;
+let spotifyTokenExpiry = 0;
+
+async function getSpotifyToken(){
+  if(spotifyToken && Date.now() < spotifyTokenExpiry) return spotifyToken;
+  const resp = await fetch(SPOTIFY_FUNCTION_URL, {
+    method: 'POST',
+    headers: {
+      'apikey': SUPABASE_ANON_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+    },
+  });
+  if(!resp.ok){
+    let msg = 'Spotify is not configured yet.';
+    try{ const d = await resp.json(); if(d && d.error) msg = d.error; }catch(e){}
+    throw new Error(msg);
+  }
+  const data = await resp.json();
+  if(!data.access_token) throw new Error('Could not authenticate with Spotify.');
+  spotifyToken = data.access_token;
+  spotifyTokenExpiry = Date.now() + (data.expires_in - 60) * 1000;
+  return spotifyToken;
 }
 
 async function loadTidalPlaylist(url){
@@ -4584,6 +4711,65 @@ async function loadTidalPlaylist(url){
   return { name:playlistName, tracks, coverArt:null };
 }
 
+async function loadSpotifyPlaylist(url){
+  const playlistId = (url.match(/playlist\/([a-zA-Z0-9]+)/i) || [])[1];
+  if(!playlistId) throw new Error('Invalid Spotify playlist URL');
+  const token = await getSpotifyToken();
+  const authHeaders = { 'Authorization': 'Bearer ' + token };
+
+  const plResp = await fetch('https://api.spotify.com/v1/playlists/' + playlistId + '?fields=name,images,tracks.total', { headers: authHeaders });
+  if(!plResp.ok) throw new Error('Could not find this Spotify playlist. Check the URL — it must be public.');
+  const pl = await plResp.json();
+  const playlistName = pl.name || 'Spotify Playlist';
+  const totalItems = (pl.tracks && pl.tracks.total) || 0;
+  if(totalItems === 0) throw new Error('This Spotify playlist is empty.');
+  const coverArt = (pl.images && pl.images[0] && pl.images[0].url) || null;
+
+  const listEl = document.getElementById('spotifyTrackList');
+  if(listEl) listEl.innerHTML = `<p class="profile-empty-note">Loading ${totalItems} tracks from Spotify…</p>`;
+
+  const tracks = [];
+  let offset = 0;
+  const spotifyStartTime = Date.now();
+  while(offset < totalItems){
+    const resp = await fetch('https://api.spotify.com/v1/playlists/' + playlistId + '/tracks?limit=100&offset=' + offset, { headers: authHeaders });
+    if(resp.status === 429 || resp.status === 503){
+      await new Promise(r => setTimeout(r, 3000));
+      continue;
+    }
+    if(!resp.ok) throw new Error('Could not load tracks from this Spotify playlist.');
+    const data = await resp.json();
+    const items = (data.items || []).filter(i => i && i.track);
+    for(const item of items){
+      const t = item.track;
+      const trackCover = (t.album && t.album.images && t.album.images[0] && t.album.images[0].url) || coverArt;
+      tracks.push({
+        title: t.name || '',
+        trackNumber: tracks.length + 1,
+        artists: (t.artists || []).map(a => a.name).filter(Boolean),
+        album: (t.album && t.album.name) || '',
+        coverArt: trackCover,
+        durationMs: t.duration_ms || 0,
+        spotifyUrl: (t.external_urls && t.external_urls.spotify) || null,
+      });
+    }
+    if(listEl){
+      const elapsed = (Date.now() - spotifyStartTime) / 1000;
+      const rate = offset > 0 ? elapsed / offset : 0.5;
+      const remaining = totalItems - tracks.length;
+      const etaSec = Math.round(remaining * rate);
+      listEl.innerHTML = `<p class="profile-empty-note">Loading tracks from Spotify… ${tracks.length}/${totalItems} · ~${fmtTime(etaSec)} remaining</p>`;
+    }
+    if(data.next){
+      offset += 100;
+    } else {
+      break;
+    }
+  }
+  if(tracks.length === 0) throw new Error('No playable tracks found in this Spotify playlist.');
+  return { name:playlistName, tracks, coverArt };
+}
+
 function parseYouTubePlaylistId(url){
   const m = url.match(/[?&]list=([a-zA-Z0-9_-]+)/);
   return m ? m[1] : null;
@@ -4610,7 +4796,7 @@ async function loadPlaylist(url){
   const service = detectPlaylistService(url);
   if(!service){
     errEl.style.display = 'block';
-    errEl.innerHTML = '<p class="profile-empty-note">Please paste an Apple Music, YouTube, or Tidal playlist URL.</p>';
+    errEl.innerHTML = '<p class="profile-empty-note">Please paste an Apple Music, Spotify, YouTube, or Tidal playlist URL.</p>';
     return;
   }
 
@@ -4620,7 +4806,7 @@ async function loadPlaylist(url){
   document.getElementById('spotifyImportStopBtn').style.display = '';
   document.getElementById('spotifyImportPauseBtn').style.display = '';
   document.getElementById('spotifyImportPauseBtn').textContent = 'Pause';
-  const serviceLabel = service === 'apple' ? 'Apple Music' : service === 'youtube' ? 'YouTube Music' : 'Tidal';
+  const serviceLabel = service === 'apple' ? 'Apple Music' : service === 'spotify' ? 'Spotify' : service === 'youtube' ? 'YouTube Music' : 'Tidal';
   listEl.innerHTML = `<p class="profile-empty-note">Connecting to ${serviceLabel}…</p>`;
   resultsEl.style.display = 'block';
   const oldStatus = document.getElementById('plEnrichStatus');
@@ -4634,6 +4820,9 @@ async function loadPlaylist(url){
       playlistName = result.name; tracks = result.tracks; coverArt = result.coverArt;
     } else if(service === 'tidal'){
       const result = await loadTidalPlaylist(url);
+      playlistName = result.name; tracks = result.tracks; coverArt = result.coverArt;
+    } else if(service === 'spotify'){
+      const result = await loadSpotifyPlaylist(url);
       playlistName = result.name; tracks = result.tracks; coverArt = result.coverArt;
     } else if(service === 'youtube'){
       const result = await loadYouTubePlaylist(url);
@@ -4653,7 +4842,7 @@ async function loadPlaylist(url){
     stopImportProgressTimer();
     document.getElementById('spotifyImportStopBtn').style.display = 'none';
     document.getElementById('spotifyImportPauseBtn').style.display = 'none';
-    const serviceLabel = service === 'apple' ? 'Apple Music' : service === 'youtube' ? 'YouTube Music' : 'Tidal';
+    const serviceLabel = service === 'apple' ? 'Apple Music' : service === 'spotify' ? 'Spotify' : service === 'youtube' ? 'YouTube Music' : 'Tidal';
     infoEl.innerHTML = `
       ${coverArt ? `<img loading="lazy" decoding="async" src="${escapeAttr(coverArt)}" style="width:48px;height:48px;border-radius:6px;object-fit:cover;" alt="Album cover">` : ''}
       <div>
@@ -4913,7 +5102,7 @@ document.getElementById('spotifyImportConfirmBtn').addEventListener('click', ()=
     if(!proceed) return;
   }
   try{
-    const serviceLabel = playlistImportService === 'apple' ? 'Apple Music' : playlistImportService === 'youtube' ? 'YouTube Music' : 'Tidal';
+    const serviceLabel = playlistImportService === 'apple' ? 'Apple Music' : playlistImportService === 'spotify' ? 'Spotify' : playlistImportService === 'youtube' ? 'YouTube Music' : 'Tidal';
     trackEvent('playlist_import', { service: playlistImportService, count: playlistImportedTracks.length });
     const clusterId = uid();
     const now = Date.now();
@@ -4934,6 +5123,8 @@ document.getElementById('spotifyImportConfirmBtn').addEventListener('click', ()=
       tier: null,
       remindsOf: [],
       year: t.year || null,
+      trackNumber: t.trackNumber || null,
+      spotifyUrl: t.spotifyUrl || null,
     }));
     const dupes = findDuplicates(allImported);
     const dupeKeys = new Set(dupes.map(d => songKey(d)));
