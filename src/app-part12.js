@@ -580,7 +580,7 @@ document.addEventListener('keydown', e=>{
     { target:'#sotdBtn', title:'Song of the Day', body:'A daily spotlight pick for you and your crew. See today\u2019s song, vote on tomorrow\u2019s, and compare what everyone\u2019s playing.' },
     { target:'#leaderboardBtn', title:'Leaderboards', body:'Weekly rankings for you and your friends — points, tiers, and bragging rights for the best ears.' },
     { target:'#statsBtn', title:'Stats', body:'Your listening stats and breakdowns — how you rate, what you replay, and where your taste lives.' },
-    { target:'#songDbBtn', title:'Song Database', body:'Every song anyone adds builds the shared <b>Song Database</b> — browse the whole community\u2019s music anytime. It unlocks once you\u2019ve added your first song.' },
+    { target:'#songDbBtn', title:'Song Database', body:'Every song anyone adds builds the shared <b>Song Database</b> — it unlocks once you\u2019ve added your first song. 🚧 <b>We\u2019re currently working on it</b> — it\u2019s not fully functional yet, but it\u2019s being built up for the future.' },
     { target:'#toggleTierBoard', title:'Tier board', body:'Rate a song and it lands on your tier board — your personal ★ to C ranking of everything you love.' },
     { target:'#toggleTimeline', title:'Timeline', body:'Your music story in the order you added it — scroll through the journey from first song to latest.' },
     { target:'#viewClustersBtn', title:'Stacks', body:'Group songs into stacks — mixtapes, moods, eras. Hit <b>+ Create Stack</b> to start one, then pull it up anytime from View Stacks.' },
@@ -600,7 +600,7 @@ document.addEventListener('keydown', e=>{
   ];
 
   const AFTER_FIRST_SLIDES = [
-    { overlay:'songDbInfoOverlay', target:'#songDbInfoOverlay h3', title:'Song Database', finish:true, body:'Your song is now part of the <b>Song Database</b> — the shared library built by everyone on bayoutonefm, ready for others to discover. That\u2019s it — happy cataloging!' },
+    { overlay:'songDbInfoOverlay', target:'#songDbInfoOverlay h3', title:'Song Database', finish:true, body:'Your song is now part of the <b>Song Database</b> — the shared library built by everyone on bayoutonefm. 🚧 <b>We\u2019re still working on it</b>, so it isn\u2019t fully functional yet — but your songs are seeding it for the future. That\u2019s it — happy cataloging!' },
   ];
 
   function el(id){ return document.getElementById(id); }
