@@ -1586,28 +1586,36 @@ async function loadDiscoverFeed(){
   if(!list) return;
   list.innerHTML = '<div class="feed-empty">Loading…</div>';
   try{
-    const friendIds = [...myFriendIds];
-    if(!friendIds.length){
+    let profiles = allProfilesCache || [];
+    if(profiles.length === 0){
+      const fresh = await fetchAllProfiles();
+      profiles = fresh || [];
+      if(profiles.length) allProfilesCache = profiles;
+    }
+    const others = profiles.filter(p => p.user_id !== currentUserId && p.username);
+    if(others.length === 0){
       if(countEl) countEl.textContent = '';
-      list.innerHTML = '<div class="feed-empty">Add some friends to see what they\'re listening to!</div>';
+      list.innerHTML = '<div class="feed-empty">You\'re the first one here — when other people on bayoutonefm add songs, they\'ll show up here.</div>';
       list.__feedMode = 'discover';
       list.__discoverData = [];
       return;
     }
-    const results = await Promise.all(friendIds.slice(0,25).map(async id=>{
+    const shuffled = others.slice();
+    for(let i = shuffled.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]; }
+    const sample = shuffled.slice(0, 30);
+    const results = await Promise.all(sample.map(async p=>{
       try{
-        const friendSongs = (await fetchReadOnlySongs(id)) || [];
-        const p = allProfilesCache.find(x=>x.user_id === id);
-        return friendSongs
+        const userSongs = (await fetchReadOnlySongs(p.user_id)) || [];
+        return userSongs
           .filter(s=>!s.archived && s.title)
-          .map(s=>({ song:s, who: p?.username || 'friend', profile: p, ownerId: id }));
+          .map(s=>({ song:s, who:p.username, profile:p, ownerId:p.user_id }));
       }catch(e){ return []; }
     }));
     const all = results.flat();
     for(let i = all.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [all[i], all[j]] = [all[j], all[i]]; }
     if(all.length === 0){
       if(countEl) countEl.textContent = '';
-      list.innerHTML = '<div class="feed-empty">Your friends haven\'t added any songs yet.</div>';
+      list.innerHTML = '<div class="feed-empty">No public songs on bayoutonefm yet — add some and others will discover your music here.</div>';
       list.__feedMode = 'discover';
       list.__discoverData = [];
       return;
@@ -1625,7 +1633,7 @@ async function loadDiscoverFeed(){
         }
       }
     }catch(err){ console.warn('Could not load discover reactions:', err); }
-    if(countEl) countEl.textContent = `${all.length} songs from ${friendIds.length} friend${friendIds.length===1?'':'s'}`;
+    if(countEl) countEl.textContent = `${all.length} songs from ${sample.length} people on bayoutonefm`;
     list.innerHTML = all.map(entry=> feedCardHtml(entry)).join('');
     list.__feedMode = 'discover';
     list.__discoverData = all;

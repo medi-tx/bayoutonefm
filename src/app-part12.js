@@ -576,7 +576,7 @@ document.addEventListener('keydown', e=>{
   const TOUR_SLIDES = [
     { target:'#notifBtn', title:'Notifications', body:'The <b>bell</b> is your notifications — when friends like your songs, comment on them, or send a friendship request, it shows up here.' },
     { target:'#messagesBtn', title:'Messages', body:'Chat with friends and trade song recommendations. Your conversations and reactions all live here.' },
-    { target:'#feedBtn', title:'Feed', body:'A stream of what your friends are adding to their cataloguex — stay on top of everyone\u2019s latest picks.' },
+    { target:'#feedBtn', title:'Feed', body:'A stream of what your friends are adding to their cataloguex — flip to <b>🌐 Discover</b> to see songs from everyone on bayoutonefm.' },
     { target:'#sotdBtn', title:'Song of the Day', body:'A daily spotlight pick for you and your crew. See today\u2019s song, vote on tomorrow\u2019s, and compare what everyone\u2019s playing.' },
     { target:'#leaderboardBtn', title:'Leaderboards', body:'Weekly rankings for you and your friends — points, tiers, and bragging rights for the best ears.' },
     { target:'#statsBtn', title:'Stats', body:'Your listening stats and breakdowns — how you rate, what you replay, and where your taste lives.' },
@@ -590,8 +590,8 @@ document.addEventListener('keydown', e=>{
     { overlay:'addMusicOverlay', target:'#addMusicSongBtn', title:'Add your first song!', body:'Choose <b>+ Song</b> for a single track, or <b>+ Album</b> / <b>+ Playlist</b> to add a whole project at once — paste an Apple Music, Spotify, YouTube, or Tidal link.' },
     { overlay:'overlay', target:'#f-song-search', title:'Add your first song!', body:'Search a title or artist and tap a result — we\u2019ll fill in title, artist, album, year, genre, and cover art automatically.' },
     { overlay:'overlay', target:'#f-title', title:'Add your first song!', body:'The song title goes here. You can edit any field if the search didn\u2019t know it.' },
-    { overlay:'overlay', target:'#f-artist', title:'Add your first song!', body:'List the artist or artists — separate multiple ones with commas.' },
-    { overlay:'overlay', target:'#tierPicker', title:'Add your first song!', body:'Give it a tier (★ / S / A / B / C). Tiers power your tier board, leaderboards, and stats.' },
+    { overlay:'overlay', target:'#f-score', title:'Add your first song!', body:'Drop in a score from <b>30–100</b> and the tier sets itself — 95+ is <b>★</b>, 85+ is <b>S</b>, 70+ is <b>A</b>, 50+ is <b>B</b>, and below is <b>C</b>.' },
+    { overlay:'overlay', target:'#tierPicker', title:'Add your first song!', body:'Tiers power your tier board and leaderboards. Pick a tier by hand here and the score fills itself in — either way works.' },
     { overlay:'overlay', target:'#f-why', title:'Add your first song!', body:'The opinions are the heart of it — write why you love it, how it hits, what it reminds you of. That part only comes from you.' },
     { overlay:'overlay', target:'#saveBtn', finish:true, title:'Add your first song!', body:'Hit <b>Save song</b> and your cataloguex has its first entry. Welcome — now make it yours.' },
   ];
