@@ -3198,14 +3198,14 @@
 }
 
 /* ---- SITE WALKTHROUGH ---- */
-.walkthrough{ position:fixed; inset:0; z-index:30000; display:none; }
+.walkthrough{ position:fixed; inset:0; z-index:30000; display:none; pointer-events:none; }
 .walkthrough.open{ display:block; }
-.wt-pane{ position:fixed; z-index:30001; background:rgba(6,8,14,0.78); }
+.wt-pane{ position:fixed; z-index:30001; background:rgba(6,8,14,0.78); pointer-events:none; }
 .wt-ring{ position:fixed; z-index:30002; pointer-events:none; border:2px solid var(--rose,#2A9D8F); border-radius:12px;
   box-shadow:0 0 0 4px rgba(42,157,143,.35), 0 0 22px rgba(42,157,143,.6); transition:left .18s ease, top .18s ease, width .18s ease, height .18s ease; }
 .wt-tooltip{ position:fixed; z-index:30003; width:min(340px, calc(100vw - 24px)); background:var(--paper,#eedd95); color:var(--on-paper,#12141c);
   border:1px solid rgba(var(--on-paper-rgb,18,20,28),0.15); border-radius:14px; padding:14px 16px;
-  box-shadow:0 12px 36px rgba(0,0,0,.55); font-family:'IBM Plex Mono',monospace; }
+  box-shadow:0 12px 36px rgba(0,0,0,.55); font-family:'IBM Plex Mono',monospace; pointer-events:auto; }
 .wt-tooltip-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:6px; }
 .wt-step{ font-size:10.5px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; opacity:.55; }
 .wt-skip{ background:none; border:none; color:var(--on-paper,#12141c); opacity:.55; cursor:pointer; font-family:inherit; font-size:11px; padding:2px 4px; }
