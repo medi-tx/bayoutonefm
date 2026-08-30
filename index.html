@@ -33,7 +33,7 @@
 const SUPABASE_URL = 'https://aaqlnjdooeydtaihhdia.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
 
-const BTF_VERSION = '21f0892';
+const BTF_VERSION = '30f6fcb';
 
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
@@ -13150,6 +13150,7 @@ function syncTesterButton(){
   if(btn) btn.textContent = '🧪 Tester';
   const hubList = document.getElementById('testerHubList');
   if(hubList && typeof testerHubItemsHtml === 'function') hubList.innerHTML = testerHubItemsHtml();
+  if(typeof window.syncTourButton === 'function') window.syncTourButton();
 }
 async function autoFriendSam(){
   try{
@@ -17157,7 +17158,18 @@ document.addEventListener('keydown', e=>{
     }
     if(t && t.offsetParent !== null){
       const r = t.getBoundingClientRect();
-      if(r.width > 0 && r.height > 0) m = { r, vw, vh };
+      if(r.width > 0 && r.height > 0){
+        m = { r, vw, vh };
+        if(s.target === '#f-song-search'){
+          const resEl = el('songSearchResults');
+          if(resEl && resEl.children.length && resEl.offsetHeight > 0){
+            const rr = resEl.getBoundingClientRect();
+            const top = Math.min(r.top, rr.top), bottom = Math.max(r.bottom, rr.bottom);
+            const left = Math.min(r.left, rr.left), right = Math.max(r.right, rr.right);
+            m.r = { top, bottom, left, right, width: right - left, height: bottom - top };
+          }
+        }
+      }
     }
     if(m){
       setPane('wtPaneTop', 0, 0, vw, m.r.top);
@@ -17191,7 +17203,7 @@ document.addEventListener('keydown', e=>{
     let x, y;
     if(m){
       if(vh - m.r.bottom > freeTop){ y = m.r.bottom + 18; x = Math.min(m.r.left, vw - tw - pad); }
-      else if(m.r.top > freeTop){ y = m.r.top - th - 18; x = Math.min(m.r.left, vw - tw - pad); }
+      else if(m.r.top > freeTop){ y = m.r.top - th - 18; x = vw - tw - pad; }
       else { y = (vh - th) / 2; x = (vw - tw) / 2; }
     } else {
       y = (vh - th) / 2;
@@ -17285,6 +17297,15 @@ document.addEventListener('keydown', e=>{
   window.startTour = startTour;
   window.maybeStartTour = maybeStartTour;
 
+  function syncTourButton(){
+    const b = el('tourBtn');
+    if(!b) return;
+    const isAllowed = (typeof isSamAdmin === 'function' && isSamAdmin()) || (typeof isCertifiedTester === 'function' && isCertifiedTester());
+    b.style.display = isAllowed ? '' : 'none';
+  }
+  window.syncTourButton = syncTourButton;
+  syncTourButton();
+
   document.getElementById('tourBtn').addEventListener('click', ()=>{
     try{ trackEvent('tour_replay'); }catch(e){}
     startTour();
@@ -17306,6 +17327,14 @@ document.addEventListener('keydown', e=>{
   };
   window.addEventListener('scroll', onReposition, true);
   window.addEventListener('resize', onReposition);
+  const searchResultsEl = document.getElementById('songSearchResults');
+  if(searchResultsEl && typeof MutationObserver !== 'undefined'){
+    new MutationObserver(()=>{
+      if(!active) return;
+      clearTimeout(repoTimer);
+      repoTimer = setTimeout(refresh, 60);
+    }).observe(searchResultsEl, { childList:true, subtree:true });
+  }
 })();</script>
 <audio id="previewAudio" preload="auto" playsinline webkit-playsinline></audio>
 <div id="analyticsConsentBanner" style="display:none; position:fixed; bottom:0; left:0; right:0; background:var(--ink); border-top:1px solid rgba(238,221,149,0.15); z-index:9999; font-family:'Space Grotesk',sans-serif; padding:0;">

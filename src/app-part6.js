@@ -931,6 +931,7 @@ function syncTesterButton(){
   if(btn) btn.textContent = '🧪 Tester';
   const hubList = document.getElementById('testerHubList');
   if(hubList && typeof testerHubItemsHtml === 'function') hubList.innerHTML = testerHubItemsHtml();
+  if(typeof window.syncTourButton === 'function') window.syncTourButton();
 }
 async function autoFriendSam(){
   try{
