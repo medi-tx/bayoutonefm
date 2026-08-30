@@ -33,7 +33,7 @@
 const SUPABASE_URL = 'https://aaqlnjdooeydtaihhdia.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
 
-const BTF_VERSION = '36ec591';
+const BTF_VERSION = '0cc805a';
 
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
@@ -8203,7 +8203,7 @@ function openImportUrlScreen(mode){
   const labelEl = document.getElementById('spotifyUrlLabel');
   const isAlbum = addMusicMode === 'album';
   titleEl.textContent = isAlbum ? 'Add an Album' : 'Add Music';
-  labelEl.textContent = isAlbum ? 'Or paste an Apple Music album link' : 'Paste an Apple Music, YouTube, or Tidal link';
+  labelEl.textContent = isAlbum ? 'Or paste an Apple Music, Spotify, or Tidal album link' : 'Paste an Apple Music, Spotify, YouTube, or Tidal link';
   document.getElementById('albumSearchField').style.display = isAlbum ? 'block' : 'none';
   document.getElementById('albumSearchInput').value = '';
   document.getElementById('albumSearchResults').innerHTML = '';
@@ -9075,6 +9075,117 @@ function detectPlaylistService(url){
   return null;
 }
 
+function detectImportType(url){
+  if(/music\.apple\.com\/.*\/playlist\//.test(url)) return { service:'apple', kind:'playlist' };
+  if(/music\.apple\.com\/.*\/album\/.*\/(\d+)(?:\?i=\d+)?/.test(url)) return { service:'apple', kind:'album' };
+  if(/tidal\.com\/(browse\/)?playlist\//.test(url)) return { service:'tidal', kind:'playlist' };
+  if(/tidal\.com\/(browse\/)?album\/(\d+)/.test(url)) return { service:'tidal', kind:'album' };
+  if(/music\.youtube\.com\/playlist|youtube\.com\/playlist/.test(url)) return { service:'youtube', kind:'playlist' };
+  if(/open\.spotify\.com\/playlist\//.test(url)) return { service:'spotify', kind:'playlist' };
+  if(/open\.spotify\.com\/album\/([a-zA-Z0-9]+)/.test(url)) return { service:'spotify', kind:'album' };
+  return null;
+}
+
+async function loadAppleAlbum(url){
+  const m = url.match(/music\.apple\.com\/.*\/album\/.*\/(\d+)(?:\?i=\d+)?/);
+  const albumId = m[1];
+  const resp = await fetch('https://itunes.apple.com/lookup?id=' + albumId + '&entity=song');
+  if(!resp.ok) throw new Error('Apple Music could not load this album right now.');
+  const d = await resp.json();
+  const results = d.results || [];
+  const col = results.find(r => r.wrapperType === 'collection');
+  const songs = results.filter(r => r.wrapperType === 'track' && r.kind === 'song' && r.trackName);
+  if(!songs.length) throw new Error('Could not find any tracks in this Apple Music album. It may be unavailable.');
+  const albumName = (col && col.collectionName) || (songs[0].collectionName || 'Apple Music Album');
+  const coverArt = (col && col.artworkUrl100) || songs[0].artworkUrl100 || null;
+  const tracks = songs
+    .sort((a, b) => (a.trackNumber || 0) - (b.trackNumber || 0))
+    .map(s => ({
+      title: s.trackName,
+      trackNumber: s.trackNumber || null,
+      artists: [s.artistName].filter(Boolean),
+      album: albumName,
+      coverArt: coverArt,
+      year: (s.releaseDate || '').substring(0, 4) || null,
+      appleMusicUrl: s.trackViewUrl || null,
+    }));
+  return { name: albumName, tracks, coverArt };
+}
+
+async function loadSpotifyAlbum(url){
+  const albumId = url.match(/open\.spotify\.com\/album\/([a-zA-Z0-9]+)/)[1];
+  const token = await getSpotifyToken();
+  const get = async path => {
+    const resp = await fetch('https://api.spotify.com/v1/' + path, { headers:{ Authorization:'Bearer '+token } });
+    if(resp.status === 429 || resp.status === 503){
+      await new Promise(r => setTimeout(r, 3000));
+      return get(path);
+    }
+    if(!resp.ok) throw new Error('Spotify could not load this album.');
+    return resp.json();
+  };
+  const d = await get('albums/' + albumId);
+  const albumName = d.name || '';
+  const albumArtists = (d.artists || []).map(a => a.name).filter(Boolean);
+  const coverArt = (d.images && d.images[0] && d.images[0].url) || null;
+  const releaseDate = d.release_date || '';
+  const totalTracks = d.total_tracks || 0;
+  const tracks = [];
+  let offset = 0;
+  while(offset < totalTracks || offset === 0){
+    const td = await get('albums/' + albumId + '/tracks?limit=50&offset=' + offset);
+    const items = td.items || [];
+    if(!items.length) break;
+    for(const t of items){
+      tracks.push({
+        title: t.name || '',
+        trackNumber: t.track_number || (tracks.length + 1),
+        artists: ((t.artists && t.artists.length ? t.artists.map(a => a.name) : albumArtists)).filter(Boolean),
+        album: albumName,
+        coverArt: coverArt,
+        year: releaseDate.substring(0, 4) || '',
+        spotifyUrl: (t.external_urls && t.external_urls.spotify) || url,
+      });
+    }
+    offset += items.length;
+    if(!td.next) break;
+  }
+  if(!tracks.length) throw new Error('Could not load tracks from this Spotify album.');
+  return { name: albumName || 'Spotify Album', tracks, coverArt };
+}
+
+async function loadTidalAlbum(url){
+  const albumId = url.match(/tidal\.com\/(?:browse\/)?album\/(\d+)/)[1];
+  const token = await getTidalToken();
+  const auth = { Authorization:'Bearer '+token, 'Content-Type':'application/vnd.tidal.v2+json' };
+  const resp = await fetch('https://openapi.tidal.com/v2/albums?filter[id]='+albumId+'&include=artists&countryCode=US', { headers: auth });
+  if(!resp.ok) throw new Error('Tidal could not load this album.');
+  const d = await resp.json();
+  const artistMap = {};
+  (d.included || []).forEach(inc => {
+    if(inc.type === 'artists' && inc.id) artistMap[inc.id] = inc.attributes && inc.attributes.name;
+  });
+  if(!d.data || !d.data[0]) throw new Error('Could not find this Tidal album.');
+  const a = d.data[0];
+  const attrs = a.attributes || {};
+  const albumArtists = ((a.relationships && a.relationships.artists && a.relationships.artists.data) || [])
+    .map(x => artistMap[x.id]).filter(Boolean);
+  const coverArt = attrs.cover ? 'https://resources.tidal.com/images/'+attrs.cover.replace('/','-')+'/640x640.jpg' : null;
+  const albumName = attrs.title || '';
+  const trResp = await fetch('https://openapi.tidal.com/v2/albums/'+albumId+'/tracks?countryCode=US&limit=300', { headers: auth });
+  let tracks = [];
+  if(trResp.ok){
+    const td = await trResp.json();
+    const items = td.items || td.data || [];
+    tracks = items.map((t, i) => {
+      const trAttrs = t.attributes || {};
+      return { title: trAttrs.title || '', trackNumber: trAttrs.trackNumber || (i + 1), artists: albumArtists, album: albumName, coverArt: coverArt, tidalUrl: url };
+    });
+  }
+  if(!tracks.length || !tracks.some(t => t.title)) throw new Error('Could not load tracks from this Tidal album.');
+  return { name: albumName || 'Tidal Album', tracks, coverArt };
+}
+
 async function loadAppleMusicPlaylist(url){
   const html = await fetchViaProxy(url);
   const doc = new DOMParser().parseFromString(html, 'text/html');
@@ -9401,12 +9512,14 @@ async function loadPlaylist(url){
   playlistImportLoadedUrl = null;
   playlistBuildEditingIdx = -1;
 
-  const service = detectPlaylistService(url);
-  if(!service){
+  const det = detectImportType(url);
+  if(!det){
     errEl.style.display = 'block';
-    errEl.innerHTML = '<p class="profile-empty-note">Please paste an Apple Music, Spotify, YouTube, or Tidal playlist URL.</p>';
+    errEl.innerHTML = '<p class="profile-empty-note">Please paste a supported Apple Music, Spotify, YouTube, or Tidal album or playlist URL.</p>';
     return;
   }
+
+  const service = det.service;
 
   playlistImportService = service;
   playlistImportUrl = url;
@@ -9423,7 +9536,18 @@ async function loadPlaylist(url){
   try{
     let playlistName, tracks, coverArt;
 
-    if(service === 'apple'){
+    if(det.kind === 'album'){
+      if(service === 'apple'){
+        const result = await loadAppleAlbum(url);
+        playlistName = result.name; tracks = result.tracks; coverArt = result.coverArt;
+      } else if(service === 'spotify'){
+        const result = await loadSpotifyAlbum(url);
+        playlistName = result.name; tracks = result.tracks; coverArt = result.coverArt;
+      } else if(service === 'tidal'){
+        const result = await loadTidalAlbum(url);
+        playlistName = result.name; tracks = result.tracks; coverArt = result.coverArt;
+      }
+    } else if(service === 'apple'){
       const result = await loadAppleMusicPlaylist(url);
       playlistName = result.name; tracks = result.tracks; coverArt = result.coverArt;
     } else if(service === 'tidal'){
@@ -9438,7 +9562,7 @@ async function loadPlaylist(url){
     }
 
     if(!tracks || !tracks.length){
-      listEl.innerHTML = '<p class="profile-empty-note">No tracks found in this playlist.</p>';
+      listEl.innerHTML = '<p class="profile-empty-note">No tracks found in this album or playlist.</p>';
       document.getElementById('spotifyImportStopBtn').style.display = 'none';
       document.getElementById('spotifyImportPauseBtn').style.display = 'none';
       return;
@@ -9733,6 +9857,8 @@ document.getElementById('spotifyImportConfirmBtn').addEventListener('click', ()=
       year: t.year || null,
       trackNumber: t.trackNumber || null,
       spotifyUrl: t.spotifyUrl || null,
+      tidalUrl: t.tidalUrl || null,
+      appleMusicUrl: t.appleMusicUrl || null,
     }));
     const dupes = findDuplicates(allImported);
     const dupeKeys = new Set(dupes.map(d => songKey(d)));
