@@ -1134,6 +1134,7 @@ async function loadAppForUser(user){
 
 subscribeNotifications();
   if(window.startMsgRealtime) window.startMsgRealtime();
+  if(typeof window.maybeStartTour === 'function') window.maybeStartTour();
 
   /* ---- invite link redemption ---- */
   try{
