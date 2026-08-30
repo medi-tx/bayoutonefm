@@ -577,9 +577,13 @@ document.addEventListener('keydown', e=>{
     { target:'#notifBtn', title:'Notifications', body:'The <b>bell</b> is your notifications — when friends like your songs, comment on them, or send a friendship request, it shows up here.' },
     { target:'#messagesBtn', title:'Messages', body:'Chat with friends and trade song recommendations. Your conversations and reactions all live here.' },
     { target:'#feedBtn', title:'Feed', body:'A stream of what your friends are adding to their cataloguex — flip to <b>🌐 Discover</b> to see songs from everyone on bayoutonefm.' },
+    { target:'#sotdBtn', title:'Song of the Day', body:'A daily spotlight pick for you and your crew. See today\u2019s song, vote on tomorrow\u2019s, and compare what everyone\u2019s playing.' },
+    { target:'#leaderboardBtn', title:'Leaderboards', body:'Weekly rankings for you and your friends — points, tiers, and bragging rights for the best ears.' },
+    { target:'#statsBtn', title:'Stats', body:'Your listening stats and breakdowns — how you rate, what you replay, and where your taste lives.' },
     { target:'#toggleTierBoard', title:'Tier board', body:'Rate a song and it lands on your tier board — your personal ★ to C ranking of everything you love.' },
     { target:'#toggleTimeline', title:'Timeline', body:'Your music story in the order you added it — scroll through the journey from first song to latest.' },
     { target:'#viewClustersBtn', title:'Stacks', body:'Group songs into stacks — mixtapes, moods, eras. Hit <b>+ Create Stack</b> to start one, then pull it up anytime from View Stacks.' },
+    { target:'#songDbBtn', title:'Song Database', body:'Every song anyone adds builds the shared <b>Song Database</b> — browse the whole community\u2019s music anytime. It unlocks once you\u2019ve added your first song.' },
   ];
 
   const ADD_MUSIC_SLIDES = [
