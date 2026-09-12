@@ -3817,6 +3817,7 @@ function stopListenRecording(silent){
     micBtn.disabled = false;
   }
 }
+const LISTEN_ATTEMPTS = 3;
 async function runListen(){
   const micBtn = document.getElementById('listenMicBtn');
   if(listenRecorder && listenRecorder.state === 'recording'){
@@ -3830,10 +3831,12 @@ async function runListen(){
     return;
   }
   try{
+    micBtn.textContent = '…';
     listenStatusText('Asking for microphone…');
     listenMediaStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation:false, noiseSuppression:false, autoGainControl:false } });
   }catch(err){
     listenStatusText('Microphone blocked. Allow mic access and try again.');
+    micBtn.textContent = '🎤';
     return;
   }
   listenChunks = [];
@@ -3846,21 +3849,22 @@ async function runListen(){
   }
   listenRecorder.ondataavailable = e=>{ if(e.data && e.data.size) listenChunks.push(e.data); };
   listenRecorder.onerror = ()=>{ stopListenRecording(true); listenStatusText('Recording error — try again.'); };
-  micBtn.textContent = '⏹';
   micBtn.classList.add('recording');
-  let secs = 9;
-  listenStatusText('Listening… play the song! (' + secs + ')');
+  let secs = 10;
+  micBtn.textContent = String(secs);
+  listenStatusText('Listening — play the song!');
   listenTimer = setInterval(()=>{
     secs--;
     if(secs > 0){
-      listenStatusText('Listening… play the song! (' + secs + ')');
+      micBtn.textContent = String(secs);
       return;
     }
     clearInterval(listenTimer);
     listenTimer = null;
     finishRecording();
   }, 1000);
-  listenRecorder.start(1000);
+  try{ listenRecorder.start(250); }
+  catch(e){ clearInterval(listenTimer); listenTimer = null; stopListenRecording(true); listenStatusText("Couldn't start recording in this browser."); }
 }
 function finishRecording(){
   const status = listenStatusText;
@@ -3908,43 +3912,46 @@ async function finishListen(blob){
     micBtn.textContent = '🎤';
     return;
   }
-  listenStatusText('Identifying…');
   const payload = {
     signature: { uri: sig.uri, samplems: sig.samplems },
     timezone: (()=>{ try{ return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'; }catch(e){ return 'UTC'; } })()
   };
-  try{
-    const resp = await fetch(SHAZAM_PROXY_URL, {
-      method: 'POST',
-      headers: {
-        'apikey': SUPABASE_ANON_KEY,
-        'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(payload)
-    });
-    if(!resp.ok) throw new Error('proxy_http_' + resp.status);
-    const data = await resp.json();
-    const hit = data && data.hit;
-    if(!hit || !hit.title){
-      listenStatusText('Couldn\'t catch it. Move closer to the speaker and try again.');
+  for(let attempt = 1; attempt <= LISTEN_ATTEMPTS; attempt++){
+    listenStatusText(attempt === 1 ? 'Identifying…' : 'Couldn\'t catch it yet — retrying…');
+    try{
+      const resp = await fetch(SHAZAM_PROXY_URL, {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+      if(!resp.ok) throw new Error('proxy_http_' + resp.status);
+      const data = await resp.json();
+      const hit = data && data.hit;
+      if(hit && hit.title){
+        trackEvent('add_song_listen');
+        closeListenOverlay();
+        openModal(hit);
+        return;
+      }
+      if(attempt < LISTEN_ATTEMPTS){
+        const retryms = Math.min(Number(data && data.retryms) || 12000, 12000);
+        if(retryms > 0){ await new Promise(r=>setTimeout(r, retryms)); }
+      }
+    }catch(err){
+      console.error('Live Listen error:', err);
+      listenStatusText('Identification failed — check your connection and try again.');
       micBtn.disabled = false;
       micBtn.textContent = '🎤';
       return;
     }
-    trackEvent('add_song_listen');
-    closeListenOverlay();
-    openModal(hit);
-  }catch(err){
-    console.error('Live Listen error:', err);
-    if(err && err.message === 'not_signed_in'){
-      listenStatusText('Please sign in again to use Live Listen.');
-    } else {
-      listenStatusText('Identification failed — check your connection and try again.');
-    }
-    micBtn.disabled = false;
-    micBtn.textContent = '🎤';
   }
+  listenStatusText('Couldn\'t catch it. Move closer to the speaker and tap the mic to try again.');
+  micBtn.disabled = false;
+  micBtn.textContent = '🎤';
 }
 async function blobToPcm16k(blob){
   const AC = window.AudioContext || window.webkitAudioContext;

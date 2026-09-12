@@ -127,8 +127,9 @@ Deno.serve(async (req) => {
 
   const track = data && data.track;
   if (!track) {
+    const retryms = Number(data && data.retryms) || 12000;
     return new Response(
-      JSON.stringify({ matches: (data && data.matches) || [], tagid: data && data.tagid, hit: null }),
+      JSON.stringify({ matches: (data && data.matches) || [], tagid: data && data.tagid, retryms, hit: null }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
