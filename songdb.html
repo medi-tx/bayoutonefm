@@ -80,15 +80,21 @@ select{cursor:pointer;}
 .card::after{content:"";position:absolute;top:0;right:14px;bottom:0;width:0;border-right:2px dashed rgba(var(--on-paper-rgb),0.18);}
 .card-top{display:flex;gap:12px;align-items:flex-start;padding-right:26px;}
 .title-stack{flex:1;min-width:0;}
-.track-title{font-family:'Fraunces',serif;font-weight:700;font-size:20px;line-height:1.2;margin:0 0 2px;}
-.track-artist{font-size:14px;color:rgba(var(--on-paper-rgb),0.9);margin:0;}
+.track-title{font-family:'Fraunces',serif;font-weight:700;font-size:21px;line-height:1.15;margin:0 0 4px;letter-spacing:-0.2px;}
+.track-artist{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--teal);font-weight:600;margin:0;}
 .cover-thumb{width:56px;height:56px;border-radius:6px;object-fit:cover;flex-shrink:0;border:1px solid rgba(var(--on-paper-rgb),0.15);box-shadow:0 2px 6px rgba(0,0,0,0.2);}
 .cover-fallback{width:56px;height:56px;border-radius:6px;flex-shrink:0;background:linear-gradient(135deg,#e0a638,#b8892f);color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-weight:700;font-size:22px;}
-.meta-row{font-family:'IBM Plex Mono',monospace;font-size:11px;color:rgba(var(--on-paper-rgb),0.82);display:flex;flex-wrap:wrap;gap:6px 10px;padding-right:26px;}
-.meta-row span{white-space:nowrap;}
-.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px;}
-.tag{background:rgba(var(--on-paper-rgb),0.08);border:1px solid rgba(var(--on-paper-rgb),0.12);color:var(--ink);font-size:11px;padding:3px 9px;border-radius:20px;font-family:'IBM Plex Mono',monospace;}
-.card-links{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px;}
+.meta-row{font-family:'IBM Plex Mono',monospace;font-size:10.5px;display:flex;flex-wrap:wrap;gap:5px;padding-right:26px;margin-top:2px;}
+.meta-row span{white-space:nowrap;background:rgba(var(--on-paper-rgb),0.07);border:1px solid rgba(var(--on-paper-rgb),0.16);color:rgba(var(--on-paper-rgb),0.92);padding:2px 8px;border-radius:5px;}
+.meta-row span:first-child{background:rgba(var(--teal),0.12);border-color:rgba(var(--teal),0.4);color:#1d2158;font-weight:600;}
+.credit-row{display:flex;align-items:baseline;gap:8px;padding-right:26px;margin-top:2px;line-height:1.35;}
+.credit-tag{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:1.2px;background:var(--teal);color:#fff;padding:2px 7px;border-radius:4px;flex-shrink:0;text-transform:uppercase;}
+.credit-tag.alt{background:var(--ink);color:var(--on-ink);}
+.credit-tag.rose{background:var(--rose);color:var(--ink);}
+.credit-val{font-size:13px;color:rgba(var(--on-paper-rgb),0.95);min-width:0;}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;padding-top:8px;border-top:1px dashed rgba(var(--on-paper-rgb),0.22);}
+.tag{background:rgba(var(--on-paper-rgb),0.08);border:1px solid rgba(var(--on-paper-rgb),0.14);color:var(--ink);font-size:11px;padding:3px 9px;border-radius:20px;font-family:'IBM Plex Mono',monospace;}
+.card-links{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}
 .card-link{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.5px;text-decoration:none;padding:4px 8px;border-radius:5px;border:1px solid rgba(var(--on-paper-rgb),0.2);color:rgba(var(--on-paper-rgb),0.88);}
 .card-link:hover{border-color:var(--teal);color:var(--teal);}
 .card-actions{display:flex;gap:10px;margin-top:auto;padding-top:10px;border-top:1px solid rgba(var(--on-paper-rgb),0.1);}
@@ -277,9 +283,11 @@ select{cursor:pointer;}
       <div class="edit-field"><label>Spotify URL</label><input id="ef_spotify" type="url" placeholder="https://..."></div>
       <div class="edit-field"><label>Apple Music URL</label><input id="ef_apple" type="url" placeholder="https://..."></div>
     </div>
-    <div class="edit-field"><label>Tidal URL</label><input id="ef_tidal" type="url" placeholder="https://tidal.com/browse/track/..."></div>
+    <div class="edit-row">
+      <div class="edit-field"><label>Tidal URL</label><input id="ef_tidal" type="url" placeholder="https://tidal.com/browse/track/..."></div>
+      <div class="edit-field"><label>Artist Website</label><input id="ef_artist_website" type="url" placeholder="https://artist.com"></div>
+    </div>
     <div class="edit-field"><label>Cover Art URL</label><input id="ef_cover_art" type="url" placeholder="https://..."><img id="ef_cover_preview" class="edit-cover-preview" style="display:none;" alt=""></div>
-    <div class="edit-field"><label>Notes</label><textarea id="ef_notes"></textarea></div>
     <div class="modal-actions">
       <button class="btn-cancel" id="editCancel" type="button">Cancel</button>
       <button class="btn-save" id="editSave" type="button">Save Changes</button>
@@ -496,6 +504,7 @@ function renderGrid(){
       if(s.streaming_links.apple) streamLinks.push({label:'Apple', url:s.streaming_links.apple});
       if(s.streaming_links.tidal) streamLinks.push({label:'Tidal', url:s.streaming_links.tidal});
     }
+    if(s.artist_website) streamLinks.push({label:'Artist Site', url:s.artist_website});
 
     var coverHTML = s.cover_art ?
       '<img class="cover-thumb" src="' + esc(s.cover_art) + '" alt="">' :
@@ -505,9 +514,9 @@ function renderGrid(){
       '<div class="title-stack"><p class="track-title">' + esc(s.title || 'Untitled') + '</p>' +
       '<p class="track-artist">' + esc(s.artist || 'Unknown') + '</p></div></div>';
     if(meta.length) html += '<div class="meta-row">' + meta.map(function(m){ return '<span>' + esc(m) + '</span>'; }).join('') + '</div>';
-    if(s.producer) html += '<div class="meta-row"><span>Prod. by ' + esc(s.producer) + '</span></div>';
-    if(s.songwriters) html += '<div class="meta-row"><span>Written by ' + esc(s.songwriters) + '</span></div>';
-    if(s.record_label) html += '<div class="meta-row"><span>' + esc(s.record_label) + '</span></div>';
+    if(s.producer) html += '<div class="credit-row"><span class="credit-tag">Producer</span><span class="credit-val">' + esc(s.producer) + '</span></div>';
+    if(s.songwriters) html += '<div class="credit-row"><span class="credit-tag alt">Written By</span><span class="credit-val">' + esc(s.songwriters) + '</span></div>';
+    if(s.record_label) html += '<div class="credit-row"><span class="credit-tag rose">Label</span><span class="credit-val">' + esc(s.record_label) + '</span></div>';
     if(tags.length) html += '<div class="tags">' + tags.map(function(t){ return '<span class="tag">' + esc(t) + '</span>'; }).join('') + '</div>';
     if(streamLinks.length) html += '<div class="card-links">' + streamLinks.map(function(l){ return '<a class="card-link" href="' + esc(l.url) + '" target="_blank" rel="noopener">' + l.label + '</a>'; }).join('') + '</div>';
     if(isAdmin) html += '<div class="card-actions"><button onclick="openEdit(\'' + s.id + '\')">Edit</button><button class="del" onclick="confirmDelete(\'' + s.id + '\')">Delete</button></div>';
@@ -847,7 +856,6 @@ document.getElementById('importConfirm').onclick = async function(){
           apple: importSource === 'itunes' ? (t.appleUrl || ('https://music.apple.com/us/song/' + t.sourceId)) : null,
           tidal: t.tidalUrl || null
         },
-        notes: '',
         source: importSource,
         source_id: t.sourceId,
         album_key: albumKey(alb.artist, alb.album),
@@ -924,8 +932,8 @@ function openEdit(id){
   document.getElementById('ef_spotify').value = (s.streaming_links && s.streaming_links.spotify) || '';
   document.getElementById('ef_apple').value = (s.streaming_links && s.streaming_links.apple) || '';
   document.getElementById('ef_tidal').value = (s.streaming_links && s.streaming_links.tidal) || '';
+  document.getElementById('ef_artist_website').value = s.artist_website || '';
   document.getElementById('ef_cover_art').value = s.cover_art || '';
-  document.getElementById('ef_notes').value = s.notes || '';
   var prev = document.getElementById('ef_cover_preview');
   if(s.cover_art){ prev.src = s.cover_art; prev.style.display = ''; } else { prev.style.display = 'none'; }
   document.getElementById('editOverlay').classList.add('open');
@@ -967,8 +975,8 @@ document.getElementById('editSave').onclick = async function(){
       apple: document.getElementById('ef_apple').value.trim() || null,
       tidal: document.getElementById('ef_tidal').value.trim() || null
     },
+    artist_website: document.getElementById('ef_artist_website').value.trim() || null,
     cover_art: document.getElementById('ef_cover_art').value.trim() || null,
-    notes: document.getElementById('ef_notes').value.trim(),
     album_key: albumKey(document.getElementById('ef_artist').value.trim(), document.getElementById('ef_album').value.trim())
   };
   var res = await sb.from(TABLE).update(updates).eq('id', editTargetId);

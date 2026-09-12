@@ -2744,6 +2744,7 @@ function render(){
     currentClusterCounts = clusterCounts;
     renderCurrentPage();
     prefetchPreviews(list);
+    if(typeof queueCardSync === 'function') queueCardSync(list);
   }
 
   const clusterBar = document.getElementById('clusterBar');
@@ -2819,6 +2820,7 @@ function renderWishlistGrid(){
     `).join('');
   }
   document.getElementById('stats').innerHTML = `<b>${wishlist.length}</b> song${wishlist.length!==1?'s':''} you wish you wrote`;
+  if(typeof queueCardSync === 'function') queueCardSync(wishlist);
 }
 
 function openModal(song){

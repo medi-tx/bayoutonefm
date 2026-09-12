@@ -334,6 +334,72 @@ function upsertGlobalSongBatch(songsList, userId){
   });
 }
 
+/* ---- auto-save rendered cards into global_songs, deduped ----------
+   Every song card shown on the site is queued here and pushed through
+   upsert_global_song, which ON CONFLICT (title, artist) updates the
+   existing row. No duplicates are ever created, and if a card's facts
+   change (edit), its fingerprint changes and the row is re-synced.
+   ---- */
+const gsAutoCache = new Map();   // key(title|artist) -> fingerprint of last synced card
+let gsAutoQueue = [];            // songs whose fingerprint changed since last sync
+let gsAutoTimer = null;
+let gsAutoRunning = false;
+
+function gsCardFingerprint(s){
+  if(!s || !s.title || !s.artists || !s.artists[0]) return null;
+  const t = (s.title||'').trim().toLowerCase();
+  const a = (s.artists[0]||'').trim().toLowerCase();
+  if(!t || !a) return null;
+  const g = Array.isArray(s.genres) ? s.genres.join('|') : (typeof s.genres === 'string' ? s.genres : '');
+  const meta = [
+    t, a,
+    (s.album||''), (s.year||''), g,
+    (s.coverArt||''), (s.previewUrl||''), !!s.explicit,
+    (s.producer||''), (s.songwriters||''), (s.bpm||null),
+    (s.musicKey||''), (s.duration||''), (s.recordLabel||''),
+    (s.spotifyUrl||''), (s.appleMusicUrl||''), (s.youtubeMusicUrl||''), (s.tidalUrl||''),
+    (s.releaseDate||''), (s.artistWebsite||''), (s.trackNumber||'')
+  ].join('§');
+  return t + '|||' + a + '|||' + meta;
+}
+
+function queueCardSync(songsList){
+  if(!sb || !Array.isArray(songsList) || !songsList.length) return;
+  const userId = (typeof currentUserId !== 'undefined' && currentUserId) || null;
+  if(!userId) return;   // only sync a real user's cards
+  const keys = new Set();
+  let changed = false;
+  songsList.forEach(s => {
+    const fp = gsCardFingerprint(s);
+    if(!fp) return;
+    const key = fp.split('|||')[0] + '|||' + fp.split('|||')[1];
+    if(keys.has(key)) return;         // no dupes within this batch
+    keys.add(key);
+    if(gsAutoCache.get(key) === fp) return; // unchanged since last sync
+    gsAutoCache.set(key, fp);
+    gsAutoQueue.push({ song: s, key });
+    changed = true;
+  });
+  if(!changed) return;
+  if(gsAutoTimer) clearTimeout(gsAutoTimer);
+  gsAutoTimer = setTimeout(()=> flushCardSyncQueue(userId), 500);
+}
+
+function flushCardSyncQueue(userId){
+  gsAutoTimer = null;
+  if(gsAutoRunning) return;
+  if(!gsAutoQueue.length) return;
+  gsAutoRunning = true;
+  const batch = gsAutoQueue.splice(0, 3);
+  Promise.all(batch.map(item => upsertGlobalSong(item.song, userId))).then(()=>{
+    gsAutoRunning = false;
+    if(gsAutoQueue.length) gsAutoTimer = setTimeout(()=> flushCardSyncQueue(userId), 400);
+  }).catch(()=>{
+    gsAutoRunning = false;
+    if(gsAutoQueue.length) gsAutoTimer = setTimeout(()=> flushCardSyncQueue(userId), 400);
+  });
+}
+
 function syncToSongDb(song, userId){
   try{
     const title = (song.title || '').trim();
