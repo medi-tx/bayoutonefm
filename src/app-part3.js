@@ -3759,18 +3759,40 @@ document.getElementById('addMusicSpotifyBtn').addEventListener('click', ()=>{
 
 /* ---- LIVE LISTEN: identify a song playing out loud (Shazam proxy) ---- */
 const SHAZAM_PROXY_URL = SUPABASE_URL + '/functions/v1/shazam-proxy';
-const SHAZAM_CORE_CDN = 'https://cdn.jsdelivr.net/npm/shazamio-core@1.3.1/web/shazamio-core.js';
+const SHAZAM_CORE_CDNS = [
+  'https://cdn.jsdelivr.net/npm/shazamio-core@1.3.1/web/shazamio-core.js',
+  'https://unpkg.com/shazamio-core@1.3.1/web/shazamio-core.js'
+];
+const LISTEN_ATTEMPTS = 3;
+const LISTEN_FETCH_TIMEOUT = 30000;
+const LISTEN_ENGINE_TIMEOUT = 45000;
 let listenMediaStream = null;
 let listenRecorder = null;
 let listenChunks = [];
 let listenTimer = null;
 let shazamCorePromise = null;
 
+function withTimeout(promise, ms, name){
+  let timer = null;
+  const timeout = new Promise((_, reject)=>{
+    timer = setTimeout(()=>reject(new Error(name || 'timeout')), ms);
+  });
+  return Promise.race([promise, timeout]).finally(()=>{ if(timer) clearTimeout(timer); });
+}
+
 function loadShazamCore(){
   if(!shazamCorePromise){
-    shazamCorePromise = import(SHAZAM_CORE_CDN)
-      .then(mod => mod.default().then(() => mod))
-      .catch(err => { shazamCorePromise = null; throw err; });
+    shazamCorePromise = (async ()=>{
+      let lastErr = null;
+      for(const cdn of SHAZAM_CORE_CDNS){
+        try{
+          const mod = await withTimeout(import(cdn), LISTEN_ENGINE_TIMEOUT, 'engine_load_timeout');
+          await withTimeout(mod.default(), LISTEN_ENGINE_TIMEOUT, 'engine_init_timeout');
+          return mod;
+        }catch(err){ lastErr = err; }
+      }
+      throw lastErr || new Error('engine_unavailable');
+    })().catch(err => { shazamCorePromise = null; throw err; });
   }
   return shazamCorePromise;
 }
@@ -3779,6 +3801,7 @@ function openListenOverlay(){
   trackEvent('open_listen');
   const micBtn = document.getElementById('listenMicBtn');
   listenStatusText('Tap the mic to start listening');
+  loadShazamCore().catch(()=>{});
   document.getElementById('listenOverlay').classList.add('open');
 }
 function closeListenOverlay(){
@@ -3812,12 +3835,11 @@ function stopListenRecording(silent){
   }
   const micBtn = document.getElementById('listenMicBtn');
   if(micBtn){
-    micBtn.textContent = '🎤';
-    micBtn.classList.remove('recording');
-    micBtn.disabled = false;
+micBtn.textContent = '🎤';
+  micBtn.classList.remove('recording');
+  micBtn.disabled = false;
   }
 }
-const LISTEN_ATTEMPTS = 3;
 async function runListen(){
   const micBtn = document.getElementById('listenMicBtn');
   if(listenRecorder && listenRecorder.state === 'recording'){
@@ -3894,14 +3916,15 @@ async function finishListen(blob){
   listenStatusText('Analyzing audio…');
   let sig = null;
   try{
+    const mod = await loadShazamCore();
+    listenStatusText('Building fingerprint…');
     const pcm = await blobToPcm16k(blob);
     const wav = pcmToWav(pcm, 16000);
-    const mod = await loadShazamCore();
     const sigs = mod.recognizeBytes(wav);
     if(sigs && sigs.length){ sig = sigs[0]; }
   }catch(err){
     console.error('Fingerprint error:', err);
-    listenStatusText('Couldn\'t build a fingerprint — try again.');
+    listenStatusText("Couldn't build a fingerprint — check your connection and try again.");
     micBtn.disabled = false;
     micBtn.textContent = '🎤';
     return;
@@ -3918,28 +3941,40 @@ async function finishListen(blob){
   };
   for(let attempt = 1; attempt <= LISTEN_ATTEMPTS; attempt++){
     listenStatusText(attempt === 1 ? 'Identifying…' : 'Couldn\'t catch it yet — retrying…');
+    let aborter = null;
     try{
-      const resp = await fetch(SHAZAM_PROXY_URL, {
-        method: 'POST',
-        headers: {
-          'apikey': SUPABASE_ANON_KEY,
-          'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
-      });
-      if(!resp.ok) throw new Error('proxy_http_' + resp.status);
-      const data = await resp.json();
-      const hit = data && data.hit;
-      if(hit && hit.title){
-        trackEvent('add_song_listen');
-        closeListenOverlay();
-        openModal(hit);
-        return;
-      }
-      if(attempt < LISTEN_ATTEMPTS){
-        const retryms = Math.min(Number(data && data.retryms) || 12000, 12000);
-        if(retryms > 0){ await new Promise(r=>setTimeout(r, retryms)); }
+      aborter = new AbortController();
+      const timeoutId = setTimeout(()=>{ try{ aborter.abort(); }catch(e){} }, LISTEN_FETCH_TIMEOUT);
+      try{
+        const resp = await fetch(SHAZAM_PROXY_URL, {
+          method: 'POST',
+          headers: {
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload),
+          signal: aborter.signal
+        });
+        if(!resp.ok) throw new Error('proxy_http_' + resp.status);
+        clearTimeout(timeoutId);
+        const data = await resp.json();
+        const hit = data && data.hit;
+        if(hit && hit.title){
+          trackEvent('add_song_listen');
+          closeListenOverlay();
+          openModal(hit);
+          return;
+        }
+        if(attempt < LISTEN_ATTEMPTS){
+          const retryms = Math.min(Number(data && data.retryms) || 12000, 12000);
+          if(retryms > 0){
+            listenStatusText('Couldn\'t catch it yet — retrying…');
+            await new Promise(r=>setTimeout(r, retryms));
+          }
+        }
+      } finally {
+        clearTimeout(timeoutId);
       }
     }catch(err){
       console.error('Live Listen error:', err);
