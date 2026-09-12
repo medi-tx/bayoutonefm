@@ -588,7 +588,7 @@ document.addEventListener('keydown', e=>{
 
   const ADD_MUSIC_SLIDES = [
     { target:'#openAddMusic', title:'Add your first song!', body:'This is where your cataloguex begins. When you\u2019re ready, open the Add Music menu to bring in your first song.' },
-    { overlay:'addMusicOverlay', target:'#addMusicSongBtn', title:'Add your first song!', body:'Choose <b>+ Song</b> for a single track, or <b>+ Album</b> / <b>+ Playlist</b> to add a whole project at once — paste an Apple Music, Spotify, YouTube, or Tidal link.' },
+    { overlay:'addMusicOverlay', target:'#addMusicSongBtn', title:'Add your first song!', body:'Choose <b>+ Song</b> for a single track, <b>+ Album</b> / <b>+ Playlist</b> to add a whole project at once — paste an Apple Music, Spotify, YouTube, or Tidal link — or <b>+ Live Listen</b> to identify a song playing nearby.' },
     { overlay:'overlay', target:'#f-song-search', title:'Add your first song!', body:'Search a title or artist and tap a result — we\u2019ll fill in title, artist, album, year, genre, and cover art automatically.' },
     { overlay:'overlay', target:'#f-title', title:'Add your first song!', body:'The song title goes here. You can edit any field if the search didn\u2019t know it.' },
     { overlay:'overlay', target:'#f-score', title:'Add your first song!', body:'Drop in a score from <b>30–100</b> and the tier sets itself — 95+ is <b>★</b>, 85+ is <b>S</b>, 70+ is <b>A</b>, 50+ is <b>B</b>, and below is <b>C</b>.' },
@@ -612,7 +612,7 @@ document.addEventListener('keydown', e=>{
     p.style.height = Math.max(0, h) + 'px';
   }
   function closeTourOverlays(){
-    ['overlay','addMusicOverlay','spotifyImportOverlay','messagesOverlay','notifOverlay','feedOverlay','statsOverlay','sotdOverlay','leaderboardOverlay','songDbInfoOverlay'].forEach(id=>{
+    ['overlay','addMusicOverlay','spotifyImportOverlay','listenOverlay','messagesOverlay','notifOverlay','feedOverlay','statsOverlay','sotdOverlay','leaderboardOverlay','songDbInfoOverlay'].forEach(id=>{
       const ov = el(id);
       if(ov) ov.classList.remove('open');
     });

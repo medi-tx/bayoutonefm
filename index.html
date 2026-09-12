@@ -33,7 +33,7 @@
 const SUPABASE_URL = 'https://aaqlnjdooeydtaihhdia.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
 
-const BTF_VERSION = '07730d8';
+const BTF_VERSION = '1ed5acd';
 
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
@@ -2601,6 +2601,25 @@ const BTF_VERSION = '07730d8';
   }
   .add-music-option:hover{ background:var(--gold); color:var(--ink); }
 
+  .listen-mic-btn{
+    width:96px; height:96px; border-radius:50%; border:none;
+    background:radial-gradient(circle at 35% 30%, var(--rose,#e8576f), #7c2d3e);
+    color:#fff; font-size:40px; cursor:pointer; margin:10px auto; display:block;
+    box-shadow:0 4px 18px rgba(0,0,0,0.35);
+    transition:transform 0.15s ease;
+  }
+  .listen-mic-btn:hover{ transform:scale(1.06); }
+  .listen-mic-btn.recording{ animation:listen-pulse 1s ease-in-out infinite; }
+  @keyframes listen-pulse{
+    0%,100%{ box-shadow:0 0 0 0 rgba(232,87,111,0.5); }
+    50%{ box-shadow:0 0 0 14px rgba(232,87,111,0); }
+  }
+  .listen-mic-btn:disabled{ opacity:0.6; cursor:default; transform:none; }
+  .listen-status{
+    font-family:'IBM Plex Mono', monospace; font-size:12px; color:var(--text-dim);
+    margin:12px 0 6px; min-height:16px;
+  }
+
   /* SONG OF THE DAY */
   #sotdBtn{ margin-left:2px; }
   .sotd-dock{
@@ -4467,9 +4486,22 @@ const BTF_VERSION = '07730d8';
 <button type="button" class="add-music-option" id="addMusicAlbumBtn" data-help="Add an album or stack of songs at once.">+ Album</button>
 <button type="button" class="add-music-option" id="addMusicSongBtn" data-help="Add a single song to your cataloguex.">+ Song</button>
       <button type="button" class="add-music-option" id="addMusicSpotifyBtn">+ Playlist</button>
+      <button type="button" class="add-music-option" id="addMusicListenBtn" data-help="Play a song out loud and we'll identify it for the catalogue.">+ Live Listen</button>
     </div>
     <div class="modal-actions">
       <button class="btn-cancel" id="addMusicCancelBtn">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="listenOverlay">
+  <div class="modal" style="max-width:460px; text-align:center;">
+    <h3>🎧 Live Listen</h3>
+    <p class="auth-sub" style="margin-bottom:14px;">Play the song out loud and hit the mic — we'll identify it and hand you a filled-in Add a Song form.</p>
+    <button type="button" id="listenMicBtn" title="Listen for a song" class="listen-mic-btn">🎤</button>
+    <p id="listenStatus" class="listen-status">Tap the mic to start listening</p>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="listenCloseBtn">Close</button>
     </div>
   </div>
 </div>
@@ -8357,6 +8389,247 @@ document.getElementById('addMusicSpotifyBtn').addEventListener('click', ()=>{
   document.getElementById('addMusicOverlay').classList.remove('open');
   openImportUrlScreen('playlist');
 });
+
+/* ---- LIVE LISTEN: identify a song playing out loud (Shazam proxy) ---- */
+const SHAZAM_PROXY_URL = SUPABASE_URL + '/functions/v1/shazam-proxy';
+const SHAZAM_CORE_CDN = 'https://cdn.jsdelivr.net/npm/shazamio-core@1.3.1/web/shazamio-core.js';
+let listenMediaStream = null;
+let listenRecorder = null;
+let listenChunks = [];
+let listenTimer = null;
+let shazamCorePromise = null;
+
+function loadShazamCore(){
+  if(!shazamCorePromise){
+    shazamCorePromise = import(SHAZAM_CORE_CDN)
+      .then(mod => mod.default().then(() => mod))
+      .catch(err => { shazamCorePromise = null; throw err; });
+  }
+  return shazamCorePromise;
+}
+
+function openListenOverlay(){
+  trackEvent('open_listen');
+  const micBtn = document.getElementById('listenMicBtn');
+  listenStatusText('Tap the mic to start listening');
+  document.getElementById('listenOverlay').classList.add('open');
+}
+function closeListenOverlay(){
+  stopListenRecording(true);
+  document.getElementById('listenOverlay').classList.remove('open');
+}
+document.getElementById('addMusicListenBtn').addEventListener('click', ()=>{
+  document.getElementById('addMusicOverlay').classList.remove('open');
+  openListenOverlay();
+});
+document.getElementById('listenCloseBtn').addEventListener('click', closeListenOverlay);
+document.getElementById('listenOverlay').addEventListener('click', e=>{
+  if(e.target.id === 'listenOverlay') closeListenOverlay();
+});
+function listenStatusText(text){
+  const el = document.getElementById('listenStatus');
+  if(el) el.textContent = text;
+}
+function stopListenRecording(silent){
+  clearTimeout(listenTimer);
+  listenTimer = null;
+  if(listenRecorder && listenRecorder.state !== 'inactive'){
+    try{ listenRecorder.ondataavailable = null; listenRecorder.onstop = null; }catch(e){}
+    try{ listenRecorder.stop(); }catch(e){}
+  }
+  listenRecorder = null;
+  listenChunks = [];
+  if(listenMediaStream){
+    listenMediaStream.getTracks().forEach(t=>t.stop());
+    listenMediaStream = null;
+  }
+  const micBtn = document.getElementById('listenMicBtn');
+  if(micBtn){
+    micBtn.textContent = '🎤';
+    micBtn.classList.remove('recording');
+    micBtn.disabled = false;
+  }
+}
+async function runListen(){
+  const micBtn = document.getElementById('listenMicBtn');
+  if(listenRecorder && listenRecorder.state === 'recording'){
+    clearTimeout(listenTimer);
+    listenTimer = null;
+    finishRecording();
+    return;
+  }
+  if(!navigator.mediaDevices || !window.MediaRecorder){
+    listenStatusText("Your browser can't record audio — try Chrome or Safari.");
+    return;
+  }
+  try{
+    listenStatusText('Asking for microphone…');
+    listenMediaStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation:false, noiseSuppression:false, autoGainControl:false } });
+  }catch(err){
+    listenStatusText('Microphone blocked. Allow mic access and try again.');
+    return;
+  }
+  listenChunks = [];
+  try{
+    listenRecorder = new MediaRecorder(listenMediaStream);
+  }catch(e){
+    stopListenRecording(true);
+    listenStatusText("Couldn't start recording in this browser.");
+    return;
+  }
+  listenRecorder.ondataavailable = e=>{ if(e.data && e.data.size) listenChunks.push(e.data); };
+  listenRecorder.onerror = ()=>{ stopListenRecording(true); listenStatusText('Recording error — try again.'); };
+  micBtn.textContent = '⏹';
+  micBtn.classList.add('recording');
+  let secs = 9;
+  listenStatusText('Listening… play the song! (' + secs + ')');
+  listenTimer = setInterval(()=>{
+    secs--;
+    if(secs > 0){
+      listenStatusText('Listening… play the song! (' + secs + ')');
+      return;
+    }
+    clearInterval(listenTimer);
+    listenTimer = null;
+    finishRecording();
+  }, 1000);
+  listenRecorder.start(1000);
+}
+function finishRecording(){
+  const status = listenStatusText;
+  const micBtn = document.getElementById('listenMicBtn');
+  const recorder = listenRecorder;
+  if(!recorder || recorder.state === 'inactive'){
+    stopListenRecording(true);
+    return;
+  }
+  recorder.onstop = ()=>{
+    const type = (recorder.mimeType || '').split(';')[0] || 'audio/webm';
+    const blob = new Blob(listenChunks, { type });
+    stopListenRecording(true);
+    if(!blob.size){
+      status('No audio captured — try again.');
+      return;
+    }
+    finishListen(blob);
+  };
+  try{ recorder.stop(); }
+  catch(e){ stopListenRecording(true); finishListen(new Blob(listenChunks)); }
+}
+async function finishListen(blob){
+  const micBtn = document.getElementById('listenMicBtn');
+  micBtn.disabled = true;
+  micBtn.textContent = '⏳';
+  listenStatusText('Analyzing audio…');
+  let sig = null;
+  try{
+    const pcm = await blobToPcm16k(blob);
+    const wav = pcmToWav(pcm, 16000);
+    const mod = await loadShazamCore();
+    const sigs = mod.recognizeBytes(wav);
+    if(sigs && sigs.length){ sig = sigs[0]; }
+  }catch(err){
+    console.error('Fingerprint error:', err);
+    listenStatusText('Couldn\'t build a fingerprint — try again.');
+    micBtn.disabled = false;
+    micBtn.textContent = '🎤';
+    return;
+  }
+  if(!sig || !sig.uri){
+    listenStatusText('Couldn\'t catch it. Move closer to the speaker and try again.');
+    micBtn.disabled = false;
+    micBtn.textContent = '🎤';
+    return;
+  }
+  listenStatusText('Identifying…');
+  const payload = {
+    signature: { uri: sig.uri, samplems: sig.samplems },
+    timezone: (()=>{ try{ return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'; }catch(e){ return 'UTC'; } })()
+  };
+  try{
+    const resp = await fetch(SHAZAM_PROXY_URL, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+    if(!resp.ok) throw new Error('proxy_http_' + resp.status);
+    const data = await resp.json();
+    const hit = data && data.hit;
+    if(!hit || !hit.title){
+      listenStatusText('Couldn\'t catch it. Move closer to the speaker and try again.');
+      micBtn.disabled = false;
+      micBtn.textContent = '🎤';
+      return;
+    }
+    trackEvent('add_song_listen');
+    closeListenOverlay();
+    openModal(hit);
+  }catch(err){
+    console.error('Live Listen error:', err);
+    if(err && err.message === 'not_signed_in'){
+      listenStatusText('Please sign in again to use Live Listen.');
+    } else {
+      listenStatusText('Identification failed — check your connection and try again.');
+    }
+    micBtn.disabled = false;
+    micBtn.textContent = '🎤';
+  }
+}
+async function blobToPcm16k(blob){
+  const AC = window.AudioContext || window.webkitAudioContext;
+  let ac;
+  try { ac = new AC(); } catch(e) { ac = null; }
+  let decoded = null;
+  if(ac){
+    try{
+      const arrayBuf = await blob.arrayBuffer();
+      decoded = await ac.decodeAudioData(arrayBuf);
+    }catch(e){ decoded = null; }
+  }
+  if(!decoded){
+    throw new Error('cant_decode_audio');
+  }
+  const rate = 16000;
+  const length = Math.max(1, Math.round(decoded.duration * rate));
+  const off = new OfflineAudioContext(1, length, rate);
+  const src = off.createBufferSource();
+  src.buffer = decoded;
+  src.connect(off.destination);
+  src.start(0);
+  const rendered = await off.startRendering();
+  const ch = rendered.getChannelData(0);
+  return ch;
+}
+function pcmToWav(pcm, rate){
+  const n = pcm.length;
+  const buf = new ArrayBuffer(44 + n * 2);
+  const v = new DataView(buf);
+  const wrtStr = (off, s)=>{ for(let i=0;i<s.length;i++) v.setUint8(off+i, s.charCodeAt(i)); };
+  wrtStr(0,'RIFF');
+  v.setUint32(4, 36 + n * 2, true);
+  wrtStr(8,'WAVE');
+  wrtStr(12,'fmt ');
+  v.setUint32(16,16,true);
+  v.setUint16(20,1,true);
+  v.setUint16(22,1,true);
+  v.setUint32(24,rate,true);
+  v.setUint32(28,rate * 2,true);
+  v.setUint16(32,2,true);
+  v.setUint16(34,16,true);
+  wrtStr(36,'data');
+  v.setUint32(40,n * 2,true);
+  for(let i=0;i<n;i++){
+    let s = pcm[i];
+    if(s > 1) s = 1; else if(s < -1) s = -1;
+    v.setInt16(44 + i * 2, Math.round(s * 32767), true);
+  }
+  return new Uint8Array(buf);
+}
+document.getElementById('listenMicBtn').addEventListener('click', runListen);
 document.getElementById('spotifyImportCancelBtn').addEventListener('click', function(){
   if(albumBuildTracks && albumBuildTracks.length){
     cancelAlbumBuild();
@@ -17181,7 +17454,7 @@ document.addEventListener('keydown', e=>{
 
   const ADD_MUSIC_SLIDES = [
     { target:'#openAddMusic', title:'Add your first song!', body:'This is where your cataloguex begins. When you\u2019re ready, open the Add Music menu to bring in your first song.' },
-    { overlay:'addMusicOverlay', target:'#addMusicSongBtn', title:'Add your first song!', body:'Choose <b>+ Song</b> for a single track, or <b>+ Album</b> / <b>+ Playlist</b> to add a whole project at once — paste an Apple Music, Spotify, YouTube, or Tidal link.' },
+    { overlay:'addMusicOverlay', target:'#addMusicSongBtn', title:'Add your first song!', body:'Choose <b>+ Song</b> for a single track, <b>+ Album</b> / <b>+ Playlist</b> to add a whole project at once — paste an Apple Music, Spotify, YouTube, or Tidal link — or <b>+ Live Listen</b> to identify a song playing nearby.' },
     { overlay:'overlay', target:'#f-song-search', title:'Add your first song!', body:'Search a title or artist and tap a result — we\u2019ll fill in title, artist, album, year, genre, and cover art automatically.' },
     { overlay:'overlay', target:'#f-title', title:'Add your first song!', body:'The song title goes here. You can edit any field if the search didn\u2019t know it.' },
     { overlay:'overlay', target:'#f-score', title:'Add your first song!', body:'Drop in a score from <b>30–100</b> and the tier sets itself — 95+ is <b>★</b>, 85+ is <b>S</b>, 70+ is <b>A</b>, 50+ is <b>B</b>, and below is <b>C</b>.' },
@@ -17205,7 +17478,7 @@ document.addEventListener('keydown', e=>{
     p.style.height = Math.max(0, h) + 'px';
   }
   function closeTourOverlays(){
-    ['overlay','addMusicOverlay','spotifyImportOverlay','messagesOverlay','notifOverlay','feedOverlay','statsOverlay','sotdOverlay','leaderboardOverlay','songDbInfoOverlay'].forEach(id=>{
+    ['overlay','addMusicOverlay','spotifyImportOverlay','listenOverlay','messagesOverlay','notifOverlay','feedOverlay','statsOverlay','sotdOverlay','leaderboardOverlay','songDbInfoOverlay'].forEach(id=>{
       const ov = el(id);
       if(ov) ov.classList.remove('open');
     });

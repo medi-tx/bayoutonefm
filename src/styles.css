@@ -2548,6 +2548,25 @@
   }
   .add-music-option:hover{ background:var(--gold); color:var(--ink); }
 
+  .listen-mic-btn{
+    width:96px; height:96px; border-radius:50%; border:none;
+    background:radial-gradient(circle at 35% 30%, var(--rose,#e8576f), #7c2d3e);
+    color:#fff; font-size:40px; cursor:pointer; margin:10px auto; display:block;
+    box-shadow:0 4px 18px rgba(0,0,0,0.35);
+    transition:transform 0.15s ease;
+  }
+  .listen-mic-btn:hover{ transform:scale(1.06); }
+  .listen-mic-btn.recording{ animation:listen-pulse 1s ease-in-out infinite; }
+  @keyframes listen-pulse{
+    0%,100%{ box-shadow:0 0 0 0 rgba(232,87,111,0.5); }
+    50%{ box-shadow:0 0 0 14px rgba(232,87,111,0); }
+  }
+  .listen-mic-btn:disabled{ opacity:0.6; cursor:default; transform:none; }
+  .listen-status{
+    font-family:'IBM Plex Mono', monospace; font-size:12px; color:var(--text-dim);
+    margin:12px 0 6px; min-height:16px;
+  }
+
   /* SONG OF THE DAY */
   #sotdBtn{ margin-left:2px; }
   .sotd-dock{

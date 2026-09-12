@@ -3756,6 +3756,247 @@ document.getElementById('addMusicSpotifyBtn').addEventListener('click', ()=>{
   document.getElementById('addMusicOverlay').classList.remove('open');
   openImportUrlScreen('playlist');
 });
+
+/* ---- LIVE LISTEN: identify a song playing out loud (Shazam proxy) ---- */
+const SHAZAM_PROXY_URL = SUPABASE_URL + '/functions/v1/shazam-proxy';
+const SHAZAM_CORE_CDN = 'https://cdn.jsdelivr.net/npm/shazamio-core@1.3.1/web/shazamio-core.js';
+let listenMediaStream = null;
+let listenRecorder = null;
+let listenChunks = [];
+let listenTimer = null;
+let shazamCorePromise = null;
+
+function loadShazamCore(){
+  if(!shazamCorePromise){
+    shazamCorePromise = import(SHAZAM_CORE_CDN)
+      .then(mod => mod.default().then(() => mod))
+      .catch(err => { shazamCorePromise = null; throw err; });
+  }
+  return shazamCorePromise;
+}
+
+function openListenOverlay(){
+  trackEvent('open_listen');
+  const micBtn = document.getElementById('listenMicBtn');
+  listenStatusText('Tap the mic to start listening');
+  document.getElementById('listenOverlay').classList.add('open');
+}
+function closeListenOverlay(){
+  stopListenRecording(true);
+  document.getElementById('listenOverlay').classList.remove('open');
+}
+document.getElementById('addMusicListenBtn').addEventListener('click', ()=>{
+  document.getElementById('addMusicOverlay').classList.remove('open');
+  openListenOverlay();
+});
+document.getElementById('listenCloseBtn').addEventListener('click', closeListenOverlay);
+document.getElementById('listenOverlay').addEventListener('click', e=>{
+  if(e.target.id === 'listenOverlay') closeListenOverlay();
+});
+function listenStatusText(text){
+  const el = document.getElementById('listenStatus');
+  if(el) el.textContent = text;
+}
+function stopListenRecording(silent){
+  clearTimeout(listenTimer);
+  listenTimer = null;
+  if(listenRecorder && listenRecorder.state !== 'inactive'){
+    try{ listenRecorder.ondataavailable = null; listenRecorder.onstop = null; }catch(e){}
+    try{ listenRecorder.stop(); }catch(e){}
+  }
+  listenRecorder = null;
+  listenChunks = [];
+  if(listenMediaStream){
+    listenMediaStream.getTracks().forEach(t=>t.stop());
+    listenMediaStream = null;
+  }
+  const micBtn = document.getElementById('listenMicBtn');
+  if(micBtn){
+    micBtn.textContent = '🎤';
+    micBtn.classList.remove('recording');
+    micBtn.disabled = false;
+  }
+}
+async function runListen(){
+  const micBtn = document.getElementById('listenMicBtn');
+  if(listenRecorder && listenRecorder.state === 'recording'){
+    clearTimeout(listenTimer);
+    listenTimer = null;
+    finishRecording();
+    return;
+  }
+  if(!navigator.mediaDevices || !window.MediaRecorder){
+    listenStatusText("Your browser can't record audio — try Chrome or Safari.");
+    return;
+  }
+  try{
+    listenStatusText('Asking for microphone…');
+    listenMediaStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation:false, noiseSuppression:false, autoGainControl:false } });
+  }catch(err){
+    listenStatusText('Microphone blocked. Allow mic access and try again.');
+    return;
+  }
+  listenChunks = [];
+  try{
+    listenRecorder = new MediaRecorder(listenMediaStream);
+  }catch(e){
+    stopListenRecording(true);
+    listenStatusText("Couldn't start recording in this browser.");
+    return;
+  }
+  listenRecorder.ondataavailable = e=>{ if(e.data && e.data.size) listenChunks.push(e.data); };
+  listenRecorder.onerror = ()=>{ stopListenRecording(true); listenStatusText('Recording error — try again.'); };
+  micBtn.textContent = '⏹';
+  micBtn.classList.add('recording');
+  let secs = 9;
+  listenStatusText('Listening… play the song! (' + secs + ')');
+  listenTimer = setInterval(()=>{
+    secs--;
+    if(secs > 0){
+      listenStatusText('Listening… play the song! (' + secs + ')');
+      return;
+    }
+    clearInterval(listenTimer);
+    listenTimer = null;
+    finishRecording();
+  }, 1000);
+  listenRecorder.start(1000);
+}
+function finishRecording(){
+  const status = listenStatusText;
+  const micBtn = document.getElementById('listenMicBtn');
+  const recorder = listenRecorder;
+  if(!recorder || recorder.state === 'inactive'){
+    stopListenRecording(true);
+    return;
+  }
+  recorder.onstop = ()=>{
+    const type = (recorder.mimeType || '').split(';')[0] || 'audio/webm';
+    const blob = new Blob(listenChunks, { type });
+    stopListenRecording(true);
+    if(!blob.size){
+      status('No audio captured — try again.');
+      return;
+    }
+    finishListen(blob);
+  };
+  try{ recorder.stop(); }
+  catch(e){ stopListenRecording(true); finishListen(new Blob(listenChunks)); }
+}
+async function finishListen(blob){
+  const micBtn = document.getElementById('listenMicBtn');
+  micBtn.disabled = true;
+  micBtn.textContent = '⏳';
+  listenStatusText('Analyzing audio…');
+  let sig = null;
+  try{
+    const pcm = await blobToPcm16k(blob);
+    const wav = pcmToWav(pcm, 16000);
+    const mod = await loadShazamCore();
+    const sigs = mod.recognizeBytes(wav);
+    if(sigs && sigs.length){ sig = sigs[0]; }
+  }catch(err){
+    console.error('Fingerprint error:', err);
+    listenStatusText('Couldn\'t build a fingerprint — try again.');
+    micBtn.disabled = false;
+    micBtn.textContent = '🎤';
+    return;
+  }
+  if(!sig || !sig.uri){
+    listenStatusText('Couldn\'t catch it. Move closer to the speaker and try again.');
+    micBtn.disabled = false;
+    micBtn.textContent = '🎤';
+    return;
+  }
+  listenStatusText('Identifying…');
+  const payload = {
+    signature: { uri: sig.uri, samplems: sig.samplems },
+    timezone: (()=>{ try{ return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'; }catch(e){ return 'UTC'; } })()
+  };
+  try{
+    const resp = await fetch(SHAZAM_PROXY_URL, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+    if(!resp.ok) throw new Error('proxy_http_' + resp.status);
+    const data = await resp.json();
+    const hit = data && data.hit;
+    if(!hit || !hit.title){
+      listenStatusText('Couldn\'t catch it. Move closer to the speaker and try again.');
+      micBtn.disabled = false;
+      micBtn.textContent = '🎤';
+      return;
+    }
+    trackEvent('add_song_listen');
+    closeListenOverlay();
+    openModal(hit);
+  }catch(err){
+    console.error('Live Listen error:', err);
+    if(err && err.message === 'not_signed_in'){
+      listenStatusText('Please sign in again to use Live Listen.');
+    } else {
+      listenStatusText('Identification failed — check your connection and try again.');
+    }
+    micBtn.disabled = false;
+    micBtn.textContent = '🎤';
+  }
+}
+async function blobToPcm16k(blob){
+  const AC = window.AudioContext || window.webkitAudioContext;
+  let ac;
+  try { ac = new AC(); } catch(e) { ac = null; }
+  let decoded = null;
+  if(ac){
+    try{
+      const arrayBuf = await blob.arrayBuffer();
+      decoded = await ac.decodeAudioData(arrayBuf);
+    }catch(e){ decoded = null; }
+  }
+  if(!decoded){
+    throw new Error('cant_decode_audio');
+  }
+  const rate = 16000;
+  const length = Math.max(1, Math.round(decoded.duration * rate));
+  const off = new OfflineAudioContext(1, length, rate);
+  const src = off.createBufferSource();
+  src.buffer = decoded;
+  src.connect(off.destination);
+  src.start(0);
+  const rendered = await off.startRendering();
+  const ch = rendered.getChannelData(0);
+  return ch;
+}
+function pcmToWav(pcm, rate){
+  const n = pcm.length;
+  const buf = new ArrayBuffer(44 + n * 2);
+  const v = new DataView(buf);
+  const wrtStr = (off, s)=>{ for(let i=0;i<s.length;i++) v.setUint8(off+i, s.charCodeAt(i)); };
+  wrtStr(0,'RIFF');
+  v.setUint32(4, 36 + n * 2, true);
+  wrtStr(8,'WAVE');
+  wrtStr(12,'fmt ');
+  v.setUint32(16,16,true);
+  v.setUint16(20,1,true);
+  v.setUint16(22,1,true);
+  v.setUint32(24,rate,true);
+  v.setUint32(28,rate * 2,true);
+  v.setUint16(32,2,true);
+  v.setUint16(34,16,true);
+  wrtStr(36,'data');
+  v.setUint32(40,n * 2,true);
+  for(let i=0;i<n;i++){
+    let s = pcm[i];
+    if(s > 1) s = 1; else if(s < -1) s = -1;
+    v.setInt16(44 + i * 2, Math.round(s * 32767), true);
+  }
+  return new Uint8Array(buf);
+}
+document.getElementById('listenMicBtn').addEventListener('click', runListen);
 document.getElementById('spotifyImportCancelBtn').addEventListener('click', function(){
   if(albumBuildTracks && albumBuildTracks.length){
     cancelAlbumBuild();
