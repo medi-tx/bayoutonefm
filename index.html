@@ -33,7 +33,7 @@
 const SUPABASE_URL = 'https://aaqlnjdooeydtaihhdia.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
 
-const BTF_VERSION = '39f3804';
+const BTF_VERSION = 'fcfdb1d';
 
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
@@ -8547,25 +8547,37 @@ async function finishListen(blob){
   micBtn.disabled = true;
   micBtn.textContent = '⏳';
   listenStatusText('Analyzing audio…');
+  // Overall watchdog: whatever happens, release the hourglass so the UI can't lock.
+  let watchdog = setTimeout(()=>{
+    const b = document.getElementById('listenMicBtn');
+    if(b){ b.disabled = false; b.textContent = '🎤'; }
+    const st = document.getElementById('listenStatus');
+    if(st && st.textContent.indexOf('catch it') === -1 && st.textContent.indexOf('failed') === -1){
+      st.textContent = 'That took too long — close this and give it another try.';
+    }
+    console.error('Live Listen watchdog fired: identification exceeded 60s');
+  }, 60000);
+  const release = (msg)=>{
+    clearTimeout(watchdog);
+    micBtn.disabled = false;
+    micBtn.textContent = '🎤';
+    if(msg) listenStatusText(msg);
+  };
   let sig = null;
   try{
     const mod = await loadShazamCore();
     listenStatusText('Building fingerprint…');
-    const pcm = await blobToPcm16k(blob);
+    const pcm = await withTimeout(blobToPcm16k(blob), LISTEN_FETCH_TIMEOUT, 'decode_audio_timeout');
     const wav = pcmToWav(pcm, 16000);
     const sigs = mod.recognizeBytes(wav);
     if(sigs && sigs.length){ sig = sigs[0]; }
   }catch(err){
     console.error('Fingerprint error:', err);
-    listenStatusText("Couldn't build a fingerprint — check your connection and try again.");
-    micBtn.disabled = false;
-    micBtn.textContent = '🎤';
+    release("Couldn't build a fingerprint — check your connection and try again.");
     return;
   }
   if(!sig || !sig.uri){
-    listenStatusText('Couldn\'t catch it. Move closer to the speaker and try again.');
-    micBtn.disabled = false;
-    micBtn.textContent = '🎤';
+    release('Couldn\'t catch it. Move closer to the speaker and try again.');
     return;
   }
   const payload = {
@@ -8594,6 +8606,7 @@ async function finishListen(blob){
         const data = await resp.json();
         const hit = data && data.hit;
         if(hit && hit.title){
+          clearTimeout(watchdog);
           trackEvent('add_song_listen');
           closeListenOverlay();
           openModal(hit);
@@ -8611,15 +8624,11 @@ async function finishListen(blob){
       }
     }catch(err){
       console.error('Live Listen error:', err);
-      listenStatusText('Identification failed — check your connection and try again.');
-      micBtn.disabled = false;
-      micBtn.textContent = '🎤';
+      release('Identification failed — check your connection and try again.');
       return;
     }
   }
-  listenStatusText('Couldn\'t catch it. Move closer to the speaker and tap the mic to try again.');
-  micBtn.disabled = false;
-  micBtn.textContent = '🎤';
+  release('Couldn\'t catch it. Move closer to the speaker and tap the mic to try again.');
 }
 async function blobToPcm16k(blob){
   const AC = window.AudioContext || window.webkitAudioContext;
