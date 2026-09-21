@@ -5591,24 +5591,27 @@ document.getElementById('spotifyImportConfirmBtn').addEventListener('click', ()=
   }
 });
 document.getElementById('cancelBtn').addEventListener('click', closeModal);
-// Once a popup has been typed in, clicking its backdrop must NOT dismiss it — it should only
-// close via Save/Cancel (or its close button). We "latch" any overlay that has received typing
-// focus, and reset the latch when that overlay closes.
-var __typingOverlays = [];
-document.addEventListener('focusin', e=>{
-  var t = e.target;
-  if(!t) return;
-  var tag = (t.tagName || '').toUpperCase();
-  if(tag !== 'INPUT' && tag !== 'TEXTAREA' && tag !== 'SELECT' && t.isContentEditable !== true) return;
-  var ov = t.closest ? t.closest('.overlay') : null;
-  if(ov && __typingOverlays.indexOf(ov) === -1) __typingOverlays.push(ov);
-}, true);
+// A popup that has a typing field should only close via Save/Cancel (or its own close button),
+// never by clicking the backdrop — so you can't lose what you were editing by clicking beside it.
+function __overlayHasTyping(ov){
+  var els = ov.querySelectorAll('input, textarea, select, [contenteditable="true"]');
+  for(var i=0;i<els.length;i++){
+    var el = els[i];
+    if(el.tagName === 'INPUT'){
+      var t = (el.getAttribute('type') || 'text').toLowerCase();
+      if(t === 'hidden' || t === 'file' || t === 'checkbox' || t === 'radio' || t === 'range' ||
+         t === 'color' || t === 'button' || t === 'submit' || t === 'reset' || t === 'image') continue;
+    }
+    if(el.getClientRects().length) return true;
+  }
+  return false;
+}
 var __typingBackdropBlock = false;
 document.addEventListener('pointerdown', e=>{
   __typingBackdropBlock = false;
   var host = e.target;
   if(!host || !host.classList || !host.classList.contains('overlay')) return;
-  if(__typingOverlays.indexOf(host) !== -1) __typingBackdropBlock = true;
+  if(__overlayHasTyping(host)) __typingBackdropBlock = true;
 }, true);
 document.addEventListener('click', e=>{
   var block = __typingBackdropBlock;
@@ -5617,26 +5620,6 @@ document.addEventListener('click', e=>{
   e.stopPropagation();
   e.preventDefault();
 }, true);
-(function(){
-  if(!window.MutationObserver) return;
-  var reset = new MutationObserver(function(muts){
-    muts.forEach(function(m){
-      if(m.type !== 'attributes' || m.attributeName !== 'class') return;
-      var el = m.target;
-      var wasOpen = m.oldValue ? m.oldValue.indexOf('open') !== -1 : false;
-      var isOpen = el.classList && el.classList.contains('open');
-      // Reset the latch when the overlay closes, so the next time it opens it can be
-      // dismissed by a backdrop click again (until the user types in it).
-      if(wasOpen && !isOpen){
-        var i = __typingOverlays.indexOf(el);
-        if(i !== -1) __typingOverlays.splice(i, 1);
-      }
-    });
-  });
-  document.querySelectorAll('.overlay').forEach(function(ov){
-    reset.observe(ov, { attributes:true, attributeFilter:['class'], attributeOldValue:true });
-  });
-})();
 document.getElementById('overlay').addEventListener('click', e=>{
   if(e.target.id !== 'overlay') return;
   closeModal();
