@@ -1092,6 +1092,17 @@
     text-shadow: 0 0 1px var(--ink), 0 0 1px var(--ink);
   }
   .card-actions a:hover{ text-decoration:underline; }
+  .card-share-logo{ display:none; }
+  .card.share-capture .card-actions{ display:none; }
+  .card.share-capture .card-share-logo{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    margin-top:auto;
+    padding-top:12px;
+    border-top:2px solid var(--ink);
+  }
+  .card.share-capture .card-share-logo img{ height:60px; width:auto; }
   .tier-board-toolbar{
     display:flex; align-items:center; justify-content:space-between; gap:12px;
     margin-bottom:14px;

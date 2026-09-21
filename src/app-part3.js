@@ -914,6 +914,7 @@ function songCardHtml(s, clusterCounts){
             <button data-action="delete" class="del" data-help="Permanently remove this song from your cataloguex.">DELETE</button>
             <button data-action="share" class="share-card-btn" data-help="Generate a shareable image of this song card." title="Generate a shareable card for this song">↗ SHARE</button>
           </div>
+          <div class="card-share-logo" aria-hidden="true"><img class="brand-logo" src="${escapeAttr(window.BRAND_LOGO||'')}" alt="bayoutonefm"></div>
         </div>
         ${cardBackHtml(s)}
         <button type="button" class="cb-flip-fab" data-action="flip" data-help="Flip the card to see extra details on the back." title="Flip card" aria-label="Flip card">↻</button>
@@ -1892,6 +1893,7 @@ async function drawSongShareCard(opts){
   }
   if(window.html2canvas && frontEl){
     try{
+      frontEl.classList.add('share-capture');
       frontEl.scrollIntoView({behavior:'auto', block:'center', inline:'center'});
       await new Promise(r=>setTimeout(r,150));
       const c = await Promise.race([
@@ -1899,10 +1901,11 @@ async function drawSongShareCard(opts){
         new Promise((_,rej)=> setTimeout(()=>rej(new Error('html2canvas timeout')), 5000))
       ]);
       applySheetToTarget('shareCanvas', c);
-      const backCv = document.getElementById('shareCanvasBack');
-      if(backCv) await drawSongBackShareCard(opts, 'shareCanvasBack');
-      return;
     }catch(e){ console.warn('html2canvas front failed, falling back:', e); }
+    finally{ frontEl.classList.remove('share-capture'); }
+    const backCv = document.getElementById('shareCanvasBack');
+    if(backCv) await drawSongBackShareCard(opts, 'shareCanvasBack');
+    return;
   }
   const W = 1080, H = 1350;
   cv.width = W; cv.height = H;
