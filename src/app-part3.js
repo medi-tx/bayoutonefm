@@ -728,6 +728,7 @@ function cardBackHtml(s){
         ${streamLinks.length ? '<div class="cb-field"><span class="cb-flabel">Listen</span><span class="cb-fval">' + streamLinks.join(' · ') + '</span></div>' : ''}
         ${s.artistWebsite ? '<div class="cb-field"><span class="cb-flabel">Artist</span><span class="cb-fval"><a class="back-link" href="'+escapeHtml(s.artistWebsite)+'" target="_blank" rel="noopener">'+escapeHtml(formatArtists(s.artists)||'Artist website')+' ↗</a></span></div>' : ''}
       </div>
+      <div class="card-share-logo" aria-hidden="true"><img class="brand-logo" src="${escapeAttr(window.BRAND_LOGO||'')}" alt="bayoutonefm"></div>
     </div>`;
 }
 function tierColor(tier){
@@ -1991,6 +1992,7 @@ async function drawSongBackShareCard(opts, cvId){
   if(window.html2canvas && backEl){
     const wasFlipped = backingCard.classList.contains('flipped');
     backingCard.classList.add('flipped');
+    backingCard.classList.add('share-capture-back');
     try{
       backEl.scrollIntoView({behavior:'auto', block:'center', inline:'center'});
       await new Promise(r=>setTimeout(r,180));
@@ -2003,6 +2005,7 @@ async function drawSongBackShareCard(opts, cvId){
     }catch(e){ console.warn('html2canvas back failed, falling back:', e); }
     finally{
       if(!wasFlipped) backingCard.classList.remove('flipped');
+      backingCard.classList.remove('share-capture-back');
     }
   }
   const W = 1080, H = 1350;
@@ -2041,6 +2044,13 @@ async function drawSongBackShareCard(opts, cvId){
     ctx.font = '500 16px "Space Grotesk", sans-serif';
     ctx.fillText('Genres: ' + s.genres.join(', '), 88, y + 8);
   }
+  try{
+    const logo = await new Promise(res=>{ const im = new Image(); im.onload = ()=>res(im); im.onerror = ()=>res(null); im.src = window.BRAND_LOGO || ''; });
+    if(logo && logo.naturalWidth){
+      const lh = 60, lw = logo.naturalWidth * lh / logo.naturalHeight;
+      ctx.drawImage(logo, (W - lw)/2, H - 96 - lh, lw, lh);
+    }
+  }catch(e){}
   const backSnap = cv.toDataURL('image/png');
   const img = new Image();
   img.onload = function(){ applySheetToTarget(cv.id, img); };
