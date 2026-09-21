@@ -33,7 +33,7 @@
 const SUPABASE_URL = 'https://aaqlnjdooeydtaihhdia.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
 
-const BTF_VERSION = 'c852846';
+const BTF_VERSION = 'a280e74';
 
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
@@ -1146,18 +1146,18 @@ const BTF_VERSION = 'c852846';
   }
   .card-actions a:hover{ text-decoration:underline; }
   .card-share-logo{ display:none; }
-  .card.share-capture .card-actions{ display:none; }
-  .card.share-capture .card-front .card-share-logo,
-  .card.share-capture-back .card-back .card-share-logo{
+  .card.share-capture .card-actions,
+  .card.share-capture-back .card-actions{ display:none; }
+  .card.share-capture .card-share-logo,
+  .card.share-capture-back .card-share-logo{
     display:block;
     text-align:center;
+    margin-top:auto;
     padding-top:12px;
     border-top:2px solid var(--ink);
   }
-  .card.share-capture .card-front .card-share-logo{ margin-top:auto; }
-  .card.share-capture-back .card-back .card-share-logo{ margin-top:16px; }
-  .card.share-capture .card-front .card-share-logo img,
-  .card.share-capture-back .card-back .card-share-logo img{ display:inline-block; height:60px; width:auto; }
+  .card.share-capture .card-share-logo img,
+  .card.share-capture-back .card-share-logo img{ display:inline-block; height:60px; width:auto; }
   .tier-board-toolbar{
     display:flex; align-items:center; justify-content:space-between; gap:12px;
     margin-bottom:14px;
