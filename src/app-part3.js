@@ -5591,6 +5591,25 @@ document.getElementById('spotifyImportConfirmBtn').addEventListener('click', ()=
   }
 });
 document.getElementById('cancelBtn').addEventListener('click', closeModal);
+// Popups that contain typing must be dismissed with Save/Cancel, not by clicking beside them.
+// pointerdown fires before the field blurs, so we remember the intent here and swallow the click.
+var __typingBackdropBlock = false;
+document.addEventListener('pointerdown', e=>{
+  __typingBackdropBlock = false;
+  var ae = document.activeElement;
+  if(!ae) return;
+  var tag = (ae.tagName || '').toUpperCase();
+  if(tag !== 'INPUT' && tag !== 'TEXTAREA' && tag !== 'SELECT' && ae.isContentEditable !== true) return;
+  var host = ae.closest ? ae.closest('.overlay') : null;
+  if(host && e.target === host) __typingBackdropBlock = true;
+}, true);
+document.addEventListener('click', e=>{
+  var block = __typingBackdropBlock;
+  __typingBackdropBlock = false;
+  if(!block) return;
+  e.stopPropagation();
+  e.preventDefault();
+}, true);
 document.getElementById('overlay').addEventListener('click', e=>{
   if(e.target.id !== 'overlay') return;
   closeModal();
