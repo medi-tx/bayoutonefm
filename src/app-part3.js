@@ -1264,15 +1264,121 @@ document.getElementById('testerBtn').addEventListener('click', ()=>{
   if(list) list.innerHTML = (typeof testerHubItemsHtml === 'function') ? testerHubItemsHtml() : '';
   document.getElementById('testerHubOverlay').classList.add('open');
 });
+function siteMvToEmbed(input){
+  if(!input) return null;
+  let src = String(input).trim();
+  const m = src.match(/<iframe[^>]*\bsrc=["']([^"']+)["']/i);
+  if(m) src = m[1].trim();
+  const yt = src.match(/(?:youtube\.com\/(?:watch\?[^#\s]*v=|embed\/|shorts\/|live\/)|music\.youtube\.com\/watch\?[^#\s]*v=|youtu\.be\/)([\w-]{6,})/i);
+  if(yt) return 'https://www.youtube.com/embed/' + yt[1];
+  const vm = src.match(/(?:player\.)?vimeo\.com\/(?:video\/)?(\d+)/i);
+  if(vm) return 'https://player.vimeo.com/video/' + vm[1];
+  return null;
+}
+function byYearDesc(a, b){ return (a.year||'') < (b.year||'') ? 1 : (a.year||'') > (b.year||'') ? -1 : 0; }
+function populateSiteMvSongSelect(){
+  const sel = document.getElementById('smv-song');
+  if(!sel) return;
+  if(!songs.length){
+    sel.innerHTML = '<option value="">Add songs to your cataloguex first</option>';
+    sel.disabled = true;
+    return;
+  }
+  sel.disabled = false;
+  sel.innerHTML = songs.slice().sort(byYearDesc).map(s=>'<option value="'+escapeAttr(s.id)+'">'+escapeHtml(((s.title||'Untitled')+' — '+(formatArtists(s.artists)||'?'))) + (s.musicVideoUrl ? '  🎬' : '') + '</option>').join('');
+}
+function siteMvIframe(src, title){
+  return '<iframe src="'+escapeAttr(src)+'" title="'+escapeAttr(title||'Site music video')+'" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>';
+}
+function renderSiteMvGallery(){
+  const gal = document.getElementById('smvGallery');
+  if(!gal) return;
+  const withVideos = songs.filter(s=>s.musicVideoUrl);
+  if(!withVideos.length){
+    gal.innerHTML = '<p class="mv-empty">No site music videos yet — pick a song above and save your video to it.</p>';
+    return;
+  }
+  gal.innerHTML = withVideos.map(s=>{
+    const e = siteMvToEmbed(s.musicVideoUrl);
+    return '<div class="mv-card">'
+      + (e ? '<div class="mv-embed">'+siteMvIframe(e, s.title)+'</div>' : '<div class="mv-embed mv-embed-missing">Embed preview unavailable — <a href="'+escapeAttr(s.musicVideoUrl)+'" target="_blank" rel="noopener">open link ↗</a></div>')
+      + '<div class="mv-meta"><b>'+escapeHtml(s.title||'Untitled')+'</b> <span>— '+escapeHtml(formatArtists(s.artists)||'?')+'</span></div>'
+      + '<button type="button" class="mv-remove" data-mv-remove="'+escapeAttr(s.id)+'">Remove video</button>'
+      + '</div>';
+  }).join('');
+}
+function updateMvPreview(){
+  const box = document.getElementById('smv-preview');
+  if(!box) return;
+  const e = siteMvToEmbed(document.getElementById('smv-embed').value);
+  if(e){
+    box.style.display = 'block';
+    box.innerHTML = siteMvIframe(e, 'Music video preview');
+  } else {
+    box.style.display = 'none';
+    box.innerHTML = '';
+  }
+}
+function setMvStatus(msg, ok){
+  const st = document.getElementById('smvStatus');
+  if(!st) return;
+  st.style.display = msg ? 'block' : 'none';
+  st.textContent = msg || '';
+  st.className = 'mv-status' + (ok ? ' mv-status-ok' : '');
+}
+function openSiteMv(){
+  trackEvent('open_site_mv');
+  populateSiteMvSongSelect();
+  renderSiteMvGallery();
+  setMvStatus('');
+  document.getElementById('siteMvOverlay').classList.add('open');
+}
 ['siteMvBtn','siteMvInfoBtn'].forEach(id=>{
   const el = document.getElementById(id);
-  if(el) el.addEventListener('click', ()=>{
-    trackEvent('open_site_mv');
-    document.getElementById('siteMvOverlay').classList.add('open');
-  });
+  if(el) el.addEventListener('click', openSiteMv);
 });
 document.getElementById('siteMvCloseBtn').addEventListener('click', ()=>{
   document.getElementById('siteMvOverlay').classList.remove('open');
+});
+document.getElementById('smvPreviewBtn').addEventListener('click', updateMvPreview);
+document.getElementById('smv-embed').addEventListener('input', updateMvPreview);
+document.getElementById('smvSaveBtn').addEventListener('click', ()=>{
+  const input = document.getElementById('smv-embed').value.trim();
+  const embedUrl = siteMvToEmbed(input);
+  if(!songs.length){ setMvStatus('Add songs to your cataloguex first.'); return; }
+  const sel = document.getElementById('smv-song');
+  if(!sel.value){ setMvStatus('Pick a song first.'); return; }
+  if(!input){ setMvStatus('Paste your video link or embed code first.'); return; }
+  if(!embedUrl){
+    setMvStatus('Couldn’t read a YouTube or Vimeo video from that. Paste a link like youtube.com/watch?v=…, youtu.be/…, vimeo.com/…, or an <iframe> embed code.');
+    return;
+  }
+  const song = songs.find(s=>s.id===sel.value);
+  if(!song) return;
+  song.musicVideoUrl = embedUrl;
+  save();
+  updateGlobalSong(song);
+  syncToSongDb(song, currentUserId);
+  render();
+  renderSiteMvGallery();
+  populateSiteMvSongSelect();
+  document.getElementById('smv-embed').value = '';
+  updateMvPreview();
+  setMvStatus('Video saved to "' + song.title + '" — it now shows on the site and on that song’s card back.', true);
+  trackEvent('add_site_mv');
+});
+document.getElementById('smvGallery').addEventListener('click', e=>{
+  const btn = e.target.closest('[data-mv-remove]');
+  if(!btn || !confirm('Remove this site music video?')) return;
+  const song = songs.find(s=>s.id===btn.dataset.mvRemove);
+  if(song) song.musicVideoUrl = null;
+  save();
+  updateGlobalSong(song);
+  syncToSongDb(song, currentUserId);
+  render();
+  renderSiteMvGallery();
+  populateSiteMvSongSelect();
+  trackEvent('remove_site_mv');
 });
 document.getElementById('testerHubList').addEventListener('click', e=>{
   const item = e.target.closest('[data-tester-hub]');

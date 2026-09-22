@@ -33,7 +33,7 @@
 const SUPABASE_URL = 'https://aaqlnjdooeydtaihhdia.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
 
-const BTF_VERSION = '35a88c4';
+const BTF_VERSION = '2a637c0';
 
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
@@ -3330,6 +3330,23 @@ const BTF_VERSION = '35a88c4';
 .mv-para{ font-size:14px; line-height:1.7; margin:0 0 14px; color:rgba(var(--on-paper-rgb),0.85); }
 .mv-para b{ color:var(--star); }
 .mv-para i{ font-style:italic; }
+.mv-select{ width:100%; padding:10px 12px; font:inherit; border:1px solid rgba(var(--on-paper-rgb),0.25); border-radius:8px; background:var(--paper); color:inherit; }
+.mv-preview{ margin-top:10px; }
+.mv-preview iframe{ width:100%; aspect-ratio:16/9; border:1px solid rgba(var(--on-paper-rgb),0.2); border-radius:8px; display:block; background:#000; }
+.mv-form-actions{ display:flex; gap:10px; margin-top:12px; }
+.mv-status{ font-size:13px; line-height:1.5; margin:10px 0 0; color:rgba(var(--on-paper-rgb),0.75); }
+.mv-status-ok{ color:var(--teal); }
+.mv-gallery{ display:flex; flex-direction:column; gap:14px; max-height:360px; overflow-y:auto; padding:2px; }
+.mv-empty{ font-size:13px; line-height:1.6; color:rgba(var(--on-paper-rgb),0.6); margin:0; }
+.mv-card{ border:1px solid rgba(var(--on-paper-rgb),0.15); border-radius:12px; padding:10px; background:rgba(var(--on-paper-rgb),0.03); }
+.mv-embed{ margin-bottom:8px; }
+.mv-embed iframe{ width:100%; aspect-ratio:16/9; border:1px solid rgba(var(--on-paper-rgb),0.15); border-radius:8px; display:block; background:#000; }
+.mv-embed-missing{ font-size:13px; color:rgba(var(--on-paper-rgb),0.6); padding:8px 0; }
+.mv-meta{ font-size:14px; margin-bottom:8px; }
+.mv-meta b{ color:var(--star); }
+.mv-meta span{ color:rgba(var(--on-paper-rgb),0.7); }
+.mv-remove{ font-size:12px; padding:5px 10px; border-radius:6px; border:1px solid rgba(var(--danger-rgb,220,60,60),0.5); color:var(--danger,#dc3c3c); background:transparent; cursor:pointer; }
+.mv-remove:hover{ background:rgba(var(--danger-rgb,220,60,60),0.12); }
 </style>
 </head>
 <body>
@@ -3828,12 +3845,27 @@ const BTF_VERSION = '35a88c4';
 </div>
 
 <div class="overlay" id="siteMvOverlay">
-  <div class="modal" style="max-width:480px;">
+  <div class="modal" style="max-width:560px;">
     <h3>🎬 Site Music Videos</h3>
-    <p class="mv-para"><b>Make your own music video to a song you love</b> — film shots of yourself, friends, art, or scenery, whatever fits the song. A phone camera plus any free video editor works; you don’t need any special tools.</p>
-    <p class="mv-para">Upload your finished video to <b>YouTube</b> or <b>Vimeo</b>, then copy its link.</p>
-    <p class="mv-para">In the <b>Add a song</b> / <b>Edit song</b> form, paste that link into the <i>“My music video”</i> box on the song’s entry. That way the site knows which song your video belongs to.</p>
-    <p class="mv-para"><b>Keep it yours:</b> make videos only for music you have the right to use, and upload only your own creations — not official music videos or others’ clips.</p>
+    <p class="mv-para" style="margin-bottom:12px;"><b>Make your own music video to a song you love</b> — film shots of yourself, friends, art, or scenery, whatever fits the song. Upload it to <b>YouTube</b> or <b>Vimeo</b>, then link it to one of the songs in your cataloguex below. Only your own creations — not official music videos or others’ clips.</p>
+    <div class="mv-form">
+      <div class="field">
+        <label>Pick a song from the site</label>
+        <select id="smv-song" class="mv-select"></select>
+      </div>
+      <div class="field">
+        <label>Your music video — paste a YouTube/Vimeo link or the embed code</label>
+        <input id="smv-embed" type="text" placeholder="https://www.youtube.com/watch?v=…  ·  https://vimeo.com/…  ·  <iframe src=…>">
+      </div>
+      <div class="mv-preview" id="smv-preview" style="display:none;"></div>
+      <div class="mv-form-actions">
+        <button class="btn-save" id="smvPreviewBtn">👁 Preview</button>
+        <button class="btn-save" id="smvSaveBtn">Save video to this song</button>
+      </div>
+      <p class="mv-status" id="smvStatus" style="display:none;"></p>
+    </div>
+    <h4 style="margin:18px 0 10px;">Videos on the site</h4>
+    <div class="mv-gallery" id="smvGallery"></div>
     <div class="modal-actions">
       <button class="btn-cancel" id="siteMvCloseBtn">Close</button>
     </div>
@@ -5944,15 +5976,121 @@ document.getElementById('testerBtn').addEventListener('click', ()=>{
   if(list) list.innerHTML = (typeof testerHubItemsHtml === 'function') ? testerHubItemsHtml() : '';
   document.getElementById('testerHubOverlay').classList.add('open');
 });
+function siteMvToEmbed(input){
+  if(!input) return null;
+  let src = String(input).trim();
+  const m = src.match(/<iframe[^>]*\bsrc=["']([^"']+)["']/i);
+  if(m) src = m[1].trim();
+  const yt = src.match(/(?:youtube\.com\/(?:watch\?[^#\s]*v=|embed\/|shorts\/|live\/)|music\.youtube\.com\/watch\?[^#\s]*v=|youtu\.be\/)([\w-]{6,})/i);
+  if(yt) return 'https://www.youtube.com/embed/' + yt[1];
+  const vm = src.match(/(?:player\.)?vimeo\.com\/(?:video\/)?(\d+)/i);
+  if(vm) return 'https://player.vimeo.com/video/' + vm[1];
+  return null;
+}
+function byYearDesc(a, b){ return (a.year||'') < (b.year||'') ? 1 : (a.year||'') > (b.year||'') ? -1 : 0; }
+function populateSiteMvSongSelect(){
+  const sel = document.getElementById('smv-song');
+  if(!sel) return;
+  if(!songs.length){
+    sel.innerHTML = '<option value="">Add songs to your cataloguex first</option>';
+    sel.disabled = true;
+    return;
+  }
+  sel.disabled = false;
+  sel.innerHTML = songs.slice().sort(byYearDesc).map(s=>'<option value="'+escapeAttr(s.id)+'">'+escapeHtml(((s.title||'Untitled')+' — '+(formatArtists(s.artists)||'?'))) + (s.musicVideoUrl ? '  🎬' : '') + '</option>').join('');
+}
+function siteMvIframe(src, title){
+  return '<iframe src="'+escapeAttr(src)+'" title="'+escapeAttr(title||'Site music video')+'" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>';
+}
+function renderSiteMvGallery(){
+  const gal = document.getElementById('smvGallery');
+  if(!gal) return;
+  const withVideos = songs.filter(s=>s.musicVideoUrl);
+  if(!withVideos.length){
+    gal.innerHTML = '<p class="mv-empty">No site music videos yet — pick a song above and save your video to it.</p>';
+    return;
+  }
+  gal.innerHTML = withVideos.map(s=>{
+    const e = siteMvToEmbed(s.musicVideoUrl);
+    return '<div class="mv-card">'
+      + (e ? '<div class="mv-embed">'+siteMvIframe(e, s.title)+'</div>' : '<div class="mv-embed mv-embed-missing">Embed preview unavailable — <a href="'+escapeAttr(s.musicVideoUrl)+'" target="_blank" rel="noopener">open link ↗</a></div>')
+      + '<div class="mv-meta"><b>'+escapeHtml(s.title||'Untitled')+'</b> <span>— '+escapeHtml(formatArtists(s.artists)||'?')+'</span></div>'
+      + '<button type="button" class="mv-remove" data-mv-remove="'+escapeAttr(s.id)+'">Remove video</button>'
+      + '</div>';
+  }).join('');
+}
+function updateMvPreview(){
+  const box = document.getElementById('smv-preview');
+  if(!box) return;
+  const e = siteMvToEmbed(document.getElementById('smv-embed').value);
+  if(e){
+    box.style.display = 'block';
+    box.innerHTML = siteMvIframe(e, 'Music video preview');
+  } else {
+    box.style.display = 'none';
+    box.innerHTML = '';
+  }
+}
+function setMvStatus(msg, ok){
+  const st = document.getElementById('smvStatus');
+  if(!st) return;
+  st.style.display = msg ? 'block' : 'none';
+  st.textContent = msg || '';
+  st.className = 'mv-status' + (ok ? ' mv-status-ok' : '');
+}
+function openSiteMv(){
+  trackEvent('open_site_mv');
+  populateSiteMvSongSelect();
+  renderSiteMvGallery();
+  setMvStatus('');
+  document.getElementById('siteMvOverlay').classList.add('open');
+}
 ['siteMvBtn','siteMvInfoBtn'].forEach(id=>{
   const el = document.getElementById(id);
-  if(el) el.addEventListener('click', ()=>{
-    trackEvent('open_site_mv');
-    document.getElementById('siteMvOverlay').classList.add('open');
-  });
+  if(el) el.addEventListener('click', openSiteMv);
 });
 document.getElementById('siteMvCloseBtn').addEventListener('click', ()=>{
   document.getElementById('siteMvOverlay').classList.remove('open');
+});
+document.getElementById('smvPreviewBtn').addEventListener('click', updateMvPreview);
+document.getElementById('smv-embed').addEventListener('input', updateMvPreview);
+document.getElementById('smvSaveBtn').addEventListener('click', ()=>{
+  const input = document.getElementById('smv-embed').value.trim();
+  const embedUrl = siteMvToEmbed(input);
+  if(!songs.length){ setMvStatus('Add songs to your cataloguex first.'); return; }
+  const sel = document.getElementById('smv-song');
+  if(!sel.value){ setMvStatus('Pick a song first.'); return; }
+  if(!input){ setMvStatus('Paste your video link or embed code first.'); return; }
+  if(!embedUrl){
+    setMvStatus('Couldn’t read a YouTube or Vimeo video from that. Paste a link like youtube.com/watch?v=…, youtu.be/…, vimeo.com/…, or an <iframe> embed code.');
+    return;
+  }
+  const song = songs.find(s=>s.id===sel.value);
+  if(!song) return;
+  song.musicVideoUrl = embedUrl;
+  save();
+  updateGlobalSong(song);
+  syncToSongDb(song, currentUserId);
+  render();
+  renderSiteMvGallery();
+  populateSiteMvSongSelect();
+  document.getElementById('smv-embed').value = '';
+  updateMvPreview();
+  setMvStatus('Video saved to "' + song.title + '" — it now shows on the site and on that song’s card back.', true);
+  trackEvent('add_site_mv');
+});
+document.getElementById('smvGallery').addEventListener('click', e=>{
+  const btn = e.target.closest('[data-mv-remove]');
+  if(!btn || !confirm('Remove this site music video?')) return;
+  const song = songs.find(s=>s.id===btn.dataset.mvRemove);
+  if(song) song.musicVideoUrl = null;
+  save();
+  updateGlobalSong(song);
+  syncToSongDb(song, currentUserId);
+  render();
+  renderSiteMvGallery();
+  populateSiteMvSongSelect();
+  trackEvent('remove_site_mv');
 });
 document.getElementById('testerHubList').addEventListener('click', e=>{
   const item = e.target.closest('[data-tester-hub]');
