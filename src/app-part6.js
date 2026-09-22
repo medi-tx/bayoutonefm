@@ -358,7 +358,7 @@ function gsCardFingerprint(s){
     (s.producer||''), (s.songwriters||''), (s.bpm||null),
     (s.musicKey||''), (s.duration||''), (s.recordLabel||''),
     (s.spotifyUrl||''), (s.appleMusicUrl||''), (s.youtubeMusicUrl||''), (s.tidalUrl||''),
-    (s.releaseDate||''), (s.artistWebsite||''), (s.trackNumber||'')
+    (s.releaseDate||''), (s.artistWebsite||''), (s.trackNumber||''), (s.musicVideoUrl||'')
   ].join('§');
   return t + '|||' + a + '|||' + meta;
 }
@@ -429,6 +429,7 @@ function syncToSongDb(song, userId){
     if(song.appleMusicUrl) links.apple = song.appleMusicUrl;
     if(song.youtubeMusicUrl) links.youtube = song.youtubeMusicUrl;
     if(song.tidalUrl) links.tidal = song.tidalUrl;
+    if(song.musicVideoUrl) links.mv = song.musicVideoUrl;
     if(Object.keys(links).length) facts.streaming_links = links;
     const localId = userId || null;
 

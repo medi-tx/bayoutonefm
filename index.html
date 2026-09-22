@@ -33,7 +33,7 @@
 const SUPABASE_URL = 'https://aaqlnjdooeydtaihhdia.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
 
-const BTF_VERSION = 'a280e74';
+const BTF_VERSION = '35a88c4';
 
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
@@ -3315,6 +3315,21 @@ const BTF_VERSION = 'a280e74';
   border-color:var(--gold,#eedd95);
   background:color-mix(in srgb, var(--star,#d5873f) 26%, transparent);
 }
+#siteMvBtn{
+  color:var(--teal,#2A9D8F);
+  border-color:var(--teal,#2A9D8F);
+  background:color-mix(in srgb, var(--teal,#2A9D8F) 14%, transparent);
+}
+#siteMvBtn:hover{
+  color:var(--gold,#eedd95);
+  border-color:var(--gold,#eedd95);
+  background:color-mix(in srgb, var(--teal,#2A9D8F) 26%, transparent);
+}
+.mv-hint{ font-size:12px; line-height:1.5; margin:6px 0 0; color:rgba(var(--on-paper-rgb),0.6); }
+.mv-info-btn{ cursor:pointer; font-size:11px; font-weight:600; color:var(--teal); text-decoration:underline; }
+.mv-para{ font-size:14px; line-height:1.7; margin:0 0 14px; color:rgba(var(--on-paper-rgb),0.85); }
+.mv-para b{ color:var(--star); }
+.mv-para i{ font-style:italic; }
 </style>
 </head>
 <body>
@@ -3422,6 +3437,7 @@ const BTF_VERSION = 'a280e74';
       <button class="theme-btn" id="songDbBtn">📀 Song Database</button>
 <button class="theme-btn" id="testerBtn">🧪 Tester</button>
 <button class="theme-btn" id="discordBtn">Discord</button>
+      <button class="theme-btn" id="siteMvBtn">🎬 Site Music Videos</button>
       <button class="theme-btn" id="tourBtn">❓ Tour</button>
       <button class="avatar-btn" id="myProfileBtn" title="My profile"><span id="myAvatarContent">?</span></button>
       <button class="logout-btn" id="logoutBtn">Log out</button>
@@ -3728,6 +3744,11 @@ const BTF_VERSION = 'a280e74';
       <div class="field"><label>Tidal URL</label><input id="f-tidal" type="url" placeholder="https://tidal.com/browse/track/…"></div>
     </div>
     <div class="field"><label>Artist website</label><input id="f-artist-website" type="url" placeholder="https://…"></div>
+    <div class="field">
+      <label>My music video <span class="mv-info-btn" id="siteMvInfoBtn" role="button" tabindex="0">(what is this?)</span></label>
+      <input id="f-mv" type="url" placeholder="https://youtube.com/watch?v=… or https://vimeo.com/…">
+      <p class="mv-hint">Fan-made videos only — make your own music video for this song, upload it to YouTube or Vimeo, and paste the link here so we know which song it’s for.</p>
+    </div>
     </div>
     <div class="modal-actions">
       <button class="btn-cancel" id="cancelBtn">Cancel</button>
@@ -3802,6 +3823,19 @@ const BTF_VERSION = 'a280e74';
     </label>
     <div class="modal-actions">
       <button class="btn-save" id="songDbInfoCloseBtn">Got it</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="siteMvOverlay">
+  <div class="modal" style="max-width:480px;">
+    <h3>🎬 Site Music Videos</h3>
+    <p class="mv-para"><b>Make your own music video to a song you love</b> — film shots of yourself, friends, art, or scenery, whatever fits the song. A phone camera plus any free video editor works; you don’t need any special tools.</p>
+    <p class="mv-para">Upload your finished video to <b>YouTube</b> or <b>Vimeo</b>, then copy its link.</p>
+    <p class="mv-para">In the <b>Add a song</b> / <b>Edit song</b> form, paste that link into the <i>“My music video”</i> box on the song’s entry. That way the site knows which song your video belongs to.</p>
+    <p class="mv-para"><b>Keep it yours:</b> make videos only for music you have the right to use, and upload only your own creations — not official music videos or others’ clips.</p>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="siteMvCloseBtn">Close</button>
     </div>
   </div>
 </div>
@@ -5373,6 +5407,7 @@ function cardBackHtml(s){
         ${cbField('Duration', s.duration ? escapeHtml(s.duration) : '')}
         ${streamLinks.length ? '<div class="cb-field"><span class="cb-flabel">Listen</span><span class="cb-fval">' + streamLinks.join(' · ') + '</span></div>' : ''}
         ${s.artistWebsite ? '<div class="cb-field"><span class="cb-flabel">Artist</span><span class="cb-fval"><a class="back-link" href="'+escapeHtml(s.artistWebsite)+'" target="_blank" rel="noopener">'+escapeHtml(formatArtists(s.artists)||'Artist website')+' ↗</a></span></div>' : ''}
+        ${s.musicVideoUrl ? '<div class="cb-field"><span class="cb-flabel">My video</span><span class="cb-fval"><a class="back-link" href="'+escapeHtml(s.musicVideoUrl)+'" target="_blank" rel="noopener">▶ Watch my fan-made music video ↗</a></span></div>' : ''}
       </div>
       <div class="card-share-logo" aria-hidden="true"><img class="brand-logo" src="${escapeAttr(window.BRAND_LOGO||'')}" alt="bayoutonefm"></div>
     </div>`;
@@ -5908,6 +5943,16 @@ document.getElementById('testerBtn').addEventListener('click', ()=>{
   const list = document.getElementById('testerHubList');
   if(list) list.innerHTML = (typeof testerHubItemsHtml === 'function') ? testerHubItemsHtml() : '';
   document.getElementById('testerHubOverlay').classList.add('open');
+});
+['siteMvBtn','siteMvInfoBtn'].forEach(id=>{
+  const el = document.getElementById(id);
+  if(el) el.addEventListener('click', ()=>{
+    trackEvent('open_site_mv');
+    document.getElementById('siteMvOverlay').classList.add('open');
+  });
+});
+document.getElementById('siteMvCloseBtn').addEventListener('click', ()=>{
+  document.getElementById('siteMvOverlay').classList.remove('open');
 });
 document.getElementById('testerHubList').addEventListener('click', e=>{
   const item = e.target.closest('[data-tester-hub]');
@@ -7506,6 +7551,7 @@ function openModal(song){
   document.getElementById('f-youtube').value = song?.youtubeMusicUrl || '';
   document.getElementById('f-tidal').value = song?.tidalUrl || '';
   document.getElementById('f-artist-website').value = song?.artistWebsite || '';
+  document.getElementById('f-mv').value = song?.musicVideoUrl || '';
   document.getElementById('f-track').value = song?.trackNumber || '';
   document.getElementById('f-score').value = (song?.score === null || song?.score === undefined) ? '' : song.score;
   currentStars = { lyrics:(song?.stars&&song.stars.lyrics)||0, vocals:(song?.stars&&song.stars.vocals)||0, replay:(song?.stars&&song.stars.replay)||0 };
@@ -7714,6 +7760,7 @@ function handleSave(){
     tidalUrl: document.getElementById('f-tidal').value.trim() || null,
     releaseDate: document.getElementById('f-release-date').value.trim() || null,
     artistWebsite: document.getElementById('f-artist-website').value.trim() || null,
+    musicVideoUrl: document.getElementById('f-mv').value.trim() || null,
     coverArt: currentCoverArt,
     remindsOf: getSelectedReminds('f'),
     tier: currentTier,
@@ -12959,7 +13006,7 @@ function gsCardFingerprint(s){
     (s.producer||''), (s.songwriters||''), (s.bpm||null),
     (s.musicKey||''), (s.duration||''), (s.recordLabel||''),
     (s.spotifyUrl||''), (s.appleMusicUrl||''), (s.youtubeMusicUrl||''), (s.tidalUrl||''),
-    (s.releaseDate||''), (s.artistWebsite||''), (s.trackNumber||'')
+    (s.releaseDate||''), (s.artistWebsite||''), (s.trackNumber||''), (s.musicVideoUrl||'')
   ].join('§');
   return t + '|||' + a + '|||' + meta;
 }
@@ -13030,6 +13077,7 @@ function syncToSongDb(song, userId){
     if(song.appleMusicUrl) links.apple = song.appleMusicUrl;
     if(song.youtubeMusicUrl) links.youtube = song.youtubeMusicUrl;
     if(song.tidalUrl) links.tidal = song.tidalUrl;
+    if(song.musicVideoUrl) links.mv = song.musicVideoUrl;
     if(Object.keys(links).length) facts.streaming_links = links;
     const localId = userId || null;
 

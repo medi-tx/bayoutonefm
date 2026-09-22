@@ -727,6 +727,7 @@ function cardBackHtml(s){
         ${cbField('Duration', s.duration ? escapeHtml(s.duration) : '')}
         ${streamLinks.length ? '<div class="cb-field"><span class="cb-flabel">Listen</span><span class="cb-fval">' + streamLinks.join(' · ') + '</span></div>' : ''}
         ${s.artistWebsite ? '<div class="cb-field"><span class="cb-flabel">Artist</span><span class="cb-fval"><a class="back-link" href="'+escapeHtml(s.artistWebsite)+'" target="_blank" rel="noopener">'+escapeHtml(formatArtists(s.artists)||'Artist website')+' ↗</a></span></div>' : ''}
+        ${s.musicVideoUrl ? '<div class="cb-field"><span class="cb-flabel">My video</span><span class="cb-fval"><a class="back-link" href="'+escapeHtml(s.musicVideoUrl)+'" target="_blank" rel="noopener">▶ Watch my fan-made music video ↗</a></span></div>' : ''}
       </div>
       <div class="card-share-logo" aria-hidden="true"><img class="brand-logo" src="${escapeAttr(window.BRAND_LOGO||'')}" alt="bayoutonefm"></div>
     </div>`;
@@ -1262,6 +1263,16 @@ document.getElementById('testerBtn').addEventListener('click', ()=>{
   const list = document.getElementById('testerHubList');
   if(list) list.innerHTML = (typeof testerHubItemsHtml === 'function') ? testerHubItemsHtml() : '';
   document.getElementById('testerHubOverlay').classList.add('open');
+});
+['siteMvBtn','siteMvInfoBtn'].forEach(id=>{
+  const el = document.getElementById(id);
+  if(el) el.addEventListener('click', ()=>{
+    trackEvent('open_site_mv');
+    document.getElementById('siteMvOverlay').classList.add('open');
+  });
+});
+document.getElementById('siteMvCloseBtn').addEventListener('click', ()=>{
+  document.getElementById('siteMvOverlay').classList.remove('open');
 });
 document.getElementById('testerHubList').addEventListener('click', e=>{
   const item = e.target.closest('[data-tester-hub]');
@@ -2860,6 +2871,7 @@ function openModal(song){
   document.getElementById('f-youtube').value = song?.youtubeMusicUrl || '';
   document.getElementById('f-tidal').value = song?.tidalUrl || '';
   document.getElementById('f-artist-website').value = song?.artistWebsite || '';
+  document.getElementById('f-mv').value = song?.musicVideoUrl || '';
   document.getElementById('f-track').value = song?.trackNumber || '';
   document.getElementById('f-score').value = (song?.score === null || song?.score === undefined) ? '' : song.score;
   currentStars = { lyrics:(song?.stars&&song.stars.lyrics)||0, vocals:(song?.stars&&song.stars.vocals)||0, replay:(song?.stars&&song.stars.replay)||0 };
@@ -3068,6 +3080,7 @@ function handleSave(){
     tidalUrl: document.getElementById('f-tidal').value.trim() || null,
     releaseDate: document.getElementById('f-release-date').value.trim() || null,
     artistWebsite: document.getElementById('f-artist-website').value.trim() || null,
+    musicVideoUrl: document.getElementById('f-mv').value.trim() || null,
     coverArt: currentCoverArt,
     remindsOf: getSelectedReminds('f'),
     tier: currentTier,
