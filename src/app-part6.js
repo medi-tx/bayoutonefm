@@ -430,6 +430,7 @@ function syncToSongDb(song, userId){
     if(song.youtubeMusicUrl) links.youtube = song.youtubeMusicUrl;
     if(song.tidalUrl) links.tidal = song.tidalUrl;
     if(song.musicVideoUrl) links.mv = song.musicVideoUrl;
+    if(song.mvAt) links.mvAt = song.mvAt;
     if(Object.keys(links).length) facts.streaming_links = links;
     const localId = userId || null;
 

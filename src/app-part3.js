@@ -1340,6 +1340,27 @@ function openSiteMv(){
 document.getElementById('siteMvCloseBtn').addEventListener('click', ()=>{
   document.getElementById('siteMvOverlay').classList.remove('open');
 });
+(function(){
+  const wrap = document.getElementById('moreWrap');
+  const menu = document.getElementById('moreMenu');
+  const btn = document.getElementById('moreBtn');
+  if(!wrap || !menu || !btn) return;
+  function setOpen(open){
+    wrap.classList.toggle('open', open);
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if(open && typeof trackEvent === 'function') trackEvent('open_more_menu');
+  }
+  btn.addEventListener('click', e=>{
+    e.stopPropagation();
+    setOpen(!wrap.classList.contains('open'));
+  });
+  document.addEventListener('click', e=>{
+    if(!wrap.contains(e.target)) setOpen(false);
+  });
+  menu.addEventListener('click', e=>{
+    if(e.target.closest('button')) setOpen(false);
+  });
+})();
 document.getElementById('smvPreviewBtn').addEventListener('click', updateMvPreview);
 document.getElementById('smv-embed').addEventListener('input', updateMvPreview);
 document.getElementById('smvSaveBtn').addEventListener('click', ()=>{
@@ -1356,6 +1377,7 @@ document.getElementById('smvSaveBtn').addEventListener('click', ()=>{
   const song = songs.find(s=>s.id===sel.value);
   if(!song) return;
   song.musicVideoUrl = embedUrl;
+  song.mvAt = Date.now();
   save();
   updateGlobalSong(song);
   syncToSongDb(song, currentUserId);
@@ -1371,7 +1393,7 @@ document.getElementById('smvGallery').addEventListener('click', e=>{
   const btn = e.target.closest('[data-mv-remove]');
   if(!btn || !confirm('Remove this site music video?')) return;
   const song = songs.find(s=>s.id===btn.dataset.mvRemove);
-  if(song) song.musicVideoUrl = null;
+  if(song){ song.musicVideoUrl = null; song.mvAt = null; }
   save();
   updateGlobalSong(song);
   syncToSongDb(song, currentUserId);
@@ -1617,7 +1639,7 @@ document.getElementById('exportAnalyticsBtn').addEventListener('click', exportUs
 
 /* ---- mixtape: friends' recent additions ---- */
 let mixtapeDays = 7;
-let feedMode = 'friends'; // 'friends' | 'discover'
+let feedMode = 'friends'; // 'friends' | 'discover' | 'mv'
 function mixtapeItemHtml(s, who){
   const cover = s.coverArt
     ? `<img loading="lazy" decoding="async" class="mixtape-cover" src="${escapeAttr(s.coverArt)}" loading="lazy" decoding="async" alt="Album cover">
@@ -1644,13 +1666,15 @@ function mixtapeItemHtml(s, who){
 }
 function setFeedModeUI(mode){
   feedMode = mode;
-  const wOn = mode==='friends' && mixtapeDays===7, mOn = mode==='friends' && mixtapeDays===30, dOn = mode==='discover';
-  const wk = document.getElementById('mixtapeWeekBtn'), mo = document.getElementById('mixtapeMonthBtn'), di = document.getElementById('mixtapeDiscoverBtn');
+  const wOn = mode==='friends' && mixtapeDays===7, mOn = mode==='friends' && mixtapeDays===30, dOn = mode==='discover', vOn = mode==='mv';
+  const wk = document.getElementById('mixtapeWeekBtn'), mo = document.getElementById('mixtapeMonthBtn'), di = document.getElementById('mixtapeDiscoverBtn'), mv = document.getElementById('mixtapeMvBtn');
   wk.classList.toggle('active', wOn); wk.setAttribute('aria-pressed', wOn ? 'true' : 'false');
   mo.classList.toggle('active', mOn); mo.setAttribute('aria-pressed', mOn ? 'true' : 'false');
   di.classList.toggle('active', dOn); di.setAttribute('aria-pressed', dOn ? 'true' : 'false');
-  document.getElementById('feedFriendsSub').style.display = mode==='discover' ? 'none' : '';
+  if(mv){ mv.classList.toggle('active', vOn); mv.setAttribute('aria-pressed', vOn ? 'true' : 'false'); }
+  document.getElementById('feedFriendsSub').style.display = (mode==='discover'||mode==='mv') ? 'none' : '';
   document.getElementById('feedModeSub').style.display = mode==='discover' ? '' : 'none';
+  document.getElementById('feedMvSub').style.display = mode==='mv' ? '' : 'none';
 }
 document.getElementById('mixtapeWeekBtn').addEventListener('click', ()=>{
   trackEvent('feed_timeframe', {tf:'week'});
@@ -1667,6 +1691,11 @@ document.getElementById('mixtapeMonthBtn').addEventListener('click', ()=>{
 document.getElementById('mixtapeDiscoverBtn').addEventListener('click', ()=>{
   trackEvent('feed_timeframe', {tf:'discover'});
   setFeedModeUI('discover');
+  loadFeed();
+});
+document.getElementById('mixtapeMvBtn').addEventListener('click', ()=>{
+  trackEvent('feed_timeframe', {tf:'mv'});
+  setFeedModeUI('mv');
   loadFeed();
 });
 // discoverCardHtml removed — discover feed now uses feedCardHtml for consistency
@@ -3200,6 +3229,14 @@ function handleSave(){
     favorited: currentFav,
     source: currentSongSource
   };
+  {
+    const priorMv = editingId ? ((songs.find(s=>s.id===editingId)||{}).musicVideoUrl) : undefined;
+    if(data.musicVideoUrl){
+      if(priorMv !== data.musicVideoUrl) data.mvAt = Date.now();
+    } else if(priorMv){
+      data.mvAt = null;
+    }
+  }
   const doSave = ()=>{
     if(!data.coverArt && (data.title || data.artists.length)){
       const q = [data.title, data.artists[0]].filter(Boolean).join(' ');

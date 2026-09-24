@@ -2015,6 +2015,31 @@
     border:1px solid var(--lilac);
   }
   .header-actions .theme-btn:hover{ background:rgba(var(--on-paper-rgb),0.08); color:var(--gold); border-color:var(--gold); }
+  .more-wrap{ position:relative; }
+  .more-btn{ font-size:16px; line-height:1; letter-spacing:2px; padding:7px 10px; }
+  .more-menu{
+    position:absolute;
+    top:calc(100% + 8px);
+    right:0;
+    display:none;
+    flex-direction:column;
+    gap:6px;
+    min-width:230px;
+    padding:10px;
+    border:1px solid var(--lilac, #b89bd9);
+    border-radius:12px;
+    background:var(--ink-2, #1d2029);
+    box-shadow:0 12px 32px rgba(0,0,0,0.35);
+    z-index:40;
+  }
+  .more-wrap.open .more-menu{ display:flex; }
+  .more-menu .theme-btn{
+    width:100%;
+    justify-content:flex-start;
+    text-align:left;
+    padding:9px 12px;
+    white-space:nowrap;
+  }
 
   .profile-header{
     display:flex;
@@ -2759,6 +2784,11 @@
   .feed-card-edits{ font-size:10px; color:rgba(var(--on-paper-rgb),0.35); margin-top:2px; font-style:italic; }
   .feed-add-btn{ margin-top:8px; padding:5px 12px; font-size:11px; font-weight:700; border:1px solid var(--teal); background:transparent; color:var(--teal); border-radius:6px; cursor:pointer; }
   .feed-add-btn:hover{ background:var(--teal); color:var(--ink); }
+  .feed-card-mv-link{ margin-left:8px; font-size:14px; text-decoration:none; }
+  .feed-mv-embed{ margin:10px 12px 4px; }
+  .feed-mv-embed iframe{ width:100%; aspect-ratio:16/9; border:0; border-radius:12px; display:block; background:#000; }
+  .feed-mv-embed-missing{ font-size:13px; padding:8px 0 2px; }
+  .feed-mv-embed-missing a{ color:var(--teal); }
 
   /* DUPLICATE CONFIRM */
   .dup-modal{ max-width:420px; }

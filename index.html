@@ -33,7 +33,7 @@
 const SUPABASE_URL = 'https://aaqlnjdooeydtaihhdia.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
 
-const BTF_VERSION = '2a637c0';
+const BTF_VERSION = '081f9a2';
 
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
@@ -2068,6 +2068,31 @@ const BTF_VERSION = '2a637c0';
     border:1px solid var(--lilac);
   }
   .header-actions .theme-btn:hover{ background:rgba(var(--on-paper-rgb),0.08); color:var(--gold); border-color:var(--gold); }
+  .more-wrap{ position:relative; }
+  .more-btn{ font-size:16px; line-height:1; letter-spacing:2px; padding:7px 10px; }
+  .more-menu{
+    position:absolute;
+    top:calc(100% + 8px);
+    right:0;
+    display:none;
+    flex-direction:column;
+    gap:6px;
+    min-width:230px;
+    padding:10px;
+    border:1px solid var(--lilac, #b89bd9);
+    border-radius:12px;
+    background:var(--ink-2, #1d2029);
+    box-shadow:0 12px 32px rgba(0,0,0,0.35);
+    z-index:40;
+  }
+  .more-wrap.open .more-menu{ display:flex; }
+  .more-menu .theme-btn{
+    width:100%;
+    justify-content:flex-start;
+    text-align:left;
+    padding:9px 12px;
+    white-space:nowrap;
+  }
 
   .profile-header{
     display:flex;
@@ -2812,6 +2837,11 @@ const BTF_VERSION = '2a637c0';
   .feed-card-edits{ font-size:10px; color:rgba(var(--on-paper-rgb),0.35); margin-top:2px; font-style:italic; }
   .feed-add-btn{ margin-top:8px; padding:5px 12px; font-size:11px; font-weight:700; border:1px solid var(--teal); background:transparent; color:var(--teal); border-radius:6px; cursor:pointer; }
   .feed-add-btn:hover{ background:var(--teal); color:var(--ink); }
+  .feed-card-mv-link{ margin-left:8px; font-size:14px; text-decoration:none; }
+  .feed-mv-embed{ margin:10px 12px 4px; }
+  .feed-mv-embed iframe{ width:100%; aspect-ratio:16/9; border:0; border-radius:12px; display:block; background:#000; }
+  .feed-mv-embed-missing{ font-size:13px; padding:8px 0 2px; }
+  .feed-mv-embed-missing a{ color:var(--teal); }
 
   /* DUPLICATE CONFIRM */
   .dup-modal{ max-width:420px; }
@@ -3441,21 +3471,26 @@ const BTF_VERSION = '2a637c0';
     <div class="stats" id="stats"></div>
     <span class="btf-version" id="btfVersion"></span>
     <span id="syncStatus" class="sync-status"></span>
-    <div class="header-actions">
+<div class="header-actions">
       <button class="theme-btn" id="notifBtn">🔔<span class="msg-btn-badge" id="notifBadge" style="display:none;"></span></button>
       <button class="theme-btn" id="messagesBtn">💬 Messages<span class="msg-btn-badge" id="msgBtnBadge" style="display:none;"></span></button>
-      <button class="theme-btn" id="feedBtn">📰 Feed</button>
-      <button class="theme-btn" id="sotdBtn">🎵 Song of the Day</button>
-      <button class="theme-btn" id="leaderboardBtn">🏆 Leaderboards</button>
-      <button class="theme-btn" id="statsBtn">📊 Stats</button>
-      <button class="theme-btn" id="discoverBtn">🔎 Friends</button>
-      <button class="theme-btn" id="editStickersBtn">🎨 Stickers</button>
-      <button class="theme-btn" id="themeBtn">🎨 Theme</button>
-      <button class="theme-btn" id="songDbBtn">📀 Song Database</button>
-<button class="theme-btn" id="testerBtn">🧪 Tester</button>
-<button class="theme-btn" id="discordBtn">Discord</button>
-      <button class="theme-btn" id="siteMvBtn">🎬 Site Music Videos</button>
-      <button class="theme-btn" id="tourBtn">❓ Tour</button>
+      <div class="more-wrap" id="moreWrap">
+        <button class="theme-btn more-btn" id="moreBtn" aria-haspopup="true" aria-expanded="false" title="More">⋯</button>
+        <div class="more-menu" id="moreMenu">
+          <button class="theme-btn" id="feedBtn">📰 Feed</button>
+          <button class="theme-btn" id="sotdBtn">🎵 Song of the Day</button>
+          <button class="theme-btn" id="leaderboardBtn">🏆 Leaderboards</button>
+          <button class="theme-btn" id="statsBtn">📊 Stats</button>
+          <button class="theme-btn" id="discoverBtn">🔎 Friends</button>
+          <button class="theme-btn" id="editStickersBtn">🎨 Stickers</button>
+          <button class="theme-btn" id="themeBtn">🎨 Theme</button>
+          <button class="theme-btn" id="songDbBtn">📀 Song Database</button>
+          <button class="theme-btn" id="testerBtn">🧪 Tester</button>
+          <button class="theme-btn" id="discordBtn">Discord</button>
+          <button class="theme-btn" id="siteMvBtn">🎬 Site Music Videos</button>
+          <button class="theme-btn" id="tourBtn">❓ Tour</button>
+        </div>
+      </div>
       <button class="avatar-btn" id="myProfileBtn" title="My profile"><span id="myAvatarContent">?</span></button>
       <button class="logout-btn" id="logoutBtn">Log out</button>
     </div>
@@ -3953,8 +3988,10 @@ const BTF_VERSION = '2a637c0';
       <button type="button" class="mixtape-period-btn active" id="mixtapeWeekBtn" aria-pressed="true">This week</button>
       <button type="button" class="mixtape-period-btn" id="mixtapeMonthBtn" aria-pressed="false">This month</button>
       <button type="button" class="mixtape-period-btn" id="mixtapeDiscoverBtn" aria-pressed="false" title="Recently added by everyone on bayoutonefm, not just friends">🌐 Discover</button>
+      <button type="button" class="mixtape-period-btn" id="mixtapeMvBtn" aria-pressed="false" title="Fan-made music videos uploaded by everyone on bayoutonefm">🎬 Music Videos</button>
     </div>
     <p class="mixtape-sub" id="feedModeSub" style="display:none;">New music added by everyone on bayoutonefm — not just your friends.</p>
+    <p class="mixtape-sub" id="feedMvSub" style="display:none;">Fan-made music videos from anyone on bayoutonefm — tap a card to watch. Make your own with the 🎬 Site Music Videos button.</p>
     <p class="mixtape-count" id="feedCount"></p>
     <div class="feed-list" id="feedList"></div>
     <div class="modal-actions">
@@ -6052,6 +6089,27 @@ function openSiteMv(){
 document.getElementById('siteMvCloseBtn').addEventListener('click', ()=>{
   document.getElementById('siteMvOverlay').classList.remove('open');
 });
+(function(){
+  const wrap = document.getElementById('moreWrap');
+  const menu = document.getElementById('moreMenu');
+  const btn = document.getElementById('moreBtn');
+  if(!wrap || !menu || !btn) return;
+  function setOpen(open){
+    wrap.classList.toggle('open', open);
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if(open && typeof trackEvent === 'function') trackEvent('open_more_menu');
+  }
+  btn.addEventListener('click', e=>{
+    e.stopPropagation();
+    setOpen(!wrap.classList.contains('open'));
+  });
+  document.addEventListener('click', e=>{
+    if(!wrap.contains(e.target)) setOpen(false);
+  });
+  menu.addEventListener('click', e=>{
+    if(e.target.closest('button')) setOpen(false);
+  });
+})();
 document.getElementById('smvPreviewBtn').addEventListener('click', updateMvPreview);
 document.getElementById('smv-embed').addEventListener('input', updateMvPreview);
 document.getElementById('smvSaveBtn').addEventListener('click', ()=>{
@@ -6068,6 +6126,7 @@ document.getElementById('smvSaveBtn').addEventListener('click', ()=>{
   const song = songs.find(s=>s.id===sel.value);
   if(!song) return;
   song.musicVideoUrl = embedUrl;
+  song.mvAt = Date.now();
   save();
   updateGlobalSong(song);
   syncToSongDb(song, currentUserId);
@@ -6083,7 +6142,7 @@ document.getElementById('smvGallery').addEventListener('click', e=>{
   const btn = e.target.closest('[data-mv-remove]');
   if(!btn || !confirm('Remove this site music video?')) return;
   const song = songs.find(s=>s.id===btn.dataset.mvRemove);
-  if(song) song.musicVideoUrl = null;
+  if(song){ song.musicVideoUrl = null; song.mvAt = null; }
   save();
   updateGlobalSong(song);
   syncToSongDb(song, currentUserId);
@@ -6329,7 +6388,7 @@ document.getElementById('exportAnalyticsBtn').addEventListener('click', exportUs
 
 /* ---- mixtape: friends' recent additions ---- */
 let mixtapeDays = 7;
-let feedMode = 'friends'; // 'friends' | 'discover'
+let feedMode = 'friends'; // 'friends' | 'discover' | 'mv'
 function mixtapeItemHtml(s, who){
   const cover = s.coverArt
     ? `<img loading="lazy" decoding="async" class="mixtape-cover" src="${escapeAttr(s.coverArt)}" loading="lazy" decoding="async" alt="Album cover">
@@ -6356,13 +6415,15 @@ function mixtapeItemHtml(s, who){
 }
 function setFeedModeUI(mode){
   feedMode = mode;
-  const wOn = mode==='friends' && mixtapeDays===7, mOn = mode==='friends' && mixtapeDays===30, dOn = mode==='discover';
-  const wk = document.getElementById('mixtapeWeekBtn'), mo = document.getElementById('mixtapeMonthBtn'), di = document.getElementById('mixtapeDiscoverBtn');
+  const wOn = mode==='friends' && mixtapeDays===7, mOn = mode==='friends' && mixtapeDays===30, dOn = mode==='discover', vOn = mode==='mv';
+  const wk = document.getElementById('mixtapeWeekBtn'), mo = document.getElementById('mixtapeMonthBtn'), di = document.getElementById('mixtapeDiscoverBtn'), mv = document.getElementById('mixtapeMvBtn');
   wk.classList.toggle('active', wOn); wk.setAttribute('aria-pressed', wOn ? 'true' : 'false');
   mo.classList.toggle('active', mOn); mo.setAttribute('aria-pressed', mOn ? 'true' : 'false');
   di.classList.toggle('active', dOn); di.setAttribute('aria-pressed', dOn ? 'true' : 'false');
-  document.getElementById('feedFriendsSub').style.display = mode==='discover' ? 'none' : '';
+  if(mv){ mv.classList.toggle('active', vOn); mv.setAttribute('aria-pressed', vOn ? 'true' : 'false'); }
+  document.getElementById('feedFriendsSub').style.display = (mode==='discover'||mode==='mv') ? 'none' : '';
   document.getElementById('feedModeSub').style.display = mode==='discover' ? '' : 'none';
+  document.getElementById('feedMvSub').style.display = mode==='mv' ? '' : 'none';
 }
 document.getElementById('mixtapeWeekBtn').addEventListener('click', ()=>{
   trackEvent('feed_timeframe', {tf:'week'});
@@ -6379,6 +6440,11 @@ document.getElementById('mixtapeMonthBtn').addEventListener('click', ()=>{
 document.getElementById('mixtapeDiscoverBtn').addEventListener('click', ()=>{
   trackEvent('feed_timeframe', {tf:'discover'});
   setFeedModeUI('discover');
+  loadFeed();
+});
+document.getElementById('mixtapeMvBtn').addEventListener('click', ()=>{
+  trackEvent('feed_timeframe', {tf:'mv'});
+  setFeedModeUI('mv');
   loadFeed();
 });
 // discoverCardHtml removed — discover feed now uses feedCardHtml for consistency
@@ -7912,6 +7978,14 @@ function handleSave(){
     favorited: currentFav,
     source: currentSongSource
   };
+  {
+    const priorMv = editingId ? ((songs.find(s=>s.id===editingId)||{}).musicVideoUrl) : undefined;
+    if(data.musicVideoUrl){
+      if(priorMv !== data.musicVideoUrl) data.mvAt = Date.now();
+    } else if(priorMv){
+      data.mvAt = null;
+    }
+  }
   const doSave = ()=>{
     if(!data.coverArt && (data.title || data.artists.length)){
       const q = [data.title, data.artists[0]].filter(Boolean).join(' ');
@@ -13216,6 +13290,7 @@ function syncToSongDb(song, userId){
     if(song.youtubeMusicUrl) links.youtube = song.youtubeMusicUrl;
     if(song.tidalUrl) links.tidal = song.tidalUrl;
     if(song.musicVideoUrl) links.mv = song.musicVideoUrl;
+    if(song.mvAt) links.mvAt = song.mvAt;
     if(Object.keys(links).length) facts.streaming_links = links;
     const localId = userId || null;
 
@@ -16874,6 +16949,7 @@ function feedCardHtml(entry){
   const feedPreviewId = 'feed:' + (s.id || Math.random().toString(36).slice(2));
   feedSongCache[feedPreviewId] = { id: feedPreviewId, title: s.title || 'Untitled', artists: s.artists || [], previewUrl: s.previewUrl || '' };
   const previewBtn = s.source === 'itunes' ? `${s.explicit ? '<span class="explicit-badge" title="Explicit content">E</span>' : ''}<button type="button" class="preview-btn" data-preview="${escapeAttr(feedPreviewId)}" title="Play a 30-second preview" aria-label="Play 30-second preview">▶︎</button>` : '';
+  const mvBtn = s.musicVideoUrl ? `<a class="feed-card-mv-link" href="${escapeAttr(s.musicVideoUrl)}" target="_blank" rel="noopener" title="Fan-made music video for this song">🎬</a>` : '';
   const why = s.quickThought ? `<div class="feed-card-why">"${escapeHtml(s.quickThought)}"</div>` : '';
   const reminds = (s.remindsOf && s.remindsOf.length)
     ? `<div class="feed-card-reminds">reminds me of <span>${s.remindsOf.map(id=>{
@@ -16904,7 +16980,7 @@ function feedCardHtml(entry){
         <div class="feed-card-info">
           <div class="feed-card-title">${escapeHtml(s.title || 'Untitled')}</div>
           <div class="feed-card-artist">${escapeHtml(formatArtists(s.artists))}${s.album ? ' · ' + escapeHtml(s.album) : ''}</div>
-          <div class="feed-card-tier">${tierBadge}${previewBtn}</div>
+          <div class="feed-card-tier">${tierBadge}${previewBtn}${mvBtn}</div>
           ${why}
           ${reminds}
           ${when}
@@ -16918,6 +16994,7 @@ function feedCardHtml(entry){
 
 async function loadFeed(){
   if(feedMode === 'discover') return loadDiscoverFeed();
+  if(feedMode === 'mv') return loadMusicVideoFeed();
   const list = document.getElementById('feedList');
   const countEl = document.getElementById('feedCount');
   if(!list) return;
@@ -16984,6 +17061,117 @@ async function loadFeed(){
   const displayed = grouped.slice(0, 80);
   list.innerHTML = displayed.map(e=> e._cluster ? feedImportCardHtml(e.clusterName, e.entries, e.who, e.profile, e.ownerId, e.when) : feedCardHtml(e)).join('');
   list.__feedData = all;
+}
+function feedMvCardHtml(entry){
+  const s = entry.song;
+  const who = entry.who;
+  const p = entry.profile;
+  const ownerId = entry.ownerId || null;
+  const reactions = entry.reactions || [];
+  const initial = (who || '?').charAt(0).toUpperCase();
+  const avatar = (p && p.photo)
+    ? `<span class="feed-card-avatar"><img loading="lazy" decoding="async" src="${escapeAttr(p.photo)}" alt="Profile photo"></span>`
+    : `<span class="feed-card-avatar">${escapeHtml(initial)}</span>`;
+  const embed = siteMvToEmbed(s.musicVideoUrl);
+  const embedHtml = embed
+    ? `<div class="feed-mv-embed">${siteMvIframe(embed, (s.title||'song') + ' fan-made music video')}</div>`
+    : `<div class="feed-mv-embed feed-mv-embed-missing">🎬 <a href="${escapeAttr(s.musicVideoUrl)}" target="_blank" rel="noopener">Watch on YouTube/Vimeo ↗</a></div>`;
+  const cover = s.coverArt
+    ? `<img loading="lazy" decoding="async" class="feed-card-cover" src="${escapeAttr(s.coverArt)}" alt="Album cover">`
+    : `<div class="feed-card-cover-fallback">${escapeHtml((s.title||'?').charAt(0).toUpperCase())}</div>`;
+  const tierBadge = s.tier ? renderTierBadge(s.tier) : '';
+  const why = s.quickThought ? `<div class="feed-card-why">"${escapeHtml(s.quickThought)}"</div>` : '';
+  const whenVal = s.mvAt || s.createdAt;
+  const when = whenVal ? `<div class="feed-card-when">🎬 video added ${escapeHtml(new Date(whenVal).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}))}</div>` : '';
+  const reactionsHtml = `
+    <div class="feed-card-reactions" data-owner-id="${ownerId||''}" data-song-id="${escapeAttr(s.id||'')}">
+      ${FEED_REACTION_EMOJIS.map(emoji=>{
+        const count = reactions.filter(r=>r.emoji===emoji).length;
+        const mine = reactions.some(r=>r.emoji===emoji && r.reactor_id===currentUserId);
+        return `<button type="button" class="feed-reaction-btn${mine?' active':''}" data-emoji="${emoji}" title="React ${emoji}">${emoji}${count>0?`<span class="feed-reaction-count">${count}</span>`:''}</button>`;
+      }).join('')}
+    </div>`;
+  return `
+    <div class="feed-card">
+      <div class="feed-card-head">
+        ${avatar}
+        <span class="feed-card-who"><b>@${escapeHtml(who)}</b> made a music video</span>
+      </div>
+      ${embedHtml}
+      <div class="feed-card-body">
+        ${cover}
+        <div class="feed-card-info">
+          <div class="feed-card-title">${escapeHtml(s.title || 'Untitled')}</div>
+          <div class="feed-card-artist">${escapeHtml(formatArtists(s.artists))}${s.album ? ' · ' + escapeHtml(s.album) : ''}</div>
+          <div class="feed-card-tier">${tierBadge}</div>
+          ${why}
+          ${when}
+        </div>
+      </div>
+      <button type="button" class="feed-add-btn" data-feed-add="1">+ Add to Cataloguex</button>
+      ${reactionsHtml}
+    </div>`;
+}
+async function loadMusicVideoFeed(){
+  const list = document.getElementById('feedList');
+  const countEl = document.getElementById('feedCount');
+  if(!list) return;
+  list.innerHTML = '<div class="feed-empty">Loading…</div>';
+  function emptyState(msg){
+    if(countEl) countEl.textContent = '';
+    list.innerHTML = '<div class="feed-empty">' + msg + '</div>';
+    list.__feedMode = 'mv';
+    list.__feedData = [];
+    list.__discoverData = [];
+  }
+  try{
+    let profiles = allProfilesCache || [];
+    if(profiles.length === 0){
+      const fresh = await fetchAllProfiles();
+      profiles = fresh || [];
+      if(profiles.length) allProfilesCache = profiles;
+    }
+    const everyone = profiles.filter(p => p.user_id !== currentUserId && p.username);
+    if(everyone.length === 0){
+      emptyState('You\'re the first one here — when other people on bayoutonefm add music videos, they\'ll show up here. Make your own with the 🎬 Site Music Videos button!');
+      return;
+    }
+    const results = await Promise.all(everyone.map(async p=>{
+      try{
+        const userSongs = (await fetchReadOnlySongs(p.user_id)) || [];
+        return userSongs
+          .filter(s=>!s.archived && s.musicVideoUrl && s.title && s.artists && s.artists[0])
+          .map(s=>({ song:s, who:p.username, profile:p, ownerId:p.user_id }));
+      }catch(e){ return []; }
+    }));
+    const all = results.flat();
+    all.sort((a,b)=> (b.song.mvAt||b.song.createdAt||0) - (a.song.mvAt||a.song.createdAt||0));
+    if(all.length === 0){
+      emptyState('No music videos on bayoutonefm yet — make one for a song you love and it will show up here for everyone!');
+      return;
+    }
+    try{
+      const ownerIds = [...new Set(all.map(e=>e.ownerId).filter(Boolean))];
+      if(ownerIds.length){
+        const { data: rxData } = await sb.from('feed_reactions')
+          .select('song_owner_id, song_id, reactor_id, emoji')
+          .in('song_owner_id', ownerIds);
+        if(rxData){
+          all.forEach(e=>{
+            e.reactions = rxData.filter(r=>r.song_owner_id===e.ownerId && r.song_id===e.song.id);
+          });
+        }
+      }
+    }catch(err){ console.warn('Could not load mv feed reactions:', err); }
+    if(countEl) countEl.textContent = `${all.length} music video${all.length===1?'':'s'} from ${everyone.length} ${everyone.length===1?'person':'people'} on bayoutonefm`;
+    list.innerHTML = all.map(feedMvCardHtml).join('');
+    list.__feedMode = 'mv';
+    list.__feedData = all;
+    list.__discoverData = [];
+  }catch(e){
+    console.warn('Could not load music video feed:', e);
+    emptyState('Couldn\'t load music videos right now — try again in a bit.');
+  }
 }
   
 document.getElementById('feedList').addEventListener('click', e=>{

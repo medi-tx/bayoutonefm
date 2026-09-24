@@ -222,6 +222,7 @@ function feedCardHtml(entry){
   const feedPreviewId = 'feed:' + (s.id || Math.random().toString(36).slice(2));
   feedSongCache[feedPreviewId] = { id: feedPreviewId, title: s.title || 'Untitled', artists: s.artists || [], previewUrl: s.previewUrl || '' };
   const previewBtn = s.source === 'itunes' ? `${s.explicit ? '<span class="explicit-badge" title="Explicit content">E</span>' : ''}<button type="button" class="preview-btn" data-preview="${escapeAttr(feedPreviewId)}" title="Play a 30-second preview" aria-label="Play 30-second preview">▶︎</button>` : '';
+  const mvBtn = s.musicVideoUrl ? `<a class="feed-card-mv-link" href="${escapeAttr(s.musicVideoUrl)}" target="_blank" rel="noopener" title="Fan-made music video for this song">🎬</a>` : '';
   const why = s.quickThought ? `<div class="feed-card-why">"${escapeHtml(s.quickThought)}"</div>` : '';
   const reminds = (s.remindsOf && s.remindsOf.length)
     ? `<div class="feed-card-reminds">reminds me of <span>${s.remindsOf.map(id=>{
@@ -252,7 +253,7 @@ function feedCardHtml(entry){
         <div class="feed-card-info">
           <div class="feed-card-title">${escapeHtml(s.title || 'Untitled')}</div>
           <div class="feed-card-artist">${escapeHtml(formatArtists(s.artists))}${s.album ? ' · ' + escapeHtml(s.album) : ''}</div>
-          <div class="feed-card-tier">${tierBadge}${previewBtn}</div>
+          <div class="feed-card-tier">${tierBadge}${previewBtn}${mvBtn}</div>
           ${why}
           ${reminds}
           ${when}
@@ -266,6 +267,7 @@ function feedCardHtml(entry){
 
 async function loadFeed(){
   if(feedMode === 'discover') return loadDiscoverFeed();
+  if(feedMode === 'mv') return loadMusicVideoFeed();
   const list = document.getElementById('feedList');
   const countEl = document.getElementById('feedCount');
   if(!list) return;
@@ -332,6 +334,117 @@ async function loadFeed(){
   const displayed = grouped.slice(0, 80);
   list.innerHTML = displayed.map(e=> e._cluster ? feedImportCardHtml(e.clusterName, e.entries, e.who, e.profile, e.ownerId, e.when) : feedCardHtml(e)).join('');
   list.__feedData = all;
+}
+function feedMvCardHtml(entry){
+  const s = entry.song;
+  const who = entry.who;
+  const p = entry.profile;
+  const ownerId = entry.ownerId || null;
+  const reactions = entry.reactions || [];
+  const initial = (who || '?').charAt(0).toUpperCase();
+  const avatar = (p && p.photo)
+    ? `<span class="feed-card-avatar"><img loading="lazy" decoding="async" src="${escapeAttr(p.photo)}" alt="Profile photo"></span>`
+    : `<span class="feed-card-avatar">${escapeHtml(initial)}</span>`;
+  const embed = siteMvToEmbed(s.musicVideoUrl);
+  const embedHtml = embed
+    ? `<div class="feed-mv-embed">${siteMvIframe(embed, (s.title||'song') + ' fan-made music video')}</div>`
+    : `<div class="feed-mv-embed feed-mv-embed-missing">🎬 <a href="${escapeAttr(s.musicVideoUrl)}" target="_blank" rel="noopener">Watch on YouTube/Vimeo ↗</a></div>`;
+  const cover = s.coverArt
+    ? `<img loading="lazy" decoding="async" class="feed-card-cover" src="${escapeAttr(s.coverArt)}" alt="Album cover">`
+    : `<div class="feed-card-cover-fallback">${escapeHtml((s.title||'?').charAt(0).toUpperCase())}</div>`;
+  const tierBadge = s.tier ? renderTierBadge(s.tier) : '';
+  const why = s.quickThought ? `<div class="feed-card-why">"${escapeHtml(s.quickThought)}"</div>` : '';
+  const whenVal = s.mvAt || s.createdAt;
+  const when = whenVal ? `<div class="feed-card-when">🎬 video added ${escapeHtml(new Date(whenVal).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}))}</div>` : '';
+  const reactionsHtml = `
+    <div class="feed-card-reactions" data-owner-id="${ownerId||''}" data-song-id="${escapeAttr(s.id||'')}">
+      ${FEED_REACTION_EMOJIS.map(emoji=>{
+        const count = reactions.filter(r=>r.emoji===emoji).length;
+        const mine = reactions.some(r=>r.emoji===emoji && r.reactor_id===currentUserId);
+        return `<button type="button" class="feed-reaction-btn${mine?' active':''}" data-emoji="${emoji}" title="React ${emoji}">${emoji}${count>0?`<span class="feed-reaction-count">${count}</span>`:''}</button>`;
+      }).join('')}
+    </div>`;
+  return `
+    <div class="feed-card">
+      <div class="feed-card-head">
+        ${avatar}
+        <span class="feed-card-who"><b>@${escapeHtml(who)}</b> made a music video</span>
+      </div>
+      ${embedHtml}
+      <div class="feed-card-body">
+        ${cover}
+        <div class="feed-card-info">
+          <div class="feed-card-title">${escapeHtml(s.title || 'Untitled')}</div>
+          <div class="feed-card-artist">${escapeHtml(formatArtists(s.artists))}${s.album ? ' · ' + escapeHtml(s.album) : ''}</div>
+          <div class="feed-card-tier">${tierBadge}</div>
+          ${why}
+          ${when}
+        </div>
+      </div>
+      <button type="button" class="feed-add-btn" data-feed-add="1">+ Add to Cataloguex</button>
+      ${reactionsHtml}
+    </div>`;
+}
+async function loadMusicVideoFeed(){
+  const list = document.getElementById('feedList');
+  const countEl = document.getElementById('feedCount');
+  if(!list) return;
+  list.innerHTML = '<div class="feed-empty">Loading…</div>';
+  function emptyState(msg){
+    if(countEl) countEl.textContent = '';
+    list.innerHTML = '<div class="feed-empty">' + msg + '</div>';
+    list.__feedMode = 'mv';
+    list.__feedData = [];
+    list.__discoverData = [];
+  }
+  try{
+    let profiles = allProfilesCache || [];
+    if(profiles.length === 0){
+      const fresh = await fetchAllProfiles();
+      profiles = fresh || [];
+      if(profiles.length) allProfilesCache = profiles;
+    }
+    const everyone = profiles.filter(p => p.user_id !== currentUserId && p.username);
+    if(everyone.length === 0){
+      emptyState('You\'re the first one here — when other people on bayoutonefm add music videos, they\'ll show up here. Make your own with the 🎬 Site Music Videos button!');
+      return;
+    }
+    const results = await Promise.all(everyone.map(async p=>{
+      try{
+        const userSongs = (await fetchReadOnlySongs(p.user_id)) || [];
+        return userSongs
+          .filter(s=>!s.archived && s.musicVideoUrl && s.title && s.artists && s.artists[0])
+          .map(s=>({ song:s, who:p.username, profile:p, ownerId:p.user_id }));
+      }catch(e){ return []; }
+    }));
+    const all = results.flat();
+    all.sort((a,b)=> (b.song.mvAt||b.song.createdAt||0) - (a.song.mvAt||a.song.createdAt||0));
+    if(all.length === 0){
+      emptyState('No music videos on bayoutonefm yet — make one for a song you love and it will show up here for everyone!');
+      return;
+    }
+    try{
+      const ownerIds = [...new Set(all.map(e=>e.ownerId).filter(Boolean))];
+      if(ownerIds.length){
+        const { data: rxData } = await sb.from('feed_reactions')
+          .select('song_owner_id, song_id, reactor_id, emoji')
+          .in('song_owner_id', ownerIds);
+        if(rxData){
+          all.forEach(e=>{
+            e.reactions = rxData.filter(r=>r.song_owner_id===e.ownerId && r.song_id===e.song.id);
+          });
+        }
+      }
+    }catch(err){ console.warn('Could not load mv feed reactions:', err); }
+    if(countEl) countEl.textContent = `${all.length} music video${all.length===1?'':'s'} from ${everyone.length} ${everyone.length===1?'person':'people'} on bayoutonefm`;
+    list.innerHTML = all.map(feedMvCardHtml).join('');
+    list.__feedMode = 'mv';
+    list.__feedData = all;
+    list.__discoverData = [];
+  }catch(e){
+    console.warn('Could not load music video feed:', e);
+    emptyState('Couldn\'t load music videos right now — try again in a bit.');
+  }
 }
   
 document.getElementById('feedList').addEventListener('click', e=>{
