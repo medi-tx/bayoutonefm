@@ -33,7 +33,7 @@
 const SUPABASE_URL = 'https://aaqlnjdooeydtaihhdia.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
 
-const BTF_VERSION = '081f9a2';
+const BTF_VERSION = '41ba3af';
 
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
@@ -3377,6 +3377,26 @@ const BTF_VERSION = '081f9a2';
 .mv-meta span{ color:rgba(var(--on-paper-rgb),0.7); }
 .mv-remove{ font-size:12px; padding:5px 10px; border-radius:6px; border:1px solid rgba(var(--danger-rgb,220,60,60),0.5); color:var(--danger,#dc3c3c); background:transparent; cursor:pointer; }
 .mv-remove:hover{ background:rgba(var(--danger-rgb,220,60,60),0.12); }
+
+/* ---- SITE MODE (Simple vs Nerd) ---- */
+.mode-chooser-modal{ max-width:520px; }
+.mode-chooser-sub{ font-size:14px; line-height:1.6; color:rgba(var(--on-paper-rgb),0.85); margin:0 0 18px; }
+.mode-chooser-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.mode-chooser-card{ display:flex; flex-direction:column; gap:6px; align-items:flex-start; text-align:left; padding:16px; border:2px solid rgba(var(--on-paper-rgb),0.2); border-radius:12px; background:rgba(var(--on-paper-rgb),0.04); color:inherit; font:inherit; cursor:pointer; }
+.mode-chooser-card:hover{ border-color:var(--star); background:color-mix(in srgb, var(--star) 14%, transparent); }
+.mode-chooser-card b{ font-size:16px; color:var(--star); }
+.mode-chooser-desc{ font-size:13px; line-height:1.5; color:rgba(var(--on-paper-rgb),0.75); }
+.mode-chooser-icon{ font-size:26px; }
+#modeBtn.is-simple{ color:var(--teal); }
+@media (max-width:520px){ .mode-chooser-grid{ grid-template-columns:1fr; } }
+
+.mode-simple .card-back{ display:none !important; }
+.mode-simple .card.flipped > .card-front{ visibility:visible; pointer-events:auto; opacity:1; }
+.mode-simple [data-action="flip"], .mode-simple .cb-flip-fab{ display:none !important; }
+.mode-simple .msg-flip-card.flipped .msg-flip-front{ transform:none; }
+.mode-simple .msg-flip-card.flipped .msg-flip-back{ transform:rotateY(180deg); }
+body.mode-simple [data-editor-tab^="back-"], body.mode-simple [data-editor-panel^="back-"]{ display:none !important; }
+.mode-simple #testerBtn{ display:none !important; }
 </style>
 </head>
 <body>
@@ -3461,6 +3481,25 @@ const BTF_VERSION = '081f9a2';
   </div>
 </div>
 
+<div class="overlay" id="modeOverlay">
+  <div class="modal mode-chooser-modal">
+    <h3>Which version do you want?</h3>
+    <p class="mode-chooser-sub">Both keep all your music — pick the one that fits how you listen. You can switch anytime from the ⋯ menu.</p>
+    <div class="mode-chooser-grid">
+      <button type="button" class="mode-chooser-card" id="modeSimpleBtn">
+        <span class="mode-chooser-icon">🎧</span>
+        <b>Simple</b>
+        <span class="mode-chooser-desc">For regular music people. A clean cataloguex of your songs, your feed, and sharing.</span>
+      </button>
+      <button type="button" class="mode-chooser-card" id="modeNerdBtn">
+        <span class="mode-chooser-icon">🧠</span>
+        <b>Nerd</b>
+        <span class="mode-chooser-desc">Everything in Simple, plus card backs with every detail — BPM, key, producers, links — and the CD collection &amp; Tester hub.</span>
+      </button>
+    </div>
+  </div>
+</div>
+
 <div class="wrap" id="appWrap" style="display:none;">
 
   <header>
@@ -3485,6 +3524,7 @@ const BTF_VERSION = '081f9a2';
           <button class="theme-btn" id="editStickersBtn">🎨 Stickers</button>
           <button class="theme-btn" id="themeBtn">🎨 Theme</button>
           <button class="theme-btn" id="songDbBtn">📀 Song Database</button>
+          <button class="theme-btn" id="modeBtn">🧠 Nerd mode</button>
           <button class="theme-btn" id="testerBtn">🧪 Tester</button>
           <button class="theme-btn" id="discordBtn">Discord</button>
           <button class="theme-btn" id="siteMvBtn">🎬 Site Music Videos</button>
@@ -4702,6 +4742,26 @@ let currentTier = null;
 let showArchived = false;
 let viewingWishlist = false;
 let viewingTierBoard = false;
+
+/* ---- SITE MODE (Simple vs Nerd) ---- */
+const MODE_KEY = 'bayoutonefm-mode';
+let siteMode = (function(){ try{ const m = localStorage.getItem(MODE_KEY); return m === 'nerd' ? 'nerd' : 'simple'; }catch(e){ return 'simple'; } })();
+function isNerd(){ return siteMode === 'nerd'; }
+function isSimple(){ return !isNerd(); }
+function applyModeToBody(){
+  document.body.classList.toggle('mode-nerd', isNerd());
+  document.body.classList.toggle('mode-simple', isSimple());
+}
+function setSiteMode(mode){
+  siteMode = (mode === 'nerd') ? 'nerd' : 'simple';
+  try{ localStorage.setItem(MODE_KEY, siteMode); }catch(e){}
+  applyModeToBody();
+  if(typeof syncModeBtn === 'function') syncModeBtn();
+  if(typeof render === 'function') render();
+  document.querySelectorAll('.card.flipped').forEach(function(c){ c.classList.remove('flipped'); });
+  trackEvent('site_mode', { mode: siteMode });
+}
+applyModeToBody();
 
 /* ---- FEATURE USAGE TRACKING ---- */
 const ANALYTICS_KEY = 'bayoutonefm-analytics';
@@ -6110,6 +6170,31 @@ document.getElementById('siteMvCloseBtn').addEventListener('click', ()=>{
     if(e.target.closest('button')) setOpen(false);
   });
 })();
+function syncModeBtn(){
+  const b = document.getElementById('modeBtn');
+  if(!b) return;
+  b.textContent = isNerd() ? '🎧 Simple mode' : '🧠 Nerd mode';
+  b.classList.toggle('is-simple', isSimple());
+  b.title = isNerd() ? 'Switch to Simple mode (no card backs or extra features)' : 'Switch to Nerd mode (card backs, details, CD collection)';
+}
+(function(){
+  let hasMode = false;
+  try{ hasMode = localStorage.getItem('bayoutonefm-mode') !== null; }catch(e){ hasMode = true; }
+  const ov = document.getElementById('modeOverlay');
+  window.maybeOpenModeChooser = function(){
+    if(hasMode || !ov) return;
+    ov.classList.add('open');
+    trackEvent('open_mode_chooser');
+  };
+  if(ov){
+    ov.addEventListener('click', e=>{ if(e.target === ov) ov.classList.remove('open'); });
+    document.getElementById('modeSimpleBtn').addEventListener('click', ()=>{ hasMode = true; setSiteMode('simple'); ov.classList.remove('open'); });
+    document.getElementById('modeNerdBtn').addEventListener('click', ()=>{ hasMode = true; setSiteMode('nerd'); ov.classList.remove('open'); });
+  }
+  const modeBtn = document.getElementById('modeBtn');
+  if(modeBtn) modeBtn.addEventListener('click', ()=>{ trackEvent('toggle_site_mode'); if(isNerd()) setSiteMode('simple'); else setSiteMode('nerd'); setTimeout(()=>{ if(typeof showToast === 'function') showToast(isNerd() ? 'Nerd mode on — cards now flip to show the back.' : 'Simple mode on — card backs are hidden.', 3400); }, 100); });
+})();
+syncModeBtn();
 document.getElementById('smvPreviewBtn').addEventListener('click', updateMvPreview);
 document.getElementById('smv-embed').addEventListener('input', updateMvPreview);
 document.getElementById('smvSaveBtn').addEventListener('click', ()=>{
@@ -7066,7 +7151,7 @@ async function openShareCard(opts){
   document.getElementById('shareSendRow').style.display = (opts.mode === 'song') ? '' : 'none';
   const previewBack = document.getElementById('sharePreviewBack');
   const dlBack = document.getElementById('shareDownloadBackBtn');
-  const isSong = opts.mode === 'song';
+  const isSong = opts.mode === 'song' && isNerd();
   if(previewBack) previewBack.style.display = isSong ? '' : 'none';
   if(dlBack) dlBack.style.display = isSong ? '' : 'none';
   try{
@@ -8396,6 +8481,7 @@ document.getElementById('grid').addEventListener('click', e=>{
     trackEvent('share_song');
     openShareCard({ mode:'song', song, username: (myProfile && myProfile.username) || 'you', friendName: false });
   } else if(action === 'flip'){
+    if(!isNerd()) return;
     const cardEl = btn.closest('.card');
     if(cardEl) cardEl.classList.toggle('flipped');
   } else if(action === 'delete'){
@@ -11668,6 +11754,7 @@ function renderFriendGrid(list){
 document.getElementById('friendGrid').addEventListener('click', e=>{
   const btn = e.target.closest('[data-action="flip"]');
   if(!btn) return;
+  if(!isNerd()) return;
   const cardEl = btn.closest('.card');
   if(cardEl) cardEl.classList.toggle('flipped');
 });
@@ -12945,6 +13032,7 @@ function showApp(){
   document.getElementById('appWrap').style.display = '';
   var sl = document.getElementById('stickerLayer');
   if(sl) sl.style.display = '';
+  if(typeof maybeOpenModeChooser === 'function') maybeOpenModeChooser();
 }
 function showRecoveryScreen(){
   document.getElementById('authScreen').style.display = 'none';
@@ -15566,6 +15654,7 @@ document.getElementById('passwordSaveBtn').addEventListener('click', async ()=>{
     if(flipCard){
       e.preventDefault();
       e.stopPropagation();
+      if(!isNerd()) return;
       flipCard.classList.toggle('flipped');
       return;
     }
@@ -17359,6 +17448,10 @@ let cdPendingBarcode = '';
 function syncCDButton(){}
 window.syncCDButton = syncCDButton;
 window.openCDCollection = function(){
+  if(!isNerd()){
+    showToast('My CDs is a Nerd-mode feature — turn on Nerd mode from the ⋯ menu to see it', 3200);
+    return;
+  }
   if(!(typeof isCertifiedTester === 'function' && isCertifiedTester())){
     showToast('My CDs is for certified testers only for now', 3200);
     return;

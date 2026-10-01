@@ -12,6 +12,10 @@ let cdPendingBarcode = '';
 function syncCDButton(){}
 window.syncCDButton = syncCDButton;
 window.openCDCollection = function(){
+  if(!isNerd()){
+    showToast('My CDs is a Nerd-mode feature — turn on Nerd mode from the ⋯ menu to see it', 3200);
+    return;
+  }
   if(!(typeof isCertifiedTester === 'function' && isCertifiedTester())){
     showToast('My CDs is for certified testers only for now', 3200);
     return;

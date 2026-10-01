@@ -674,6 +674,7 @@ function renderFriendGrid(list){
 document.getElementById('friendGrid').addEventListener('click', e=>{
   const btn = e.target.closest('[data-action="flip"]');
   if(!btn) return;
+  if(!isNerd()) return;
   const cardEl = btn.closest('.card');
   if(cardEl) cardEl.classList.toggle('flipped');
 });

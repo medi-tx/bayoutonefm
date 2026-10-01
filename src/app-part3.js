@@ -1361,6 +1361,31 @@ document.getElementById('siteMvCloseBtn').addEventListener('click', ()=>{
     if(e.target.closest('button')) setOpen(false);
   });
 })();
+function syncModeBtn(){
+  const b = document.getElementById('modeBtn');
+  if(!b) return;
+  b.textContent = isNerd() ? '🎧 Simple mode' : '🧠 Nerd mode';
+  b.classList.toggle('is-simple', isSimple());
+  b.title = isNerd() ? 'Switch to Simple mode (no card backs or extra features)' : 'Switch to Nerd mode (card backs, details, CD collection)';
+}
+(function(){
+  let hasMode = false;
+  try{ hasMode = localStorage.getItem('bayoutonefm-mode') !== null; }catch(e){ hasMode = true; }
+  const ov = document.getElementById('modeOverlay');
+  window.maybeOpenModeChooser = function(){
+    if(hasMode || !ov) return;
+    ov.classList.add('open');
+    trackEvent('open_mode_chooser');
+  };
+  if(ov){
+    ov.addEventListener('click', e=>{ if(e.target === ov) ov.classList.remove('open'); });
+    document.getElementById('modeSimpleBtn').addEventListener('click', ()=>{ hasMode = true; setSiteMode('simple'); ov.classList.remove('open'); });
+    document.getElementById('modeNerdBtn').addEventListener('click', ()=>{ hasMode = true; setSiteMode('nerd'); ov.classList.remove('open'); });
+  }
+  const modeBtn = document.getElementById('modeBtn');
+  if(modeBtn) modeBtn.addEventListener('click', ()=>{ trackEvent('toggle_site_mode'); if(isNerd()) setSiteMode('simple'); else setSiteMode('nerd'); setTimeout(()=>{ if(typeof showToast === 'function') showToast(isNerd() ? 'Nerd mode on — cards now flip to show the back.' : 'Simple mode on — card backs are hidden.', 3400); }, 100); });
+})();
+syncModeBtn();
 document.getElementById('smvPreviewBtn').addEventListener('click', updateMvPreview);
 document.getElementById('smv-embed').addEventListener('input', updateMvPreview);
 document.getElementById('smvSaveBtn').addEventListener('click', ()=>{
@@ -2317,7 +2342,7 @@ async function openShareCard(opts){
   document.getElementById('shareSendRow').style.display = (opts.mode === 'song') ? '' : 'none';
   const previewBack = document.getElementById('sharePreviewBack');
   const dlBack = document.getElementById('shareDownloadBackBtn');
-  const isSong = opts.mode === 'song';
+  const isSong = opts.mode === 'song' && isNerd();
   if(previewBack) previewBack.style.display = isSong ? '' : 'none';
   if(dlBack) dlBack.style.display = isSong ? '' : 'none';
   try{
@@ -3647,6 +3672,7 @@ document.getElementById('grid').addEventListener('click', e=>{
     trackEvent('share_song');
     openShareCard({ mode:'song', song, username: (myProfile && myProfile.username) || 'you', friendName: false });
   } else if(action === 'flip'){
+    if(!isNerd()) return;
     const cardEl = btn.closest('.card');
     if(cardEl) cardEl.classList.toggle('flipped');
   } else if(action === 'delete'){
