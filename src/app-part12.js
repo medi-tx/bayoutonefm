@@ -760,36 +760,16 @@ document.addEventListener('keydown', e=>{
     if(!el('walkthrough')) return;
     const key = TOUR_SEEN_KEY + (window.currentUserId || 'anon');
     try{ if(localStorage.getItem(key)) return; }catch(e){ return; }
-    let tries = 0;
-    const iv = setInterval(()=>{
-      tries++;
-      const onboardingEl = el('onboardingOverlay');
-      const onboardingOpen = onboardingEl && onboardingEl.classList.contains('open');
-      if(!onboardingOpen){
-        clearInterval(iv);
-        startTour();
-      } else if(tries > 120){
-        clearInterval(iv);
-      }
-    }, 250);
+    // Tour disabled by user preference
+    return;
   }
 
   window.startTour = startTour;
   window.maybeStartTour = maybeStartTour;
 
-  function syncTourButton(){
-    const b = el('tourBtn');
-    if(!b) return;
-    const isAllowed = (typeof isSamAdmin === 'function' && isSamAdmin()) || (typeof isCertifiedTester === 'function' && isCertifiedTester());
-    b.style.display = isAllowed ? '' : 'none';
-  }
-  window.syncTourButton = syncTourButton;
+  // tour button removed per request
+  window.syncTourButton = function(){};
   syncTourButton();
-
-  document.getElementById('tourBtn').addEventListener('click', ()=>{
-    try{ trackEvent('tour_replay'); }catch(e){}
-    startTour();
-  });
   document.getElementById('wtNext').addEventListener('click', ()=>{
     const s = slides[idx];
     if(s && s.finish){ endTour(); return; }

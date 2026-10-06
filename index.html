@@ -33,7 +33,7 @@
 const SUPABASE_URL = 'https://aaqlnjdooeydtaihhdia.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
 
-const BTF_VERSION = 'a408919';
+const BTF_VERSION = '511f61a';
 
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
@@ -3528,7 +3528,6 @@ body.mode-simple [data-editor-tab^="back-"], body.mode-simple [data-editor-panel
           <button class="theme-btn" id="testerBtn">🧪 Tester</button>
           <button class="theme-btn" id="discordBtn">Discord</button>
           <button class="theme-btn" id="siteMvBtn">🎬 Site Music Videos</button>
-          <button class="theme-btn" id="tourBtn">❓ Tour</button>
         </div>
       </div>
       <button class="avatar-btn" id="myProfileBtn" title="My profile"><span id="myAvatarContent">?</span></button>
@@ -18196,36 +18195,16 @@ document.addEventListener('keydown', e=>{
     if(!el('walkthrough')) return;
     const key = TOUR_SEEN_KEY + (window.currentUserId || 'anon');
     try{ if(localStorage.getItem(key)) return; }catch(e){ return; }
-    let tries = 0;
-    const iv = setInterval(()=>{
-      tries++;
-      const onboardingEl = el('onboardingOverlay');
-      const onboardingOpen = onboardingEl && onboardingEl.classList.contains('open');
-      if(!onboardingOpen){
-        clearInterval(iv);
-        startTour();
-      } else if(tries > 120){
-        clearInterval(iv);
-      }
-    }, 250);
+    // Tour disabled by user preference
+    return;
   }
 
   window.startTour = startTour;
   window.maybeStartTour = maybeStartTour;
 
-  function syncTourButton(){
-    const b = el('tourBtn');
-    if(!b) return;
-    const isAllowed = (typeof isSamAdmin === 'function' && isSamAdmin()) || (typeof isCertifiedTester === 'function' && isCertifiedTester());
-    b.style.display = isAllowed ? '' : 'none';
-  }
-  window.syncTourButton = syncTourButton;
+  // tour button removed per request
+  window.syncTourButton = function(){};
   syncTourButton();
-
-  document.getElementById('tourBtn').addEventListener('click', ()=>{
-    try{ trackEvent('tour_replay'); }catch(e){}
-    startTour();
-  });
   document.getElementById('wtNext').addEventListener('click', ()=>{
     const s = slides[idx];
     if(s && s.finish){ endTour(); return; }
