@@ -221,7 +221,7 @@ function feedCardHtml(entry){
   const tierBadge = s.tier ? renderTierBadge(s.tier) : '';
   const feedPreviewId = 'feed:' + (s.id || Math.random().toString(36).slice(2));
   feedSongCache[feedPreviewId] = { id: feedPreviewId, title: s.title || 'Untitled', artists: s.artists || [], previewUrl: s.previewUrl || '' };
-  const previewBtn = s.source === 'itunes' ? `${s.explicit ? '<span class="explicit-badge" title="Explicit content">E</span>' : ''}<button type="button" class="preview-btn" data-preview="${escapeAttr(feedPreviewId)}" title="Play a 30-second preview" aria-label="Play 30-second preview">▶︎</button>` : '';
+  const previewBtn = `<button type="button" class="preview-btn" data-preview="${escapeAttr(feedPreviewId)}" title="Play a 30-second preview" aria-label="Play 30-second preview">▶︎</button>${s.explicit ? '<span class="explicit-badge" title="Explicit content">E</span>' : ''}`;
   const mvBtn = s.musicVideoUrl ? `<a class="feed-card-mv-link" href="${escapeAttr(s.musicVideoUrl)}" target="_blank" rel="noopener" title="Fan-made music video for this song">🎬</a>` : '';
   const why = s.quickThought ? `<div class="feed-card-why">"${escapeHtml(s.quickThought)}"</div>` : '';
   const reminds = (s.remindsOf && s.remindsOf.length)
