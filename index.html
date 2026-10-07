@@ -33,7 +33,7 @@
 const SUPABASE_URL = 'https://aaqlnjdooeydtaihhdia.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
 
-const BTF_VERSION = '511f61a';
+const BTF_VERSION = '562a0fb';
 
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
@@ -2093,6 +2093,11 @@ const BTF_VERSION = '511f61a';
     padding:9px 12px;
     white-space:nowrap;
   }
+  .more-menu-sep{
+    height:1px;
+    background:rgba(var(--on-paper-rgb),0.15);
+    margin:4px 6px;
+  }
 
   .profile-header{
     display:flex;
@@ -3511,8 +3516,6 @@ body.mode-simple [data-editor-tab^="back-"], body.mode-simple [data-editor-panel
     <span class="btf-version" id="btfVersion"></span>
     <span id="syncStatus" class="sync-status"></span>
 <div class="header-actions">
-      <button class="theme-btn" id="notifBtn">🔔 Notifications<span class="msg-btn-badge" id="notifBadge" style="display:none;"></span></button>
-      <button class="theme-btn" id="messagesBtn">💬 Messages<span class="msg-btn-badge" id="msgBtnBadge" style="display:none;"></span></button>
       <button class="theme-btn" id="feedBtn">📰 Feed</button>
       <button class="theme-btn" id="sotdBtn">🎵 Song of the Day</button>
       <button class="theme-btn" id="leaderboardBtn">🏆 Leaderboards</button>
@@ -3520,6 +3523,9 @@ body.mode-simple [data-editor-tab^="back-"], body.mode-simple [data-editor-panel
       <div class="more-wrap" id="moreWrap">
         <button class="theme-btn more-btn" id="moreBtn" aria-haspopup="true" aria-expanded="false" title="More">⋯</button>
         <div class="more-menu" id="moreMenu">
+          <button class="theme-btn" id="notifBtn">🔔 Notifications<span class="msg-btn-badge" id="notifBadge" style="display:none;"></span></button>
+          <button class="theme-btn" id="messagesBtn">💬 Messages<span class="msg-btn-badge" id="msgBtnBadge" style="display:none;"></span></button>
+          <div class="more-menu-sep"></div>
           <button class="theme-btn" id="statsBtn">📊 Stats</button>
           <button class="theme-btn" id="editStickersBtn">🎨 Stickers</button>
           <button class="theme-btn" id="themeBtn">🎨 Theme</button>

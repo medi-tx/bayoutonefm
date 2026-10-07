@@ -2040,6 +2040,11 @@
     padding:9px 12px;
     white-space:nowrap;
   }
+  .more-menu-sep{
+    height:1px;
+    background:rgba(var(--on-paper-rgb),0.15);
+    margin:4px 6px;
+  }
 
   .profile-header{
     display:flex;
