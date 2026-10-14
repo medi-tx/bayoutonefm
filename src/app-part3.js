@@ -1242,10 +1242,6 @@ function testerHubItemsHtml(){
       <span class="tester-form-title">📋 Updates Log</span>
       <span class="tester-form-desc">What's being worked on right now.</span>
     </button>`,
-    `<button type="button" class="tester-form-btn" data-tester-hub="cds">
-      <span class="tester-form-title">💿 My CDs</span>
-      <span class="tester-form-desc">Your physical CD collection.</span>
-    </button>`,
     `<button type="button" class="tester-form-btn" data-tester-hub="forms">
       <span class="tester-form-title">🧪 Tester Forms</span>
       <span class="tester-form-desc">Bug reports, feedback &amp; suggestions, questions.</span>
@@ -1352,6 +1348,30 @@ document.getElementById('siteMvCloseBtn').addEventListener('click', ()=>{
   }
   btn.addEventListener('click', e=>{
     e.stopPropagation();
+    const prof = document.getElementById('profileWrap');
+    if(prof) prof.classList.remove('open');
+    setOpen(!wrap.classList.contains('open'));
+  });
+  document.addEventListener('click', e=>{
+    if(!wrap.contains(e.target)) setOpen(false);
+  });
+  menu.addEventListener('click', e=>{
+    if(e.target.closest('button')) setOpen(false);
+  });
+})();
+(function(){
+  const wrap = document.getElementById('profileWrap');
+  const menu = document.getElementById('profileMenu');
+  const btn = document.getElementById('myProfileBtn');
+  if(!wrap || !menu || !btn) return;
+  function setOpen(open){
+    wrap.classList.toggle('open', open);
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  }
+  btn.addEventListener('click', e=>{
+    e.stopPropagation();
+    const more = document.getElementById('moreWrap');
+    if(more) more.classList.remove('open');
     setOpen(!wrap.classList.contains('open'));
   });
   document.addEventListener('click', e=>{
@@ -1435,9 +1455,6 @@ document.getElementById('testerHubList').addEventListener('click', e=>{
   if(which === 'updates'){
     trackEvent('open_updates_log');
     if(typeof window.openUpdatesLog === 'function') window.openUpdatesLog();
-  } else if(which === 'cds'){
-    trackEvent('open_my_cds');
-    if(typeof window.openCDCollection === 'function') window.openCDCollection();
   } else if(which === 'forms'){
     trackEvent('open_tester_forms');
     document.getElementById('testerFormsOverlay').classList.add('open');

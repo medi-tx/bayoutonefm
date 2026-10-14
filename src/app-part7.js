@@ -129,7 +129,7 @@ async function loadMyProfileSotdCount(){
   el.style.display = '';
 }
 
-document.getElementById('myProfileBtn').addEventListener('click', ()=>{
+document.getElementById('profileViewBtn').addEventListener('click', ()=>{
   trackEvent('open_my_profile');
   renderMyProfileView();
   document.getElementById('myProfileOverlay').classList.add('open');
