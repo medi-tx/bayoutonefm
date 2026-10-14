@@ -172,6 +172,39 @@ function unsubscribeNotifications(){
 
 /* ---- FRIEND ACTIVITY FEED ---- */
 const FEED_REACTION_EMOJIS = ['🔥','❤️','🤯','😎','😭','💯'];
+const FEED_PAGE_SIZE = 12;
+function feedPagerHtml(page, totalPages){
+  if(totalPages <= 1) return '';
+  const dis = (b)=> b ? ' disabled' : '';
+  return '<div class="feed-pager">'
+    + '<button type="button" class="feed-pager-btn" data-feed-page="0"' + dis(page<=0) + '>⏮ First</button>'
+    + '<button type="button" class="feed-pager-btn" data-feed-page="' + (page-1) + '"' + dis(page<=0) + '>← Prev</button>'
+    + '<span class="feed-pager-info">Page ' + (page+1) + ' of ' + totalPages + '</span>'
+    + '<button type="button" class="feed-pager-btn" data-feed-page="' + (page+1) + '"' + dis(page>=totalPages-1) + '>Next →</button>'
+    + '<button type="button" class="feed-pager-btn" data-feed-page="' + (totalPages-1) + '"' + dis(page>=totalPages-1) + '>Last ⏭</button>'
+    + '</div>';
+}
+function renderFeedPage(list, page){
+  if(!list) return;
+  const items = list.__feedItems || [];
+  const builder = list.__feedBuilder;
+  const totalPages = Math.max(1, Math.ceil(items.length / FEED_PAGE_SIZE));
+  page = Math.max(0, Math.min(page|0, totalPages - 1));
+  list.__feedPage = page;
+  const start = page * FEED_PAGE_SIZE;
+  const slice = items.slice(start, start + FEED_PAGE_SIZE);
+  const cardsHtml = slice.map((it, i)=> builder(it, start + i)).join('');
+  list.innerHTML = cardsHtml + (items.length ? feedPagerHtml(page, totalPages) : '');
+  list.querySelectorAll('.feed-card').forEach((el, i)=>{ el.dataset.feedIdx = String(start + i); });
+  list.__feedData = items;
+}
+function setFeedItems(list, items, builder){
+  list.__feedItems = items || [];
+  list.__feedBuilder = builder;
+  renderFeedPage(list, 0);
+}
+window.setFeedItems = setFeedItems;
+window.renderFeedPage = renderFeedPage;
 function feedImportCardHtml(clusterName, entries, who, profile, ownerId, when){
   const initial = who === 'you' ? 'You' : ((who || '?').charAt(0).toUpperCase());
   const avatar = (profile && profile.photo)
@@ -331,9 +364,7 @@ async function loadFeed(){
     return tb - ta;
   });
   if(countEl) countEl.textContent = `${grouped.length} item${grouped.length===1?'':'s'} (${all.length} song${all.length===1?'':'s'}) in the last ${windowLabel}${friendNote}`;
-  const displayed = grouped.slice(0, 80);
-  list.innerHTML = displayed.map(e=> e._cluster ? feedImportCardHtml(e.clusterName, e.entries, e.who, e.profile, e.ownerId, e.when) : feedCardHtml(e)).join('');
-  list.__feedData = all;
+  setFeedItems(list, grouped, (e)=> e._cluster ? feedImportCardHtml(e.clusterName, e.entries, e.who, e.profile, e.ownerId, e.when) : feedCardHtml(e));
 }
 function feedMvCardHtml(entry){
   const s = entry.song;
@@ -406,7 +437,7 @@ async function loadMusicVideoFeed(){
     }
     const everyone = profiles.filter(p => p.user_id !== currentUserId && p.username);
     if(everyone.length === 0){
-      emptyState('You\'re the first one here — when other people on bayoutonefm add music videos, they\'ll show up here. Make your own with the 🎬 Site Music Videos button!');
+      emptyState('You\'re the first one here — when other people on bayoutonefm add music videos, they\'ll show up here. Make your own with the 🎬 Fan Music Videos button!');
       return;
     }
     const results = await Promise.all(everyone.map(async p=>{
@@ -437,10 +468,9 @@ async function loadMusicVideoFeed(){
       }
     }catch(err){ console.warn('Could not load mv feed reactions:', err); }
     if(countEl) countEl.textContent = `${all.length} music video${all.length===1?'':'s'} from ${everyone.length} ${everyone.length===1?'person':'people'} on bayoutonefm`;
-    list.innerHTML = all.map(feedMvCardHtml).join('');
     list.__feedMode = 'mv';
-    list.__feedData = all;
     list.__discoverData = [];
+    setFeedItems(list, all, (it)=> feedMvCardHtml(it));
   }catch(e){
     console.warn('Could not load music video feed:', e);
     emptyState('Couldn\'t load music videos right now — try again in a bit.');
@@ -462,7 +492,7 @@ document.getElementById('feedList').addEventListener('click', e=>{
     if(!card) return;
     const listEl = document.getElementById('feedList');
     const allData = listEl.__feedData || listEl.__discoverData || [];
-    const idx = Array.from(document.querySelectorAll('#feedList .feed-card')).indexOf(card);
+    const idx = parseInt(card.dataset.feedIdx, 10);
     const entry = allData[idx];
     if(!entry) return;
     const username = entry.who;
@@ -476,10 +506,10 @@ document.getElementById('feedList').addEventListener('click', e=>{
   if(addBtn){
     e.stopPropagation();
     const card = addBtn.closest('.feed-card');
-    const idx = Array.from(document.querySelectorAll('#feedList .feed-card')).indexOf(card);
-    if(idx < 0) return;
+    if(!card) return;
     const listEl = document.getElementById('feedList');
     const allData = listEl.__feedData || listEl.__discoverData || [];
+    const idx = parseInt(card.dataset.feedIdx, 10);
     const entry = allData[idx];
     if(!entry) return;
     document.getElementById('feedOverlay').classList.remove('open');
@@ -498,6 +528,15 @@ document.getElementById('feedList').addEventListener('click', e=>{
     });
     return;
   }
+});
+
+document.getElementById('feedList').addEventListener('click', e=>{
+  const pg = e.target.closest('[data-feed-page]');
+  if(!pg || pg.disabled) return;
+  e.preventDefault();
+  const list = document.getElementById('feedList');
+  renderFeedPage(list, parseInt(pg.dataset.feedPage, 10));
+  list.scrollTop = 0;
 });
 
 async function handleFeedReaction(btn){

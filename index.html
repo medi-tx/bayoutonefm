@@ -33,7 +33,7 @@
 const SUPABASE_URL = 'https://aaqlnjdooeydtaihhdia.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
 
-const BTF_VERSION = '807be82';
+const BTF_VERSION = 'c84aa91';
 
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
@@ -756,17 +756,74 @@ const BTF_VERSION = '807be82';
     outline:2px solid var(--ink);
     outline-offset:2px;
   }
-  #toggleTierBoard, #friendTierBoardBtn{
+  #friendTierBoardBtn{
     background:var(--teal) !important;
     color:var(--ink) !important;
     border-color:var(--teal) !important;
   }
-  #toggleTierBoard:hover, #friendTierBoardBtn:hover{ opacity:0.85; transform:translateY(-1px); }
+  #friendTierBoardBtn:hover{ opacity:0.85; transform:translateY(-1px); }
   .controls .add-btn.secondary.danger{
     color:color-mix(in srgb, var(--rose) 55%, var(--on-paper));
     border-color:color-mix(in srgb, var(--rose) 60%, var(--on-paper));
   }
   .controls .add-btn.secondary.danger:hover{ background:color-mix(in srgb, var(--rose) 20%, var(--field-bg)); }
+
+  /* VIEW TABS — one grouped switcher instead of a row of loose buttons */
+  .view-bar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:14px 20px;
+    flex-wrap:wrap;
+    margin-bottom:28px;
+  }
+  .view-tabs{
+    display:inline-flex;
+    gap:2px;
+    padding:3px;
+    max-width:100%;
+    overflow-x:auto;
+    background:var(--ink-2);
+    border:1px solid rgba(238,221,149,0.28);
+    border-radius:10px;
+    scrollbar-width:none;
+  }
+  .view-tabs::-webkit-scrollbar{ display:none; }
+  .view-tab{
+    font-family:'Space Grotesk', sans-serif;
+    font-size:13.5px;
+    font-weight:500;
+    white-space:nowrap;
+    background:none;
+    border:none;
+    color:var(--text-dim);
+    padding:8px 14px;
+    border-radius:7px;
+    cursor:pointer;
+    transition:background .15s ease, color .15s ease;
+  }
+  .view-tab:hover{ color:var(--on-ink); background:rgba(238,221,149,0.08); }
+  .view-tab.active{ background:var(--rose); color:var(--ink); font-weight:600; }
+  body.cb-on .view-tab.active{ outline:2px solid var(--on-ink); outline-offset:1px; }
+  .stacks-group{ display:inline-flex; align-items:center; gap:10px; }
+  .stacks-label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:1px;
+    text-transform:uppercase;
+    color:var(--text-dim);
+  }
+  .btn-pair{ display:inline-flex; }
+  .stacks-group .add-btn.secondary{
+    color:var(--on-ink);
+    border:1px solid rgba(238,221,149,0.32);
+    padding:8px 14px;
+    font-size:13px;
+    border-radius:0;
+  }
+  .stacks-group .add-btn.secondary:hover{ background:rgba(238,221,149,0.1); transform:none; }
+  .stacks-group .btn-pair .add-btn:first-child{ border-radius:8px 0 0 8px; }
+  .stacks-group .btn-pair .add-btn:last-child{ border-radius:0 8px 8px 0; margin-left:-1px; }
 
   /* GRID */
   .grid{
@@ -2792,6 +2849,11 @@ const BTF_VERSION = '807be82';
   .feed-modal{ max-width:520px; }
   .feed-list{ max-height:60vh; overflow-y:auto; margin:8px 0; }
   .feed-empty{ font-size:13px; color:var(--on-paper); opacity:0.6; text-align:center; padding:24px 0; }
+  .feed-pager{ display:flex; align-items:center; justify-content:center; gap:6px; flex-wrap:wrap; margin:14px 0 4px; }
+  .feed-pager-btn{ font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:12.5px; padding:7px 12px; border-radius:8px; border:1px solid rgba(var(--on-paper-rgb),0.25); background:transparent; color:var(--on-paper); cursor:pointer; transition:background .15s ease, border-color .15s ease; }
+  .feed-pager-btn:hover:not(:disabled){ background:rgba(var(--on-paper-rgb),0.12); border-color:rgba(var(--on-paper-rgb),0.4); }
+  .feed-pager-btn:disabled{ opacity:0.35; cursor:default; }
+  .feed-pager-info{ font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.5px; color:rgba(var(--on-paper-rgb),0.7); padding:0 4px; }
   .feed-card{
     background:rgba(var(--on-paper-rgb),0.04); border:1px solid rgba(var(--on-paper-rgb),0.1);
     border-radius:10px; padding:14px; margin-bottom:10px;
@@ -3316,6 +3378,7 @@ body.mode-simple [data-editor-tab^="back-"], body.mode-simple [data-editor-panel
 .more-menu .menu-danger:hover{ color:#fff; border-color:#d6536d; background:rgba(214,83,109,0.14); }
 @media (max-width:620px){
   .header-actions{ width:100%; }
+  .view-bar{ margin-bottom:22px; }
 }
 </style>
 </head>
@@ -3446,7 +3509,7 @@ body.mode-simple [data-editor-tab^="back-"], body.mode-simple [data-editor-panel
           <button class="theme-btn" id="songDbBtn">📀 Song Database</button>
           <button class="theme-btn" id="testerBtn">🧪 Tester</button>
           <button class="theme-btn" id="discordBtn">Discord</button>
-          <button class="theme-btn" id="siteMvBtn">🎬 Site Music Videos</button>
+          <button class="theme-btn" id="siteMvBtn">🎬 Fan Music Videos</button>
           <div class="more-menu-sep"></div>
           <button class="theme-btn" id="logoutBtn">Log out</button>
         </div>
@@ -3858,7 +3921,7 @@ body.mode-simple [data-editor-tab^="back-"], body.mode-simple [data-editor-panel
 
 <div class="overlay" id="siteMvOverlay">
   <div class="modal" style="max-width:560px;">
-    <h3>🎬 Site Music Videos</h3>
+    <h3>🎬 Fan Music Videos</h3>
     <p class="mv-para" style="margin-bottom:12px;"><b>Make your own music video to a song you love</b> — film shots of yourself, friends, art, or scenery, whatever fits the song. Upload it to <b>YouTube</b> or <b>Vimeo</b>, then link it to one of the songs in your cataloguex below. Only your own creations — not official music videos or others’ clips.</p>
     <div class="mv-form">
       <div class="field">
@@ -3929,7 +3992,7 @@ body.mode-simple [data-editor-tab^="back-"], body.mode-simple [data-editor-panel
       <button type="button" class="mixtape-period-btn" id="mixtapeMvBtn" aria-pressed="false" title="Fan-made music videos uploaded by everyone on bayoutonefm">🎬 Music Videos</button>
     </div>
     <p class="mixtape-sub" id="feedModeSub" style="display:none;">New music added by everyone on bayoutonefm — not just your friends.</p>
-    <p class="mixtape-sub" id="feedMvSub" style="display:none;">Fan-made music videos from anyone on bayoutonefm — tap a card to watch. Make your own with the 🎬 Site Music Videos button.</p>
+    <p class="mixtape-sub" id="feedMvSub" style="display:none;">Fan-made music videos from anyone on bayoutonefm — tap a card to watch. Make your own with the 🎬 Fan Music Videos button.</p>
     <p class="mixtape-count" id="feedCount"></p>
     <div class="feed-list" id="feedList"></div>
     <div class="modal-actions">
@@ -5991,14 +6054,14 @@ function populateSiteMvSongSelect(){
   sel.innerHTML = songs.slice().sort(byYearDesc).map(s=>'<option value="'+escapeAttr(s.id)+'">'+escapeHtml(((s.title||'Untitled')+' — '+(formatArtists(s.artists)||'?'))) + (s.musicVideoUrl ? '  🎬' : '') + '</option>').join('');
 }
 function siteMvIframe(src, title){
-  return '<iframe src="'+escapeAttr(src)+'" title="'+escapeAttr(title||'Site music video')+'" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>';
+  return '<iframe src="'+escapeAttr(src)+'" title="'+escapeAttr(title||'Fan music video')+'" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>';
 }
 function renderSiteMvGallery(){
   const gal = document.getElementById('smvGallery');
   if(!gal) return;
   const withVideos = songs.filter(s=>s.musicVideoUrl);
   if(!withVideos.length){
-    gal.innerHTML = '<p class="mv-empty">No site music videos yet — pick a song above and save your video to it.</p>';
+    gal.innerHTML = '<p class="mv-empty">No fan music videos yet — pick a song above and save your video to it.</p>';
     return;
   }
   gal.innerHTML = withVideos.map(s=>{
@@ -6143,7 +6206,7 @@ document.getElementById('smvSaveBtn').addEventListener('click', ()=>{
 });
 document.getElementById('smvGallery').addEventListener('click', e=>{
   const btn = e.target.closest('[data-mv-remove]');
-  if(!btn || !confirm('Remove this site music video?')) return;
+  if(!btn || !confirm('Remove this fan music video?')) return;
   const song = songs.find(s=>s.id===btn.dataset.mvRemove);
   if(song){ song.musicVideoUrl = null; song.mvAt = null; }
   save();
@@ -6531,9 +6594,9 @@ async function loadDiscoverFeed(){
       }
     }catch(err){ console.warn('Could not load discover reactions:', err); }
     if(countEl) countEl.textContent = `${all.length} songs from ${sample.length} people on bayoutonefm`;
-    list.innerHTML = all.map(entry=> feedCardHtml(entry)).join('');
     list.__feedMode = 'discover';
     list.__discoverData = all;
+    setFeedItems(list, all, (entry)=> feedCardHtml(entry));
   }catch(e){
     console.warn('Could not load discover feed:', e);
     if(countEl) countEl.textContent = '';
@@ -16903,6 +16966,39 @@ function unsubscribeNotifications(){
 
 /* ---- FRIEND ACTIVITY FEED ---- */
 const FEED_REACTION_EMOJIS = ['🔥','❤️','🤯','😎','😭','💯'];
+const FEED_PAGE_SIZE = 12;
+function feedPagerHtml(page, totalPages){
+  if(totalPages <= 1) return '';
+  const dis = (b)=> b ? ' disabled' : '';
+  return '<div class="feed-pager">'
+    + '<button type="button" class="feed-pager-btn" data-feed-page="0"' + dis(page<=0) + '>⏮ First</button>'
+    + '<button type="button" class="feed-pager-btn" data-feed-page="' + (page-1) + '"' + dis(page<=0) + '>← Prev</button>'
+    + '<span class="feed-pager-info">Page ' + (page+1) + ' of ' + totalPages + '</span>'
+    + '<button type="button" class="feed-pager-btn" data-feed-page="' + (page+1) + '"' + dis(page>=totalPages-1) + '>Next →</button>'
+    + '<button type="button" class="feed-pager-btn" data-feed-page="' + (totalPages-1) + '"' + dis(page>=totalPages-1) + '>Last ⏭</button>'
+    + '</div>';
+}
+function renderFeedPage(list, page){
+  if(!list) return;
+  const items = list.__feedItems || [];
+  const builder = list.__feedBuilder;
+  const totalPages = Math.max(1, Math.ceil(items.length / FEED_PAGE_SIZE));
+  page = Math.max(0, Math.min(page|0, totalPages - 1));
+  list.__feedPage = page;
+  const start = page * FEED_PAGE_SIZE;
+  const slice = items.slice(start, start + FEED_PAGE_SIZE);
+  const cardsHtml = slice.map((it, i)=> builder(it, start + i)).join('');
+  list.innerHTML = cardsHtml + (items.length ? feedPagerHtml(page, totalPages) : '');
+  list.querySelectorAll('.feed-card').forEach((el, i)=>{ el.dataset.feedIdx = String(start + i); });
+  list.__feedData = items;
+}
+function setFeedItems(list, items, builder){
+  list.__feedItems = items || [];
+  list.__feedBuilder = builder;
+  renderFeedPage(list, 0);
+}
+window.setFeedItems = setFeedItems;
+window.renderFeedPage = renderFeedPage;
 function feedImportCardHtml(clusterName, entries, who, profile, ownerId, when){
   const initial = who === 'you' ? 'You' : ((who || '?').charAt(0).toUpperCase());
   const avatar = (profile && profile.photo)
@@ -17062,9 +17158,7 @@ async function loadFeed(){
     return tb - ta;
   });
   if(countEl) countEl.textContent = `${grouped.length} item${grouped.length===1?'':'s'} (${all.length} song${all.length===1?'':'s'}) in the last ${windowLabel}${friendNote}`;
-  const displayed = grouped.slice(0, 80);
-  list.innerHTML = displayed.map(e=> e._cluster ? feedImportCardHtml(e.clusterName, e.entries, e.who, e.profile, e.ownerId, e.when) : feedCardHtml(e)).join('');
-  list.__feedData = all;
+  setFeedItems(list, grouped, (e)=> e._cluster ? feedImportCardHtml(e.clusterName, e.entries, e.who, e.profile, e.ownerId, e.when) : feedCardHtml(e));
 }
 function feedMvCardHtml(entry){
   const s = entry.song;
@@ -17137,7 +17231,7 @@ async function loadMusicVideoFeed(){
     }
     const everyone = profiles.filter(p => p.user_id !== currentUserId && p.username);
     if(everyone.length === 0){
-      emptyState('You\'re the first one here — when other people on bayoutonefm add music videos, they\'ll show up here. Make your own with the 🎬 Site Music Videos button!');
+      emptyState('You\'re the first one here — when other people on bayoutonefm add music videos, they\'ll show up here. Make your own with the 🎬 Fan Music Videos button!');
       return;
     }
     const results = await Promise.all(everyone.map(async p=>{
@@ -17168,10 +17262,9 @@ async function loadMusicVideoFeed(){
       }
     }catch(err){ console.warn('Could not load mv feed reactions:', err); }
     if(countEl) countEl.textContent = `${all.length} music video${all.length===1?'':'s'} from ${everyone.length} ${everyone.length===1?'person':'people'} on bayoutonefm`;
-    list.innerHTML = all.map(feedMvCardHtml).join('');
     list.__feedMode = 'mv';
-    list.__feedData = all;
     list.__discoverData = [];
+    setFeedItems(list, all, (it)=> feedMvCardHtml(it));
   }catch(e){
     console.warn('Could not load music video feed:', e);
     emptyState('Couldn\'t load music videos right now — try again in a bit.');
@@ -17193,7 +17286,7 @@ document.getElementById('feedList').addEventListener('click', e=>{
     if(!card) return;
     const listEl = document.getElementById('feedList');
     const allData = listEl.__feedData || listEl.__discoverData || [];
-    const idx = Array.from(document.querySelectorAll('#feedList .feed-card')).indexOf(card);
+    const idx = parseInt(card.dataset.feedIdx, 10);
     const entry = allData[idx];
     if(!entry) return;
     const username = entry.who;
@@ -17207,10 +17300,10 @@ document.getElementById('feedList').addEventListener('click', e=>{
   if(addBtn){
     e.stopPropagation();
     const card = addBtn.closest('.feed-card');
-    const idx = Array.from(document.querySelectorAll('#feedList .feed-card')).indexOf(card);
-    if(idx < 0) return;
+    if(!card) return;
     const listEl = document.getElementById('feedList');
     const allData = listEl.__feedData || listEl.__discoverData || [];
+    const idx = parseInt(card.dataset.feedIdx, 10);
     const entry = allData[idx];
     if(!entry) return;
     document.getElementById('feedOverlay').classList.remove('open');
@@ -17229,6 +17322,15 @@ document.getElementById('feedList').addEventListener('click', e=>{
     });
     return;
   }
+});
+
+document.getElementById('feedList').addEventListener('click', e=>{
+  const pg = e.target.closest('[data-feed-page]');
+  if(!pg || pg.disabled) return;
+  e.preventDefault();
+  const list = document.getElementById('feedList');
+  renderFeedPage(list, parseInt(pg.dataset.feedPage, 10));
+  list.scrollTop = 0;
 });
 
 async function handleFeedReaction(btn){

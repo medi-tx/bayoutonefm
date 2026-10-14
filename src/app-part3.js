@@ -1284,14 +1284,14 @@ function populateSiteMvSongSelect(){
   sel.innerHTML = songs.slice().sort(byYearDesc).map(s=>'<option value="'+escapeAttr(s.id)+'">'+escapeHtml(((s.title||'Untitled')+' — '+(formatArtists(s.artists)||'?'))) + (s.musicVideoUrl ? '  🎬' : '') + '</option>').join('');
 }
 function siteMvIframe(src, title){
-  return '<iframe src="'+escapeAttr(src)+'" title="'+escapeAttr(title||'Site music video')+'" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>';
+  return '<iframe src="'+escapeAttr(src)+'" title="'+escapeAttr(title||'Fan music video')+'" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>';
 }
 function renderSiteMvGallery(){
   const gal = document.getElementById('smvGallery');
   if(!gal) return;
   const withVideos = songs.filter(s=>s.musicVideoUrl);
   if(!withVideos.length){
-    gal.innerHTML = '<p class="mv-empty">No site music videos yet — pick a song above and save your video to it.</p>';
+    gal.innerHTML = '<p class="mv-empty">No fan music videos yet — pick a song above and save your video to it.</p>';
     return;
   }
   gal.innerHTML = withVideos.map(s=>{
@@ -1436,7 +1436,7 @@ document.getElementById('smvSaveBtn').addEventListener('click', ()=>{
 });
 document.getElementById('smvGallery').addEventListener('click', e=>{
   const btn = e.target.closest('[data-mv-remove]');
-  if(!btn || !confirm('Remove this site music video?')) return;
+  if(!btn || !confirm('Remove this fan music video?')) return;
   const song = songs.find(s=>s.id===btn.dataset.mvRemove);
   if(song){ song.musicVideoUrl = null; song.mvAt = null; }
   save();
@@ -1824,9 +1824,9 @@ async function loadDiscoverFeed(){
       }
     }catch(err){ console.warn('Could not load discover reactions:', err); }
     if(countEl) countEl.textContent = `${all.length} songs from ${sample.length} people on bayoutonefm`;
-    list.innerHTML = all.map(entry=> feedCardHtml(entry)).join('');
     list.__feedMode = 'discover';
     list.__discoverData = all;
+    setFeedItems(list, all, (entry)=> feedCardHtml(entry));
   }catch(e){
     console.warn('Could not load discover feed:', e);
     if(countEl) countEl.textContent = '';
