@@ -33,7 +33,7 @@
 const SUPABASE_URL = 'https://aaqlnjdooeydtaihhdia.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
 
-const BTF_VERSION = '562a0fb';
+const BTF_VERSION = '6f307d0';
 
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
@@ -3516,10 +3516,12 @@ body.mode-simple [data-editor-tab^="back-"], body.mode-simple [data-editor-panel
     <span class="btf-version" id="btfVersion"></span>
     <span id="syncStatus" class="sync-status"></span>
 <div class="header-actions">
-      <button class="theme-btn" id="feedBtn">📰 Feed</button>
-      <button class="theme-btn" id="sotdBtn">🎵 Song of the Day</button>
-      <button class="theme-btn" id="leaderboardBtn">🏆 Leaderboards</button>
-      <button class="theme-btn" id="discoverBtn">🔎 Friends</button>
+      <nav class="nav-group" aria-label="Community">
+        <button class="theme-btn" id="feedBtn">📰 Feed</button>
+        <button class="theme-btn" id="discoverBtn">🔎 Friends</button>
+        <button class="theme-btn" id="leaderboardBtn">🏆 Leaderboards</button>
+        <button class="theme-btn" id="sotdBtn">🎵 Song of the Day</button>
+      </nav>
       <div class="more-wrap" id="moreWrap">
         <button class="theme-btn more-btn" id="moreBtn" aria-haspopup="true" aria-expanded="false" title="More">⋯</button>
         <div class="more-menu" id="moreMenu">
@@ -3534,10 +3536,12 @@ body.mode-simple [data-editor-tab^="back-"], body.mode-simple [data-editor-panel
           <button class="theme-btn" id="testerBtn">🧪 Tester</button>
           <button class="theme-btn" id="discordBtn">Discord</button>
           <button class="theme-btn" id="siteMvBtn">🎬 Site Music Videos</button>
+          <div class="more-menu-sep"></div>
+          <button class="theme-btn menu-danger" id="resetCataloguexBtn" title="Reset your cataloguex back to the built-in examples">🗑 Reset cataloguex</button>
+          <button class="theme-btn" id="logoutBtn">Log out</button>
         </div>
       </div>
       <button class="avatar-btn" id="myProfileBtn" title="My profile"><span id="myAvatarContent">?</span></button>
-      <button class="logout-btn" id="logoutBtn">Log out</button>
     </div>
   </header>
 
