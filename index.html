@@ -33,7 +33,7 @@
 const SUPABASE_URL = 'https://aaqlnjdooeydtaihhdia.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
 
-const BTF_VERSION = '6f307d0';
+const BTF_VERSION = '370c557';
 
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
@@ -687,7 +687,7 @@ const BTF_VERSION = '6f307d0';
     display:flex;
     gap:12px;
     flex-wrap:wrap;
-    margin-bottom:16px;
+    margin-bottom:28px;
     align-items:center;
   }
   input, select{
@@ -756,90 +756,17 @@ const BTF_VERSION = '6f307d0';
     outline:2px solid var(--ink);
     outline-offset:2px;
   }
-  #friendTierBoardBtn{
+  #toggleTierBoard, #friendTierBoardBtn{
     background:var(--teal) !important;
     color:var(--ink) !important;
     border-color:var(--teal) !important;
   }
-  #friendTierBoardBtn:hover{ opacity:0.85; transform:translateY(-1px); }
+  #toggleTierBoard:hover, #friendTierBoardBtn:hover{ opacity:0.85; transform:translateY(-1px); }
   .controls .add-btn.secondary.danger{
     color:color-mix(in srgb, var(--rose) 55%, var(--on-paper));
     border-color:color-mix(in srgb, var(--rose) 60%, var(--on-paper));
   }
   .controls .add-btn.secondary.danger:hover{ background:color-mix(in srgb, var(--rose) 20%, var(--field-bg)); }
-
-
-  /* VIEW TABS — one grouped switcher instead of a row of loose buttons */
-  .view-bar{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:14px 20px;
-    flex-wrap:wrap;
-    margin-bottom:28px;
-  }
-  .view-tabs{
-    display:inline-flex;
-    gap:2px;
-    padding:3px;
-    max-width:100%;
-    overflow-x:auto;
-    background:var(--ink-2);
-    border:1px solid rgba(238,221,149,0.28);
-    border-radius:10px;
-    scrollbar-width:none;
-  }
-  .view-tabs::-webkit-scrollbar{ display:none; }
-  .view-tab{
-    font-family:'Space Grotesk', sans-serif;
-    font-size:13.5px;
-    font-weight:500;
-    white-space:nowrap;
-    background:none;
-    border:none;
-    color:var(--text-dim);
-    padding:8px 14px;
-    border-radius:7px;
-    cursor:pointer;
-    transition:background .15s ease, color .15s ease;
-  }
-  .view-tab:hover{ color:var(--on-ink); background:rgba(238,221,149,0.08); }
-  .view-tab.active{ background:var(--rose); color:var(--ink); font-weight:600; }
-  body.cb-on .view-tab.active{ outline:2px solid var(--on-ink); outline-offset:1px; }
-  .stacks-group{ display:inline-flex; align-items:center; gap:10px; }
-  .stacks-label{
-    font-family:'IBM Plex Mono', monospace;
-    font-size:11px;
-    letter-spacing:1px;
-    text-transform:uppercase;
-    color:var(--text-dim);
-  }
-  .btn-pair{ display:inline-flex; }
-  .stacks-group .add-btn.secondary{
-    color:var(--on-ink);
-    border:1px solid rgba(238,221,149,0.32);
-    padding:8px 14px;
-    font-size:13px;
-    border-radius:0;
-  }
-  .stacks-group .add-btn.secondary:hover{ background:rgba(238,221,149,0.1); transform:none; }
-  .stacks-group .btn-pair .add-btn:first-child{ border-radius:8px 0 0 8px; }
-  .stacks-group .btn-pair .add-btn:last-child{ border-radius:0 8px 8px 0; margin-left:-1px; }
-
-  /* HEADER NAV — Feed / Friends / Leaderboards / Song of the Day as one joined group */
-  .nav-group{ display:inline-flex; max-width:100%; }
-  .header-actions .nav-group .theme-btn{ border-radius:0; margin-left:-1px; padding:8px 14px; white-space:nowrap; }
-  .header-actions .nav-group .theme-btn:first-child{ border-radius:7px 0 0 7px; margin-left:0; }
-  .header-actions .nav-group .theme-btn:last-child{ border-radius:0 7px 7px 0; }
-  .header-actions .nav-group .theme-btn:hover{ position:relative; z-index:1; }
-  .more-menu .menu-danger{ color:#f2b6c2; }
-  .more-menu .menu-danger:hover{ color:#fff; border-color:#d6536d; background:rgba(214,83,109,0.14); }
-  @media (max-width:620px){
-    .header-actions{ width:100%; }
-    .header-actions .nav-group{ order:5; width:100%; overflow-x:auto; scrollbar-width:none; }
-    .header-actions .nav-group .theme-btn{ flex:1 0 auto; }
-    .view-bar{ margin-bottom:22px; }
-  }
 
   /* GRID */
   .grid{
@@ -3475,6 +3402,20 @@ const BTF_VERSION = '6f307d0';
 .mode-simple .msg-flip-card.flipped .msg-flip-back{ transform:rotateY(180deg); }
 body.mode-simple [data-editor-tab^="back-"], body.mode-simple [data-editor-panel^="back-"]{ display:none !important; }
 .mode-simple #testerBtn{ display:none !important; }
+
+/* HEADER NAV - Feed / Friends / Leaderboards / Song of the Day as one joined group */
+.nav-group{ display:inline-flex; max-width:100%; }
+.header-actions .nav-group .theme-btn{ border-radius:0; margin-left:-1px; padding:8px 14px; white-space:nowrap; }
+.header-actions .nav-group .theme-btn:first-child{ border-radius:7px 0 0 7px; margin-left:0; }
+.header-actions .nav-group .theme-btn:last-child{ border-radius:0 7px 7px 0; }
+.header-actions .nav-group .theme-btn:hover{ position:relative; z-index:1; }
+.more-menu .menu-danger{ color:#f2b6c2; }
+.more-menu .menu-danger:hover{ color:#fff; border-color:#d6536d; background:rgba(214,83,109,0.14); }
+@media (max-width:620px){
+  .header-actions{ width:100%; }
+  .header-actions .nav-group{ order:5; width:100%; overflow-x:auto; scrollbar-width:none; }
+  .header-actions .nav-group .theme-btn{ flex:1 0 auto; }
+}
 </style>
 </head>
 <body>
@@ -3610,11 +3551,7 @@ body.mode-simple [data-editor-tab^="back-"], body.mode-simple [data-editor-panel
           <button class="theme-btn" id="discordBtn">Discord</button>
           <button class="theme-btn" id="siteMvBtn">🎬 Site Music Videos</button>
           <div class="more-menu-sep"></div>
-<<<<<<< HEAD
-          <button class="theme-btn menu-danger" id="resetCataloguexBtn" title="Reset your cataloguex back to the built-in examples">🗑 Reset cataloguex</button>
-=======
           <button class="theme-btn menu-danger" id="resetCataloguexBtn" title="Reset your cataloguex back to the built-in examples">⚠ Reset cataloguex</button>
->>>>>>> 26fe0694d3d8f5996a85d52e786bbf06b29050a5
           <button class="theme-btn" id="logoutBtn">Log out</button>
         </div>
       </div>
@@ -8591,20 +8528,27 @@ document.getElementById('grid').addEventListener('click', e=>{
 });
 
 function updateViewUI(){
-  const libBtn = document.getElementById('viewLibraryBtn');
   const archBtn = document.getElementById('toggleArchive');
   const wishBtn = document.getElementById('toggleWishlist');
   const tierBtn = document.getElementById('toggleTierBoard');
   const timeBtn = document.getElementById('toggleTimeline');
-  const inLibrary = !(showArchived || viewingWishlist || viewingTierBoard || viewingTimeline);
-  [[libBtn, inLibrary],[archBtn, showArchived],[wishBtn, viewingWishlist],[tierBtn, viewingTierBoard],[timeBtn, viewingTimeline]].forEach(([b, on])=>{
-    b.classList.toggle('active', !!on);
-    b.setAttribute('aria-pressed', on ? 'true' : 'false');
-  });
+  archBtn.textContent = showArchived ? '← Back to cataloguex' : 'View archive';
+  archBtn.classList.toggle('active', showArchived);
+  archBtn.setAttribute('aria-pressed', showArchived ? 'true' : 'false');
+  wishBtn.textContent = viewingWishlist ? '← Back to cataloguex' : '✍ Songs I Wish I Wrote';
+  wishBtn.classList.toggle('active', viewingWishlist);
+  wishBtn.setAttribute('aria-pressed', viewingWishlist ? 'true' : 'false');
+  tierBtn.textContent = viewingTierBoard ? '← Back to cataloguex' : '🏆 Tier board';
+  tierBtn.classList.toggle('active', viewingTierBoard);
+  tierBtn.setAttribute('aria-pressed', viewingTierBoard ? 'true' : 'false');
+  timeBtn.textContent = viewingTimeline ? '← Back to cataloguex' : '🕰 Timeline';
+  timeBtn.classList.toggle('active', viewingTimeline);
+  timeBtn.setAttribute('aria-pressed', viewingTimeline ? 'true' : 'false');
 
   const otherMode = showArchived || viewingWishlist;
   document.getElementById('openAddMusic').style.display = otherMode ? 'none' : '';
-  document.getElementById('stacksGroup').style.display = otherMode ? 'none' : '';
+  document.getElementById('openCluster').style.display = otherMode ? 'none' : '';
+  document.getElementById('viewClustersBtn').style.display = otherMode ? 'none' : '';
 
   document.getElementById('resetCataloguexBtn').style.display = otherMode ? 'none' : '';
   document.getElementById('openWish').style.display = viewingWishlist ? '' : 'none';
@@ -8613,6 +8557,9 @@ function updateViewUI(){
   document.getElementById('filterMood').style.display = (viewingWishlist || viewingTierBoard || viewingTimeline) ? 'none' : '';
   document.getElementById('sortBy').style.display = (viewingWishlist || viewingTierBoard || viewingTimeline) ? 'none' : '';
   document.getElementById('search').style.display = (viewingTierBoard || viewingTimeline) ? 'none' : '';
+  archBtn.style.display = (viewingWishlist || viewingTierBoard || viewingTimeline) ? 'none' : '';
+  wishBtn.style.display = (showArchived || viewingTierBoard || viewingTimeline) ? 'none' : '';
+  tierBtn.style.display = (showArchived || viewingWishlist || viewingTimeline) ? 'none' : '';
   clusterFilterId = null;
   remindsFilterId = null;
 }
@@ -8636,13 +8583,6 @@ function saveViewMode(){
   const mode = showArchived ? 'archive' : viewingWishlist ? 'wishlist' : viewingTierBoard ? 'tierboard' : viewingTimeline ? 'timeline' : 'cataloguex';
   localStorage.setItem('bayoutonefm-view-mode', mode);
 }
-document.getElementById('viewLibraryBtn').addEventListener('click', ()=>{
-  trackEvent('view_library');
-  showArchived = false; viewingWishlist = false; viewingTierBoard = false; viewingTimeline = false;
-  saveViewMode();
-  updateViewUI();
-  render();
-});
 document.getElementById('toggleArchive').addEventListener('click', ()=>{
   trackEvent('toggle_archive');
   showArchived = !showArchived;

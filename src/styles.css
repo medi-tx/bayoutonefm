@@ -3349,3 +3349,17 @@
 .mode-simple .msg-flip-card.flipped .msg-flip-back{ transform:rotateY(180deg); }
 body.mode-simple [data-editor-tab^="back-"], body.mode-simple [data-editor-panel^="back-"]{ display:none !important; }
 .mode-simple #testerBtn{ display:none !important; }
+
+/* HEADER NAV - Feed / Friends / Leaderboards / Song of the Day as one joined group */
+.nav-group{ display:inline-flex; max-width:100%; }
+.header-actions .nav-group .theme-btn{ border-radius:0; margin-left:-1px; padding:8px 14px; white-space:nowrap; }
+.header-actions .nav-group .theme-btn:first-child{ border-radius:7px 0 0 7px; margin-left:0; }
+.header-actions .nav-group .theme-btn:last-child{ border-radius:0 7px 7px 0; }
+.header-actions .nav-group .theme-btn:hover{ position:relative; z-index:1; }
+.more-menu .menu-danger{ color:#f2b6c2; }
+.more-menu .menu-danger:hover{ color:#fff; border-color:#d6536d; background:rgba(214,83,109,0.14); }
+@media (max-width:620px){
+  .header-actions{ width:100%; }
+  .header-actions .nav-group{ order:5; width:100%; overflow-x:auto; scrollbar-width:none; }
+  .header-actions .nav-group .theme-btn{ flex:1 0 auto; }
+}
