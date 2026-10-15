@@ -33,7 +33,7 @@
 const SUPABASE_URL = 'https://aaqlnjdooeydtaihhdia.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
 
-const BTF_VERSION = 'c84aa91';
+const BTF_VERSION = '1c2db68';
 
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
@@ -2119,12 +2119,35 @@ const BTF_VERSION = 'c84aa91';
   .sync-status.syncing{ color:var(--star); }
   .sync-status.saved{ color:var(--sage); }
   .sync-status.error{ color:var(--rose); }
-  .header-actions{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .header-actions{ display:flex; align-items:center; gap:10px 14px; flex-wrap:wrap; }
   .header-actions .theme-btn{
     color:var(--lilac);
     border:1px solid var(--lilac);
   }
   .header-actions .theme-btn:hover{ background:rgba(var(--on-paper-rgb),0.08); color:var(--gold); border-color:var(--gold); }
+  .header-icons{ display:flex; align-items:center; gap:8px; }
+  .icon-btn{
+    position:relative;
+    width:38px; height:38px;
+    border-radius:10px;
+    border:1px solid var(--lilac);
+    background:transparent;
+    color:var(--on-ink);
+    font-size:16px;
+    line-height:1;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:0;
+    flex-shrink:0;
+    transition:border-color .15s ease, color .15s ease;
+  }
+  .icon-btn:hover{ border-color:var(--gold); color:var(--gold); }
+  .icon-btn .msg-btn-badge{
+    position:absolute; top:-6px; right:-6px; margin-left:0;
+    min-width:16px; height:16px; line-height:16px; font-size:10px; padding:0 4px; border-radius:8px;
+  }
   .more-wrap{ position:relative; }
   .more-btn{ font-size:16px; line-height:1; letter-spacing:2px; padding:7px 10px; }
   .more-menu{
@@ -3493,33 +3516,32 @@ body.mode-simple [data-editor-tab^="back-"], body.mode-simple [data-editor-panel
     <div class="stats" id="stats"></div>
     <span class="btf-version" id="btfVersion"></span>
     <span id="syncStatus" class="sync-status"></span>
-<div class="header-actions">
-      <button class="theme-btn" id="feedBtn">📰 Feed</button>
-      <button class="theme-btn" id="sotdBtn">🎵 Song of the Day</button>
-      <button class="theme-btn" id="leaderboardBtn">🏆 Leaderboards</button>
-      <button class="theme-btn" id="discoverBtn">🔎 Friends</button>
-      <div class="more-wrap" id="moreWrap">
-        <button class="theme-btn more-btn" id="moreBtn" aria-haspopup="true" aria-expanded="false" title="More">⋯</button>
-        <div class="more-menu" id="moreMenu">
-          <button class="theme-btn" id="notifBtn">🔔 Notifications<span class="msg-btn-badge" id="notifBadge" style="display:none;"></span></button>
-          <button class="theme-btn" id="messagesBtn">💬 Messages<span class="msg-btn-badge" id="msgBtnBadge" style="display:none;"></span></button>
-          <div class="more-menu-sep"></div>
-          <button class="theme-btn" id="editStickersBtn">🎨 Stickers</button>
-          <button class="theme-btn" id="themeBtn">🎨 Theme</button>
-          <button class="theme-btn" id="songDbBtn">📀 Song Database</button>
-          <button class="theme-btn" id="testerBtn">🧪 Tester</button>
-          <button class="theme-btn" id="discordBtn">Discord</button>
-          <button class="theme-btn" id="siteMvBtn">🎬 Fan Music Videos</button>
-          <div class="more-menu-sep"></div>
-          <button class="theme-btn" id="logoutBtn">Log out</button>
-        </div>
+    <div class="header-actions">
+      <div class="view-tabs nav-tabs" id="navTabs" aria-label="Main sections">
+        <button class="view-tab" id="feedBtn">📰 Feed</button>
+        <button class="view-tab" id="sotdBtn">🎵 Song of the Day</button>
+        <button class="view-tab" id="leaderboardBtn">🏆 Leaderboards</button>
+        <button class="view-tab" id="discoverBtn">🔎 Friends</button>
       </div>
-      <div class="more-wrap" id="profileWrap">
-        <button class="avatar-btn" id="myProfileBtn" aria-haspopup="true" aria-expanded="false" title="My profile"><span id="myAvatarContent">?</span></button>
-        <div class="more-menu" id="profileMenu">
-          <button class="theme-btn" id="profileViewBtn">👤 My profile</button>
-          <button class="theme-btn" id="statsBtn">📊 Stats</button>
-          <button class="theme-btn" id="modeBtn">🧠 Nerd mode</button>
+      <div class="header-icons">
+        <button class="icon-btn" id="notifBtn" title="Notifications" aria-label="Notifications">🔔<span class="msg-btn-badge" id="notifBadge" style="display:none;"></span></button>
+        <button class="icon-btn" id="messagesBtn" title="Messages" aria-label="Messages">💬<span class="msg-btn-badge" id="msgBtnBadge" style="display:none;"></span></button>
+        <div class="more-wrap" id="profileWrap">
+          <button class="avatar-btn" id="myProfileBtn" aria-haspopup="true" aria-expanded="false" title="My profile"><span id="myAvatarContent">?</span></button>
+          <div class="more-menu" id="profileMenu">
+            <button class="theme-btn" id="profileViewBtn">👤 My profile</button>
+            <button class="theme-btn" id="statsBtn">📊 Stats</button>
+            <button class="theme-btn" id="modeBtn">🧠 Nerd mode</button>
+            <div class="more-menu-sep"></div>
+            <button class="theme-btn" id="editStickersBtn">🎨 Stickers</button>
+            <button class="theme-btn" id="themeBtn">🎨 Theme</button>
+            <button class="theme-btn" id="songDbBtn">📀 Song Database</button>
+            <button class="theme-btn" id="testerBtn">🧪 Tester</button>
+            <button class="theme-btn" id="discordBtn">Discord</button>
+            <button class="theme-btn" id="siteMvBtn">🎬 Fan Music Videos</button>
+            <div class="more-menu-sep"></div>
+            <button class="theme-btn" id="logoutBtn">Log out</button>
+          </div>
         </div>
       </div>
     </div>
@@ -6107,29 +6129,6 @@ document.getElementById('siteMvCloseBtn').addEventListener('click', ()=>{
   document.getElementById('siteMvOverlay').classList.remove('open');
 });
 (function(){
-  const wrap = document.getElementById('moreWrap');
-  const menu = document.getElementById('moreMenu');
-  const btn = document.getElementById('moreBtn');
-  if(!wrap || !menu || !btn) return;
-  function setOpen(open){
-    wrap.classList.toggle('open', open);
-    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-    if(open && typeof trackEvent === 'function') trackEvent('open_more_menu');
-  }
-  btn.addEventListener('click', e=>{
-    e.stopPropagation();
-    const prof = document.getElementById('profileWrap');
-    if(prof) prof.classList.remove('open');
-    setOpen(!wrap.classList.contains('open'));
-  });
-  document.addEventListener('click', e=>{
-    if(!wrap.contains(e.target)) setOpen(false);
-  });
-  menu.addEventListener('click', e=>{
-    if(e.target.closest('button')) setOpen(false);
-  });
-})();
-(function(){
   const wrap = document.getElementById('profileWrap');
   const menu = document.getElementById('profileMenu');
   const btn = document.getElementById('myProfileBtn');
@@ -6140,8 +6139,6 @@ document.getElementById('siteMvCloseBtn').addEventListener('click', ()=>{
   }
   btn.addEventListener('click', e=>{
     e.stopPropagation();
-    const more = document.getElementById('moreWrap');
-    if(more) more.classList.remove('open');
     setOpen(!wrap.classList.contains('open'));
   });
   document.addEventListener('click', e=>{

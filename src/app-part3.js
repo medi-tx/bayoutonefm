@@ -1337,29 +1337,6 @@ document.getElementById('siteMvCloseBtn').addEventListener('click', ()=>{
   document.getElementById('siteMvOverlay').classList.remove('open');
 });
 (function(){
-  const wrap = document.getElementById('moreWrap');
-  const menu = document.getElementById('moreMenu');
-  const btn = document.getElementById('moreBtn');
-  if(!wrap || !menu || !btn) return;
-  function setOpen(open){
-    wrap.classList.toggle('open', open);
-    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-    if(open && typeof trackEvent === 'function') trackEvent('open_more_menu');
-  }
-  btn.addEventListener('click', e=>{
-    e.stopPropagation();
-    const prof = document.getElementById('profileWrap');
-    if(prof) prof.classList.remove('open');
-    setOpen(!wrap.classList.contains('open'));
-  });
-  document.addEventListener('click', e=>{
-    if(!wrap.contains(e.target)) setOpen(false);
-  });
-  menu.addEventListener('click', e=>{
-    if(e.target.closest('button')) setOpen(false);
-  });
-})();
-(function(){
   const wrap = document.getElementById('profileWrap');
   const menu = document.getElementById('profileMenu');
   const btn = document.getElementById('myProfileBtn');
@@ -1370,8 +1347,6 @@ document.getElementById('siteMvCloseBtn').addEventListener('click', ()=>{
   }
   btn.addEventListener('click', e=>{
     e.stopPropagation();
-    const more = document.getElementById('moreWrap');
-    if(more) more.classList.remove('open');
     setOpen(!wrap.classList.contains('open'));
   });
   document.addEventListener('click', e=>{
