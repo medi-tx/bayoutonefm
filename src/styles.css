@@ -3340,6 +3340,7 @@ body.mode-simple [data-editor-tab^="back-"], body.mode-simple [data-editor-panel
 .more-menu .menu-danger{ color:#f2b6c2; }
 .more-menu .menu-danger:hover{ color:#fff; border-color:#d6536d; background:rgba(214,83,109,0.14); }
 @media (max-width:620px){
+  .wrap{ padding-left:34px; padding-right:34px; }
   .header-actions{ width:100%; }
   .view-bar{ margin-bottom:22px; }
   .view-tabs{ display:flex; flex-wrap:wrap; overflow:visible; width:100%; }
