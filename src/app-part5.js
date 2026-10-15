@@ -662,6 +662,7 @@ function renderFriendGrid(list){
           <button type="button" class="preview-btn" data-preview="${escapeAttr(s.id)}" title="Play a 30-second preview" aria-label="Play 30-second preview">▶︎</button>
           <span class="preview-hint">30-sec preview</span>
         </div>
+        ${(s.tags&&s.tags.length) ? `<div class="tags">${s.tags.map(t=>`<span class="tag" style="background:color-mix(in srgb, ${tierColor('B')} 18%, transparent);color:${tierColor('B')};border-color:${tierColor('B')}">${escapeHtml(t)}</span>`).join('')}</div>` : ''}
         ${s.quickThought ? `<p class="why">${escapeHtml(s.quickThought)}</p>` : ''}
         ${s.credit ? `<p class="credit-note"><b>Borrowed from / Where I Heard It:</b> ${escapeHtml(s.credit)}</p>` : ''}
         ${geniusLyricsUrl(s.title, s.artists) ? `<a class="lyrics-link" href="${escapeAttr(geniusLyricsUrl(s.title, s.artists))}" target="_blank" rel="noopener" title="Open lyrics on Genius">LYRICS ↗</a>` : ''}
@@ -778,6 +779,7 @@ function renderCompareView(){
         ${(s.genres&&s.genres.length) ? `<span> · ${s.genres.map(g=>escapeHtml(g)).join(', ')}</span>` : ''}
       </div>
       <div class="tier-row">${renderTierBadge(s.tier)}</div>
+      ${(s.tags&&s.tags.length) ? `<div class="tags">${s.tags.map(t=>`<span class="tag" style="background:color-mix(in srgb, ${tierColor('B')} 18%, transparent);color:${tierColor('B')};border-color:${tierColor('B')}">${escapeHtml(t)}</span>`).join('')}</div>` : ''}
       ${s.quickThought ? `<p class="why">${escapeHtml(s.quickThought)}</p>` : ''}
     </div>`;
 
@@ -1708,135 +1710,7 @@ async function uploadStickerBlob(blob){
     return data && data.publicUrl ? data.publicUrl : null;
   }catch(e){ console.error('Sticker upload failed:', e); return null; }
 }
-function openWishModal(item){
-  editingWishId = item ? item.id : null;
-  document.getElementById('wishModalTitle').textContent = item ? 'Edit song' : 'Add a song you wish you wrote';
-  document.getElementById('w-title').value = item?.title || '';
-  document.getElementById('w-artist').value = (item?.artists||[]).join(', ');
-  document.getElementById('w-album').value = item?.album || '';
-  document.getElementById('w-year').value = item?.year || '';
-  document.getElementById('w-why').value = item?.why || '';
-  currentWishCoverArt = item?.coverArt || null;
-  setImagePreview('w-cover', currentWishCoverArt);
-  updateWishLyricsBtn();
-  document.getElementById('wishSearchField').style.display = item ? 'none' : '';
-  document.getElementById('wishManualForm').style.display = item ? '' : 'none';
-  document.getElementById('wishSaveBtn').style.display = item ? '' : 'none';
-  document.getElementById('w-search').value = '';
-  document.getElementById('wishSearchResults').style.display = 'none';
-  document.getElementById('wishSearchResults').innerHTML = '';
-  document.getElementById('wishOverlay').classList.add('open');
-  if(item){
-    document.getElementById('w-title').focus();
-  } else {
-    renderWishSearchResults('');
-    document.getElementById('w-search').focus();
-  }
-}
-function closeWishModal(){
-  document.getElementById('wishOverlay').classList.remove('open');
-  editingWishId = null;
-}
-function updateWishLyricsBtn(){
-  const btn = document.getElementById('w-lyrics-btn');
-  const url = geniusLyricsUrl(document.getElementById('w-title').value, document.getElementById('w-artist').value.split(',').map(a=>a.trim()));
-  if(url){
-    btn.href = url;
-    btn.style.opacity = '1';
-    btn.style.pointerEvents = 'auto';
-  } else {
-    btn.removeAttribute('href');
-    btn.style.opacity = '0.45';
-    btn.style.pointerEvents = 'none';
-  }
-}
-document.getElementById('w-title').addEventListener('input', updateWishLyricsBtn);
-document.getElementById('w-artist').addEventListener('input', updateWishLyricsBtn);
-function renderWishSearchResults(query){
-  const wrap = document.getElementById('wishSearchResults');
-  const q = query.trim().toLowerCase();
-  let source = songs;
-  if(q){
-    source = songs.filter(s=>{
-      const title = (s.title||'').toLowerCase();
-      const artists = (s.artists||[]).join(' ').toLowerCase();
-      return title.includes(q) || artists.includes(q);
-    });
-  }
-  if(!source.length){
-    wrap.style.display = 'block';
-    wrap.innerHTML = `<p class="profile-empty-note">${q ? 'No matching songs in your cataloguex.' : 'Your cataloguex is empty. Add songs to your library first, or use the form below to add manually.'}</p>`;
-    return;
-  }
-  const cap = 200;
-  const shown = source.slice(0, cap);
-  let html = shown.map(s=>{
-    const already = wishlist.some(w=>songKey(w)===songKey(s));
-    return `
-      <button type="button" class="discover-row" data-song-id="${s.id}" data-added="${already?'1':'0'}" style="${already ? 'opacity:0.55; cursor:default;' : ''}">
-        ${s.coverArt ? `<img loading="lazy" decoding="async" src="${escapeAttr(s.coverArt)}" alt="Album cover">` : `<span class="drow-fallback">${escapeHtml((s.title||'?').charAt(0).toUpperCase())}</span>`}
-        <span>
-          <span class="drow-name">${escapeHtml(s.title||'Untitled')}</span><br>
-          <span class="drow-bio">${escapeHtml((s.artists||[]).join(', ') || 'Unknown artist')}</span>
-        </span>
-        <span data-wish-tag style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:${already ? 'var(--teal)' : 'var(--rose)'}; flex-shrink:0;">${already ? '✓ In list' : '+ Add'}</span>
-      </button>`;
-  }).join('');
-  if(source.length > cap){
-    html += `<p class="profile-empty-note" style="text-align:center;padding:8px;">Showing first ${cap} of ${source.length} songs. Type to search for a specific one.</p>`;
-  }
-  wrap.style.display = 'block';
-  wrap.innerHTML = html;
-}
-document.getElementById('w-search').addEventListener('input', e=>renderWishSearchResults(e.target.value));
-document.getElementById('wishSearchResults').addEventListener('click', e=>{
-  const row = e.target.closest('[data-song-id]');
-  if(!row) return;
-  if(row.dataset.added === '1') return;
-  const s = songs.find(x=>x.id===row.dataset.songId);
-  if(!s) return;
-  const key = songKey(s);
-  if(wishlist.some(w=>songKey(w)===key)){
-    row.dataset.added = '1';
-    row.style.opacity = '0.55';
-    row.style.cursor = 'default';
-    const tag = row.querySelector('[data-wish-tag]');
-    if(tag){ tag.textContent = '✓ In list'; tag.style.color = 'var(--teal)'; }
-    showToast('Already in your wishlist');
-    return;
-  }
-  wishlist.unshift({ id: uid(), createdAt: Date.now(), title: s.title||'Untitled', artists: s.artists||[], album: s.album||'', year: s.year||'', lyricSnippet: s.lyricSnippet || '', why: s.why || '', coverArt: s.coverArt || null });
-  saveWishlist();
-  renderWishlistGrid();
-  renderWishSearchResults(document.getElementById('w-search').value);
-  showToast(`Added "${s.title}" to songs you wish you wrote`, 4000);
-});
-document.getElementById('openWish').addEventListener('click', ()=>{ trackEvent('open_wishlist_add'); openWishModal(null); });
-document.getElementById('wishCancelBtn').addEventListener('click', closeWishModal);
-document.getElementById('wishSaveBtn').addEventListener('click', ()=>{
-  trackEvent('save_wishlist');
-  const title = document.getElementById('w-title').value.trim();
-  if(!title){ document.getElementById('w-title').focus(); return; }
-  const data = {
-    title,
-    artists: document.getElementById('w-artist').value.split(',').map(a=>a.trim()).filter(Boolean),
-    album: document.getElementById('w-album').value.trim(),
-    year: document.getElementById('w-year').value.trim(),
-    lyricSnippet: document.getElementById('w-lyric').value.trim(),
-    why: document.getElementById('w-why').value.trim(),
-    coverArt: currentWishCoverArt
-  };
-  if(editingWishId){
-    const idx = wishlist.findIndex(w=>w.id===editingWishId);
-    if(idx>-1) wishlist[idx] = {...wishlist[idx], ...data};
-  } else {
-    wishlist.unshift({ id: uid(), createdAt: Date.now(), ...data });
-  }
-  saveWishlist();
-  closeWishModal();
-  renderWishlistGrid();
-});
-document.addEventListener('keydown', e=>{ if(e.key==='Escape'){ closeWishModal(); document.getElementById('personOverlay').classList.remove('open'); } });
+document.addEventListener('keydown', e=>{ if(e.key==='Escape'){ document.getElementById('personOverlay').classList.remove('open'); } });
 
 // the "examples removed" flag is per-account, so it stays consistent
 // across devices instead of leaking between accounts on the same browser

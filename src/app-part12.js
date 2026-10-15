@@ -173,7 +173,6 @@
     if(!wt) return;
     closeTourOverlays();
     showArchived = false;
-    viewingWishlist = false;
     viewingTierBoard = false;
     viewingTimeline = false;
     if(typeof updateViewUI === 'function'){ try{ updateViewUI(); }catch(e){} }

@@ -1977,10 +1977,9 @@
   }
   .theme-preset-x:hover{ color:var(--rose); }
 
-  /* Custom-color editor: admin (samannleblanc) only */
-  body:not(.is-theme-admin) #themeCustomColorsLabel,
-  body:not(.is-theme-admin) #themeColorGrid,
-  body:not(.is-theme-admin) #themeSaveRow{ display:none !important; }
+  /* Custom-color editor: unlocked after 1000 songs (or for samannleblanc) */
+  body:not(.is-theme-unlocked) #themeColorGrid,
+  body:not(.is-theme-unlocked) #themeSaveRow{ display:none !important; }
 
   /* TESTER FORMS */
   .tester-form-list{ display:flex; flex-direction:column; gap:10px; }

@@ -60,7 +60,6 @@ document.getElementById('myObsessedStrip').addEventListener('click', e=>{
   const chip = e.target.closest('[data-obsessed]');
   if(!chip) return;
   document.getElementById('myProfileOverlay').classList.remove('open');
-  viewingWishlist = false;
   viewingTierBoard = false;
   showArchived = false;
   clusterFilterId = null;
@@ -201,14 +200,11 @@ document.getElementById('importDataFile').addEventListener('change', async (e)=>
     const data = JSON.parse(text);
     const incomingSongs = data.cataloguex || data.songs || [];
     const incomingPeople = data.people || [];
-    const incomingWish = data.wishlist || [];
     if(!Array.isArray(incomingSongs)) throw new Error('No songs found in this backup file.');
     const before = songs.length;
     songs = mergeById(songs, incomingSongs, s => s.updatedAt || s.createdAt || s.addedAt || 0);
     people = mergeById(people, incomingPeople, p => p.updatedAt || 0);
-    wishlist = mergeById(wishlist, incomingWish, w => w.updatedAt || 0);
     save(); savePeople();
-    if(typeof saveWishlist === 'function') saveWishlist();
     syncToSupabase();
     if(typeof render === 'function') render();
     alert('Backup imported and merged. ' + songs.length + ' songs now in your cataloguex (' + (songs.length - before) + ' added).');
@@ -228,7 +224,6 @@ document.getElementById('exportDataBtn').addEventListener('click', async ()=>{
     profile: myProfile || {},
     cataloguex: songs || [],
     people: people || [],
-    wishlist: wishlist || [],
     settings: { theme: loadTheme(), customThemes: loadCustomThemes() }
   };
   const blob = new Blob([JSON.stringify(exportObj, null, 2)], { type: 'application/json' });
@@ -254,18 +249,17 @@ document.getElementById('deleteAccountBtn').addEventListener('click', async ()=>
     const keys = [
       'song-journal-entries-' + uid,
       'song-journal-people-' + uid,
-      'song-journal-wishlist-' + uid,
       'song-journal-analytics',
       'song-journal-theme',
       'song-journal-custom-themes'
     ];
     keys.forEach(k => { try{ localStorage.removeItem(k); }catch(e){} });
-    const tables = ['profiles','songs','people','wishlist','stickers','messages','sotd_votes','sotd_nominations','sotd_notifs'];
+    const tables = ['profiles','songs','people','stickers','messages','sotd_votes','sotd_nominations','sotd_notifs'];
     for(const t of tables){
       try{ await sb.from(t).delete().eq('user_id', uid); }catch(e){}
     }
     const { error } = await sb.auth.signOut();
-    songs = []; people = []; wishlist = [];
+    songs = []; people = [];
     location.reload();
   }catch(e){
     console.error('Account deletion error:', e);

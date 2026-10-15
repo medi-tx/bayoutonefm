@@ -76,6 +76,16 @@
 (function(){
   const SOTD_EMOJIS = ['👍','👎','❤️','🔥','😮','😂','😢','🎉','💯'];
   const SOTD_RANDOM_TERMS = ['summer','love','forever','night','heart','dream','stars','golden','honey','waves','midnight','highway','shine','wild','city'];
+  const SOTD_REMINDER_MESSAGES = [
+    "Hey! Don't miss your chance to react to the Song of the Day.",
+    "🎵 Today's Song of the Day is waiting — tap in and react!",
+    "Your daily pick is live. Have you reacted to the Song of the Day yet?",
+    "Don't leave today's Song of the Day hanging — drop a reaction!",
+    "New Song of the Day is up! See what everyone thinks 👀",
+    "Been meaning to react to the Song of the Day? Now's the time."
+  ];
+  const SOTD_REMINDER_STORAGE_KEY = 'bayoutonefm-sotd-6pm-sent';
+  const SOTD_REMINDER_HOUR = 18; // 6pm local time
   let sotdSong = null;
   let sotdPickedBy = null;
   let sotdReactions = [];
@@ -86,6 +96,7 @@
   let sotdCurrentStreak = 0;
   let sotdBestStreak = 0;
   let sotdNotifTimer = null;
+  let sotdReminderInflight = false;
 
   window.sotdPreviewSong = function(){
     if(!sotdSong) return null;
@@ -165,6 +176,31 @@
       await sb.from('notifications').insert(rows);
     }catch(e){
       console.error('Error notifying friends about SOTD reaction:', e);
+    }
+  }
+  async function sendSotdSixPmReminder(){
+    if(!sb || !currentUserId || sotdReminderInflight) return;
+    const now = new Date();
+    if(now.getHours() < SOTD_REMINDER_HOUR) return;
+    const today = sotdToday();
+    if(localStorage.getItem(SOTD_REMINDER_STORAGE_KEY) === today) return;
+    if(!sotdSong) return; // wait until today's Song of the Day exists
+    sotdReminderInflight = true;
+    localStorage.setItem(SOTD_REMINDER_STORAGE_KEY, today);
+    try{
+      const { data, error } = await sb.from('profiles').select('user_id');
+      if(error) return;
+      const message = SOTD_REMINDER_MESSAGES[Math.floor(Math.random() * SOTD_REMINDER_MESSAGES.length)];
+      const rows = (data || [])
+        .filter(p => p.user_id && p.user_id !== currentUserId)
+        .map(p => ({ user_id: p.user_id, type: 'sotd_reminder', message, payload: { song_date: today } }));
+      if(rows.length === 0) return;
+      const { error: insErr } = await sb.from('notifications').insert(rows);
+      if(insErr) console.error('Error sending 6pm SOTD reminder:', insErr);
+    }catch(e){
+      console.error('Error sending 6pm SOTD reminder:', e);
+    }finally{
+      sotdReminderInflight = false;
     }
   }
   function showSotdToast(n){
@@ -680,7 +716,7 @@
   function startSotdPolling(){
     clearInterval(sotdPollTimer);
     sotdPollTimer = setInterval(()=>{
-      if(currentUserId){ sotdLoad(); migrateSotdLinks(); }
+      if(currentUserId){ sotdLoad(); migrateSotdLinks(); sendSotdSixPmReminder(); }
     }, 10000);
     clearInterval(sotdNotifTimer);
     sotdNotifTimer = setInterval(()=>{
@@ -692,7 +728,7 @@
       sotdOpen = false;
       sotdReactions = [];
       sotdProfiles = [];
-      sotdLoad();
+      sotdLoad().then(()=>sendSotdSixPmReminder());
       migrateSotdLinks();
       checkSotdNotifs();
     }

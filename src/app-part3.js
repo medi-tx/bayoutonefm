@@ -30,6 +30,10 @@ const THEME_PRESETS = [
 ];
 const THEME_UNLOCK_STEPS = [0,0,0,0,3,5,5,10,10,10,15,15,20,20,25,30,30,40,40,50,50,75];
 function themeUnlockThreshold(i){ return THEME_UNLOCK_STEPS[i] !== undefined ? THEME_UNLOCK_STEPS[i] : 0; }
+const CUSTOM_COLORS_UNLOCK = 1000;
+function customColorsUnlocked(){
+  return ((typeof isSamAdmin === 'function') && isSamAdmin()) || songs.length >= CUSTOM_COLORS_UNLOCK;
+}
 function themeLockedAt(i){
   if(typeof isSamAdmin === 'function' && isSamAdmin()) return 0;
   const need = themeUnlockThreshold(i); return need > 0 && songs.length < need ? need : 0;
@@ -217,14 +221,21 @@ function saveCustomThemes(list){
   }
 }
 function syncThemeEditorVisibility(){
-  const isAdmin = (typeof isSamAdmin === 'function') && isSamAdmin();
-  document.body.classList.toggle('is-theme-admin', isAdmin);
+  const unlocked = customColorsUnlocked();
+  document.body.classList.toggle('is-theme-unlocked', unlocked);
   const grid = document.getElementById('themeColorGrid');
   const label = document.getElementById('themeCustomColorsLabel');
   const row = document.getElementById('themeSaveRow');
-  if(grid) grid.style.display = isAdmin ? '' : 'none';
-  if(label) label.style.display = isAdmin ? '' : 'none';
-  if(row) row.style.display = isAdmin ? '' : 'none';
+  if(grid) grid.style.display = unlocked ? '' : 'none';
+  if(row) row.style.display = unlocked ? '' : 'none';
+  if(label){
+    if(unlocked){
+      label.textContent = 'Custom colors';
+    } else {
+      const left = Math.max(0, CUSTOM_COLORS_UNLOCK - songs.length);
+      label.textContent = `Custom colors (unlocks at ${CUSTOM_COLORS_UNLOCK} songs — ${left} to go)`;
+    }
+  }
 }
 function renderThemePresets(){
   const wrap = document.getElementById('themePresets');
@@ -253,7 +264,7 @@ function renderThemePresets(){
     });
     wrap.appendChild(btn);
   });
-  const admin = (typeof isSamAdmin === 'function') && isSamAdmin();
+  const admin = customColorsUnlocked();
   loadCustomThemes().forEach(theme=>{
     const btn = document.createElement('button');
     btn.type = 'button';
@@ -405,7 +416,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
     themeSaveBtn.disabled = !themeSaveName.value.trim();
   });
   themeSaveBtn.addEventListener('click', ()=>{
-    if(!((typeof isSamAdmin === 'function') && isSamAdmin())) return;
+    if(!customColorsUnlocked()) return;
     const name = themeSaveName.value.trim();
     if(!name) return;
     const id = 'custom-' + Date.now();
@@ -897,6 +908,7 @@ function songCardHtml(s, clusterCounts){
             <span class="preview-hint">30-sec preview</span>
           </div>
           ${songStackBadgesHtml(s, clusterCounts)}
+          ${(s.tags&&s.tags.length) ? `<div class="tags">${s.tags.map(t=>`<span class="tag" style="background:color-mix(in srgb, ${tierColor('B')} 18%, transparent);color:${tierColor('B')};border-color:${tierColor('B')}">${escapeHtml(t)}</span>`).join('')}</div>` : (showEx ? `<div class="tags">${['nostalgic','road trip','late night'].map(t=>`<span class="tag ex-tag">e.g. ${t}</span>`).join('')}</div>` : '')}
 
           ${s.quickThought ? `<p class="card-thought">"${escapeHtml(s.quickThought)}"</p>` : ''}
           ${s.why ? `<p class="card-opinions">${escapeHtml(s.why)}</p>` : ''}
@@ -1506,7 +1518,6 @@ document.getElementById('exportBackupBtn').addEventListener('click', ()=>{
     username: myProfile?.username || null,
     songs,
     people,
-    wishlist,
     custom_themes: loadCustomThemes(),
     stickers: (()=>{ try{ return JSON.parse(localStorage.getItem(STICKERS_KEY)||'[]'); }catch(e){ return []; }})(),
     theme: loadTheme()
@@ -1825,6 +1836,8 @@ function openAddFromData(data){
   document.getElementById('f-year').value = data.year || '';
   const genreEl = document.getElementById('f-genre');
   if(genreEl) genreEl.value = (data.genres||[]).join(', ');
+  const tagsEl = document.getElementById('f-tags');
+  if(tagsEl) tagsEl.value = (data.tags||[]).join(', ');
   document.getElementById('f-why').value = data.why || '';
   document.getElementById('f-quick').value = data.quickThought || '';
   document.getElementById('f-credit').value = data.credit || '';
@@ -2838,15 +2851,6 @@ function render(){
     renderTimeline();
     return;
   }
-  if(viewingWishlist){
-    document.getElementById('tierBoard').style.display = 'none';
-    document.getElementById('tierBoardToolbar').style.display = 'none';
-    document.getElementById('tierBoardEmptyState').style.display = 'none';
-    document.getElementById('timeline').style.display = 'none';
-    document.getElementById('timelineEmptyState').style.display = 'none';
-    renderWishlistGrid();
-    return;
-  }
   if(viewingTierBoard){
     document.getElementById('grid').style.display = 'none';
     document.getElementById('gridSentinel').style.display = 'none';
@@ -2963,49 +2967,6 @@ function render(){
   }
 }
 
-function renderWishlistGrid(){
-  document.getElementById('lastAdded').style.display = 'none';
-  document.getElementById('clusterBar').style.display = 'none';
-  document.getElementById('remindsBar').style.display = 'none';
-  document.getElementById('gridPagination').style.display = 'none';
-  const grid = document.getElementById('grid');
-  const empty = document.getElementById('emptyState');
-  const q = document.getElementById('search').value.trim().toLowerCase();
-  let list = wishlist.filter(s=>{
-    if(!q) return true;
-    const hay = `${s.title} ${(s.artists||[]).join(' ')} ${s.album||''}`.toLowerCase();
-    return hay.includes(q);
-  });
-  if(list.length === 0){
-    grid.innerHTML = '';
-    empty.style.display = 'block';
-    empty.querySelector('h2').textContent = wishlist.length ? 'No matches' : 'No songs yet';
-    empty.querySelector('p').textContent = wishlist.length ? 'Try a different search.' : "Add a song you wish you'd written — a little inspiration shelf for your cataloguex.";
-  } else {
-    empty.style.display = 'none';
-    grid.innerHTML = list.map(s=>`
-      <div class="card" data-wish-id="${s.id}">
-        <div class="card-top">
-          ${coverThumbHtml(s)}
-          <div class="title-stack">
-            <p class="track-title" style="${s.tier ? 'color:'+tierColor(s.tier) : ''}">${escapeHtml(s.title||'Untitled')}</p>
-            <p class="track-artist">${escapeHtml(formatArtists(s.artists))}${s.album ? ' · '+escapeHtml(s.album) : ''}${trackNoDisplay(s)}</p>
-          </div>
-        </div>
-        <div class="meta-row">${s.year ? `<span>${escapeHtml(s.year)}</span>`:''}</div>
-        ${s.lyricSnippet ? `<p class="lyric-snippet">${escapeHtml(s.lyricSnippet)}</p>` : ''}
-        ${s.quickThought ? `<p class="why">${escapeHtml(s.quickThought)}</p>` : ''}
-        <div class="card-actions">
-          <button data-wish-action="edit">EDIT</button>
-          <button data-wish-action="delete" class="del">DELETE</button>
-        </div>
-      </div>
-    `).join('');
-  }
-  document.getElementById('stats').innerHTML = `<b>${wishlist.length}</b> song${wishlist.length!==1?'s':''} you wish you wrote`;
-  if(typeof queueCardSync === 'function') queueCardSync(wishlist);
-}
-
 function openModal(song){
   editingId = song ? song.id : null;
   document.getElementById('modalTitle').textContent = song ? 'Edit song' : 'Add a song';
@@ -3014,6 +2975,7 @@ function openModal(song){
   document.getElementById('f-album').value = song?.album || '';
   document.getElementById('f-year').value = song?.year || '';
   document.getElementById('f-genre').value = (song?.genres||[]).join(', ');
+  document.getElementById('f-tags').value = (song?.tags||[]).join(', ');
   document.getElementById('f-why').value = song?.why || '';
   document.getElementById('f-quick').value = song?.quickThought || '';
   document.getElementById('f-credit').value = song?.credit || '';
@@ -3224,6 +3186,7 @@ function handleSave(){
     album: document.getElementById('f-album').value.trim(),
     year: document.getElementById('f-year').value.trim(),
     genres: document.getElementById('f-genre').value.split(',').map(g=>g.trim()).filter(Boolean),
+    tags: document.getElementById('f-tags').value.split(',').map(t=>t.trim()).filter(Boolean),
     why: document.getElementById('f-why').value.trim(),
     quickThought: document.getElementById('f-quick').value.trim(),
     credit: document.getElementById('f-credit').value.trim(),
@@ -3363,6 +3326,7 @@ function openMultiModal(mode){
   document.getElementById('multiWhyLabel').textContent = isAlbum ? 'Thoughts on the album' : 'What connects these';
   document.getElementById('multiTitlesLabel').textContent = isAlbum ? 'Tracks' : 'Song titles';
   document.getElementById('mf-spotify-search-field').style.display = isAlbum ? '' : 'none';
+  document.getElementById('mf-tags-field').style.display = isAlbum ? 'none' : '';
   document.getElementById('mf-album-search').value = '';
   document.getElementById('albumSearchResults').style.display = 'none';
   document.getElementById('albumSearchResults').innerHTML = '';
@@ -3370,6 +3334,7 @@ function openMultiModal(mode){
   document.getElementById('mf-album').value = '';
   document.getElementById('mf-year').value = '';
   document.getElementById('mf-genre').value = '';
+  document.getElementById('mf-tags').value = '';
   document.getElementById('mf-why').value = '';
   document.getElementById('mf-credit').value = '';
   document.getElementById('mf-label').value = '';
@@ -3437,7 +3402,12 @@ function addTitleBoxRow(focus, prefill){
     artistInput.className = 'track-box-artist';
     artistInput.placeholder = 'Artist(s) for this track — e.g. Artist One, Artist Two (feat. …)';
     if(prefill && prefill.artist) artistInput.value = prefill.artist;
+    const tagsInput = document.createElement('input');
+    tagsInput.type = 'text';
+    tagsInput.className = 'track-box-tags';
+    tagsInput.placeholder = 'Mood / tags for this track (comma-separated)';
     sub.appendChild(artistInput);
+    sub.appendChild(tagsInput);
     const scoreInput = document.createElement('input');
     scoreInput.type = 'number';
     scoreInput.className = 'track-box-score';
@@ -3541,12 +3511,14 @@ function handleMultiSave(){
       const title = row.querySelector('.title-box-input').value.trim();
       if(!title) return null;
       const artistVal = row.querySelector('.track-box-artist').value.trim();
+      const tagsVal = row.querySelector('.track-box-tags').value.trim();
       const trackTier = row._trackTier ? row._trackTier() : null;
       const scoreEl = row.querySelector('.track-box-score');
       const trackScore = scoreEl && scoreEl.value ? parseInt(scoreEl.value, 10) : null;
       return {
         id: uid(), pinned:false, createdAt: now, clusterId, clusterName: albumName, title,
         artists: artistVal ? artistVal.split(',').map(a=>a.trim()).filter(Boolean) : sharedArtists,
+        tags: tagsVal.split(',').map(t=>t.trim()).filter(Boolean),
         trackNumber: row._trackNo || null,
         recordLabel: row._label || null,
         ...shared,
@@ -3559,6 +3531,7 @@ function handleMultiSave(){
     newSongs = titles.map(title=>({
       id: uid(), pinned:false, createdAt: now, clusterId,
       artists: sharedArtists,
+      tags: document.getElementById('mf-tags').value.split(',').map(t=>t.trim()).filter(Boolean),
       ...shared
     }));
   }
@@ -3626,24 +3599,6 @@ document.getElementById('grid').addEventListener('click', e=>{
     render();
     return;
   }
-  const wishBtn = e.target.closest('button[data-wish-action]');
-  if(wishBtn){
-    const card = wishBtn.closest('.card');
-    const id = card.dataset.wishId;
-    const item = wishlist.find(w=>w.id===id);
-    if(!item) return;
-    const action = wishBtn.dataset.wishAction;
-    if(action === 'edit'){
-      openWishModal(item);
-    } else if(action === 'delete'){
-      if(confirm(`Remove "${item.title}" from your wishlist?`)){
-        wishlist = wishlist.filter(w=>w.id!==id);
-        saveWishlist();
-        renderWishlistGrid();
-      }
-    }
-    return;
-  }
   const btn = e.target.closest('button[data-action]');
   if(!btn) return;
   const card = btn.closest('.card');
@@ -3686,15 +3641,11 @@ document.getElementById('grid').addEventListener('click', e=>{
 
 function updateViewUI(){
   const archBtn = document.getElementById('toggleArchive');
-  const wishBtn = document.getElementById('toggleWishlist');
   const tierBtn = document.getElementById('toggleTierBoard');
   const timeBtn = document.getElementById('toggleTimeline');
   archBtn.textContent = showArchived ? '← Back to cataloguex' : 'View archive';
   archBtn.classList.toggle('active', showArchived);
   archBtn.setAttribute('aria-pressed', showArchived ? 'true' : 'false');
-  wishBtn.textContent = viewingWishlist ? '← Back to cataloguex' : '✍ Songs I Wish I Wrote';
-  wishBtn.classList.toggle('active', viewingWishlist);
-  wishBtn.setAttribute('aria-pressed', viewingWishlist ? 'true' : 'false');
   tierBtn.textContent = viewingTierBoard ? '← Back to cataloguex' : '🏆 Tier board';
   tierBtn.classList.toggle('active', viewingTierBoard);
   tierBtn.setAttribute('aria-pressed', viewingTierBoard ? 'true' : 'false');
@@ -3702,21 +3653,19 @@ function updateViewUI(){
   timeBtn.classList.toggle('active', viewingTimeline);
   timeBtn.setAttribute('aria-pressed', viewingTimeline ? 'true' : 'false');
 
-  const otherMode = showArchived || viewingWishlist;
+  const otherMode = showArchived;
   document.getElementById('openAddMusic').style.display = otherMode ? 'none' : '';
   document.getElementById('openCluster').style.display = otherMode ? 'none' : '';
   document.getElementById('viewClustersBtn').style.display = otherMode ? 'none' : '';
 
   document.getElementById('resetCataloguexBtn').style.display = otherMode ? 'none' : '';
-  document.getElementById('openWish').style.display = viewingWishlist ? '' : 'none';
-  document.getElementById('peopleSection').style.display = viewingWishlist ? 'none' : '';
-  document.getElementById('filterGenre').style.display = (viewingWishlist || viewingTierBoard || viewingTimeline) ? 'none' : '';
-  document.getElementById('filterMood').style.display = (viewingWishlist || viewingTierBoard || viewingTimeline) ? 'none' : '';
-  document.getElementById('sortBy').style.display = (viewingWishlist || viewingTierBoard || viewingTimeline) ? 'none' : '';
+  document.getElementById('peopleSection').style.display = '';
+  document.getElementById('filterGenre').style.display = (viewingTierBoard || viewingTimeline) ? 'none' : '';
+  document.getElementById('filterMood').style.display = (viewingTierBoard || viewingTimeline) ? 'none' : '';
+  document.getElementById('sortBy').style.display = (viewingTierBoard || viewingTimeline) ? 'none' : '';
   document.getElementById('search').style.display = (viewingTierBoard || viewingTimeline) ? 'none' : '';
-  archBtn.style.display = (viewingWishlist || viewingTierBoard || viewingTimeline) ? 'none' : '';
-  wishBtn.style.display = (showArchived || viewingTierBoard || viewingTimeline) ? 'none' : '';
-  tierBtn.style.display = (showArchived || viewingWishlist || viewingTimeline) ? 'none' : '';
+  archBtn.style.display = (viewingTierBoard || viewingTimeline) ? 'none' : '';
+  tierBtn.style.display = (showArchived || viewingTimeline) ? 'none' : '';
   clusterFilterId = null;
   remindsFilterId = null;
 }
@@ -3737,21 +3686,13 @@ function updateHeaderFeatureAccess(){
   });
 }
 function saveViewMode(){
-  const mode = showArchived ? 'archive' : viewingWishlist ? 'wishlist' : viewingTierBoard ? 'tierboard' : viewingTimeline ? 'timeline' : 'cataloguex';
+  const mode = showArchived ? 'archive' : viewingTierBoard ? 'tierboard' : viewingTimeline ? 'timeline' : 'cataloguex';
   localStorage.setItem('bayoutonefm-view-mode', mode);
 }
 document.getElementById('toggleArchive').addEventListener('click', ()=>{
   trackEvent('toggle_archive');
   showArchived = !showArchived;
-  if(showArchived){ viewingWishlist = false; viewingTierBoard = false; viewingTimeline = false; }
-  saveViewMode();
-  updateViewUI();
-  render();
-});
-document.getElementById('toggleWishlist').addEventListener('click', ()=>{
-  trackEvent('toggle_wishlist');
-  viewingWishlist = !viewingWishlist;
-  if(viewingWishlist){ showArchived = false; viewingTierBoard = false; viewingTimeline = false; }
+  if(showArchived){ viewingTierBoard = false; viewingTimeline = false; }
   saveViewMode();
   updateViewUI();
   render();
@@ -3759,7 +3700,7 @@ document.getElementById('toggleWishlist').addEventListener('click', ()=>{
 document.getElementById('toggleTierBoard').addEventListener('click', ()=>{
   trackEvent('toggle_tier_board');
   viewingTierBoard = !viewingTierBoard;
-  if(viewingTierBoard){ showArchived = false; viewingWishlist = false; viewingTimeline = false; }
+  if(viewingTierBoard){ showArchived = false; viewingTimeline = false; }
   saveViewMode();
   updateViewUI();
   render();
@@ -3767,7 +3708,7 @@ document.getElementById('toggleTierBoard').addEventListener('click', ()=>{
 document.getElementById('toggleTimeline').addEventListener('click', ()=>{
   trackEvent('toggle_timeline');
   viewingTimeline = !viewingTimeline;
-  if(viewingTimeline){ showArchived = false; viewingWishlist = false; viewingTierBoard = false; }
+  if(viewingTimeline){ showArchived = false; viewingTierBoard = false; }
   saveViewMode();
   updateViewUI();
   render();
@@ -3778,11 +3719,6 @@ document.getElementById('openAddMusic').addEventListener('click', ()=>{
 });
 document.querySelectorAll('.empty-state-add-btn').forEach(btn=>{
   btn.addEventListener('click', ()=>{
-    if(viewingWishlist){
-      trackEvent('open_wishlist_add');
-      openWishModal(null);
-      return;
-    }
     trackEvent('open_add_music_from_empty_state');
     document.getElementById('addMusicOverlay').classList.add('open');
   });

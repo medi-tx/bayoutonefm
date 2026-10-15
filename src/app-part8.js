@@ -46,6 +46,7 @@
   let msgActiveFriend = null;
   let msgPendingSong = null;
   let msgUnreadCache = {};       // friendId -> unread count
+  let msgRecency = {};           // friendId -> ISO timestamp of last message exchanged
   let msgSongResultsCache = [];
   window.msgPreviewSong = function(id){
     const idx = parseInt(String(id).slice(7), 10);
@@ -111,9 +112,34 @@
     setMsgBadge(Object.values(msgUnreadCache).reduce((a,b)=>a+b, 0));
     }finally{ msgRefreshInflight = false; }
   }
+  async function loadMsgRecency(){
+    if(!currentUserId || !myFriendIds || myFriendIds.size === 0){ msgRecency = {}; return; }
+    const { data, error } = await sb
+      .from('messages')
+      .select('sender_id, recipient_id, created_at')
+      .or(`sender_id.eq.${currentUserId},recipient_id.eq.${currentUserId}`)
+      .order('created_at', { ascending: false })
+      .limit(500);
+    if(error) return;
+    const rec = {};
+    (data || []).forEach(m=>{
+      const other = m.sender_id === currentUserId ? m.recipient_id : m.sender_id;
+      if(!myFriendIds.has(other)) return;
+      if(!rec[other]) rec[other] = m.created_at;
+    });
+    msgRecency = rec;
+  }
+  function msgRecencyComparator(a,b){
+    const ta = msgRecency[a.user_id], tb = msgRecency[b.user_id];
+    if(ta && tb) return new Date(tb).getTime() - new Date(ta).getTime();
+    if(ta) return -1;
+    if(tb) return 1;
+    return (a.username||'').localeCompare(b.username||'');
+  }
   function renderMsgFriendList(){
     const list = document.getElementById('msgFriendList');
-    list.innerHTML = msgFriendProfiles.map(p=>{
+    const sorted = msgFriendProfiles.slice().sort(msgRecencyComparator);
+    list.innerHTML = sorted.map(p=>{
       const unread = msgUnreadCache[p.user_id] || 0;
       const active = p.user_id === msgActiveFriend ? ' active' : '';
       return `<button type="button" class="msg-friend-item${active}" data-msg-friend="${p.user_id}" aria-current="${p.user_id === msgActiveFriend ? 'true' : 'false'}">
@@ -141,6 +167,8 @@
     msgFriendProfiles.forEach(p=>{ if(!msgLastRead[p.user_id]) msgLastRead[p.user_id] = now; });
     saveMsgLastRead();
     await refreshMsgUnread();
+    await loadMsgRecency();
+    msgFriendProfiles.sort(msgRecencyComparator);
     renderMsgFriendList();
     if(msgFriendProfiles.length > 0 && !msgFriendProfiles.some(p=>p.user_id === msgActiveFriend)){
       openMsgConversation(msgFriendProfiles[0].user_id);
@@ -299,6 +327,8 @@
     showMsgError('');
     input.value = '';
     setMsgPendingSong(null);
+    msgRecency[msgActiveFriend] = new Date().toISOString();
+    renderMsgFriendList();
     await loadMsgThread(msgActiveFriend);
   }
   async function openMsgSongPicker(){
@@ -401,6 +431,7 @@
   }
   async function handleIncomingMessage(m){
     if(!m || !m.sender_id || m.sender_id === currentUserId) return;
+    msgRecency[m.sender_id] = m.created_at || new Date().toISOString();
     const overlay = document.getElementById('messagesOverlay');
     const overlayOpen = overlay && overlay.classList.contains('open');
     if(overlayOpen && msgActiveFriend === m.sender_id){

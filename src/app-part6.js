@@ -269,7 +269,7 @@ document.getElementById('recoverySubmitBtn').addEventListener('click', async ()=
 async function fetchUserData(userId){
   const { data, error } = await sb
     .from('user_data')
-    .select('songs, people, wishlist')
+    .select('songs, people')
     .eq('user_id', userId)
     .maybeSingle();
   if(error){ console.error('Error loading your data:', error); return null; }
@@ -279,7 +279,7 @@ async function fetchUserData(userId){
 async function ensureUserRow(userId){
   const { error } = await sb
     .from('user_data')
-    .upsert({ user_id: userId, songs: [], people: [], wishlist: [] }, { onConflict: 'user_id', ignoreDuplicates: true });
+    .upsert({ user_id: userId, songs: [], people: [] }, { onConflict: 'user_id', ignoreDuplicates: true });
   if(error) console.error('Error creating your data row:', error);
 }
 
@@ -824,12 +824,12 @@ async function doSync(attempt, startRevision){
     }
     // Covers persist outside the (size-limited) user_data row.
     await syncCovers(slimSongs, uid);
-    let payload = { user_id: uid, songs: slimSongs, people, wishlist, updated_at: updated };
+    let payload = { user_id: uid, songs: slimSongs, people, updated_at: updated };
     if(JSON.stringify(payload).length < 900000){
       await pushUserData(payload);
     } else {
-      // Large cataloguex: save people+wishlist first, then merge songs with remote
-      await pushUserData({ user_id: uid, people, wishlist, updated_at: updated });
+      // Large cataloguex: save people first, then merge songs with remote
+      await pushUserData({ user_id: uid, people, updated_at: updated });
       const { data: existing } = await sb.from('user_data').select('songs').eq('user_id', uid).maybeSingle();
       const remoteOnly = (((existing && existing.songs) || [])).filter(s => !localIds.has(s.id));
       const merged = [...slimSongs, ...remoteOnly];
@@ -903,8 +903,7 @@ window.resetCataloguex = async function(){
   console.log('Resetting cataloguex for user:', currentUserId);
   localStorage.removeItem(STORAGE_KEY);
   localStorage.removeItem(PEOPLE_KEY);
-  localStorage.removeItem(WISHLIST_KEY);
-  const { error } = await sb.from('user_data').upsert({ user_id: currentUserId, songs: [], people: [], wishlist: [], updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
+  const { error } = await sb.from('user_data').upsert({ user_id: currentUserId, songs: [], people: [], updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
   if(error) console.error('Reset error:', error);
   else console.log('Reset done, reloading...');
   location.reload();
@@ -1046,7 +1045,6 @@ async function loadAppForUser(user){
   // Per-user localStorage keys to prevent cross-account data bleed
   STORAGE_KEY = 'song-journal-entries-' + user.id;
   PEOPLE_KEY = 'song-journal-people-' + user.id;
-  WISHLIST_KEY = 'song-journal-wishlist-' + user.id;
   myProfile = await fetchMyProfile(user.id);
   showAnalyticsExport();
   showSotdScheduleBtn();
@@ -1125,22 +1123,6 @@ async function loadAppForUser(user){
     });
     if(stripped) save();
   }
-  wishlist = (remote && remote.wishlist) || [];
-
-  const songTitles = new Set(songs.map(s => normalizeTitle(s.title)));
-  const songKeys = new Set(songs.map(s => normalizeTitle(s.title) + '||' + (s.artists||[]).map(normalizeArtist).sort().join(' ')));
-  const wishlistBefore = wishlist.length;
-  wishlist = wishlist.filter(w => {
-    const key = normalizeTitle(w.title) + '||' + (w.artists||[]).map(normalizeArtist).sort().join(' ');
-    if(songKeys.has(key)) return false;
-    if(songTitles.has(normalizeTitle(w.title)) && w.lyricSnippet === undefined && w.why === undefined) return false;
-    return true;
-  });
-  if(wishlistBefore !== wishlist.length){
-    console.warn(`Cleaned ${wishlistBefore - wishlist.length} cataloguex songs from wishlist`);
-    syncToSupabase();
-  }
-
   // run the existing migration/backfill logic against the loaded songs
   songs.forEach(s=>{
     if(!s.artists){ s.artists = s.artist ? [s.artist] : []; }
@@ -1179,7 +1161,6 @@ async function loadAppForUser(user){
     if(savedMood){ const sel = document.getElementById('filterMood'); if(sel) sel.value = savedMood; }
     const savedMode = localStorage.getItem('bayoutonefm-view-mode');
     if(savedMode === 'archive') showArchived = true;
-    else if(savedMode === 'wishlist') viewingWishlist = true;
     else if(savedMode === 'tierboard') viewingTierBoard = true;
     else if(savedMode === 'timeline') viewingTimeline = true;
   }catch(e){}

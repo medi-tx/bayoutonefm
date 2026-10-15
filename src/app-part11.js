@@ -1,6 +1,6 @@
 
 /* ---- NOTIFICATIONS FEED ---- */
-const NOTIF_ICONS = { sotd_reaction:'🔥', friend_request:'👤', friend_accept:'🤝', badge:'🏆', message:'💬', song_recommend:'🎵', feed_reaction:'✨' };
+const NOTIF_ICONS = { sotd_reaction:'🔥', friend_request:'👤', friend_accept:'🤝', badge:'🏆', message:'💬', song_recommend:'🎵', feed_reaction:'✨', sotd_reminder:'🎵' };
 let notifUnreadCount = 0;
 
 function notifTimeAgo(ts){
