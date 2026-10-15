@@ -2095,6 +2095,8 @@
     position:absolute; top:-6px; right:-6px; margin-left:0;
     min-width:16px; height:16px; line-height:16px; font-size:10px; padding:0 4px; border-radius:8px;
   }
+  .nav-tabs{ gap:2px; padding:2px; }
+  .nav-tabs .view-tab{ font-size:12px; padding:5px 10px; border-radius:6px; }
   .more-wrap{ position:relative; }
   .more-btn{ font-size:16px; line-height:1; letter-spacing:2px; padding:7px 10px; }
   .more-menu{
