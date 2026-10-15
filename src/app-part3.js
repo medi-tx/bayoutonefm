@@ -908,7 +908,7 @@ function songCardHtml(s, clusterCounts){
             <span class="preview-hint">30-sec preview</span>
           </div>
           ${songStackBadgesHtml(s, clusterCounts)}
-          ${(s.tags&&s.tags.length) ? `<div class="tags">${s.tags.map(t=>`<span class="tag" style="background:color-mix(in srgb, ${tierColor('B')} 18%, transparent);color:${tierColor('B')};border-color:${tierColor('B')}">${escapeHtml(t)}</span>`).join('')}</div>` : (showEx ? `<div class="tags">${['nostalgic','road trip','late night'].map(t=>`<span class="tag ex-tag">e.g. ${t}</span>`).join('')}</div>` : '')}
+          ${(s.tags&&s.tags.length) ? `<div class="tags">${s.tags.map(t=>`<span class="tag" style="background:color-mix(in srgb, ${tierColor('B')} 18%, transparent);color:${tierColor('B')};border-color:${tierColor('B')}">${escapeHtml(t)}</span>`).join('')}</div>` : ''}
 
           ${s.quickThought ? `<p class="card-thought">"${escapeHtml(s.quickThought)}"</p>` : ''}
           ${s.why ? `<p class="card-opinions">${escapeHtml(s.why)}</p>` : ''}
