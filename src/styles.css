@@ -33,7 +33,7 @@
     font-family:'Space Grotesk', sans-serif;
     min-height:100vh;
   }
-  .wrap{ max-width:1100px; margin:0 auto; padding:40px 24px 100px; }
+  .wrap{ max-width:960px; margin:0 auto; padding:40px 24px 100px; }
 
   /* LOGO */
   .brand-logo{
@@ -3342,4 +3342,6 @@ body.mode-simple [data-editor-tab^="back-"], body.mode-simple [data-editor-panel
 @media (max-width:620px){
   .header-actions{ width:100%; }
   .view-bar{ margin-bottom:22px; }
+  .nav-tabs{ display:flex; flex-wrap:wrap; overflow:visible; width:100%; }
+  .nav-tabs .view-tab{ flex:1 1 auto; justify-content:center; text-align:center; }
 }
