@@ -1336,6 +1336,11 @@ function openSiteMv(){
 document.getElementById('siteMvCloseBtn').addEventListener('click', ()=>{
   document.getElementById('siteMvOverlay').classList.remove('open');
 });
+document.getElementById('feedAddMvBtn').addEventListener('click', ()=>{
+  trackEvent('feed_add_music_video');
+  document.getElementById('feedOverlay').classList.remove('open');
+  openSiteMv();
+});
 (function(){
   const wrap = document.getElementById('profileWrap');
   const menu = document.getElementById('profileMenu');
@@ -1692,6 +1697,8 @@ function setFeedModeUI(mode){
   document.getElementById('feedFriendsSub').style.display = (mode==='discover'||mode==='mv') ? 'none' : '';
   document.getElementById('feedModeSub').style.display = mode==='discover' ? '' : 'none';
   document.getElementById('feedMvSub').style.display = mode==='mv' ? '' : 'none';
+  const addMv = document.getElementById('feedAddMvBtn');
+  if(addMv) addMv.style.display = mode==='mv' ? '' : 'none';
 }
 document.getElementById('mixtapeWeekBtn').addEventListener('click', ()=>{
   trackEvent('feed_timeframe', {tf:'week'});

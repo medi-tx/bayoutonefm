@@ -33,7 +33,7 @@
 const SUPABASE_URL = 'https://aaqlnjdooeydtaihhdia.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
 
-const BTF_VERSION = '1c2db68';
+const BTF_VERSION = '0cd6301';
 
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
@@ -1626,7 +1626,7 @@ const BTF_VERSION = '1c2db68';
   }
   .reminds-chip.selected{ border-color:var(--teal); background:rgba(90,155,155,0.15); }
   .reminds-chip input{ display:none; }
-  .reminds-hint{ font-size:12px; color: rgba(var(--on-paper-rgb),0.78); margin-top:4px; }
+  .reminds-hint{ font-size:12px; color: color-mix(in srgb, currentColor 65%, transparent); margin-top:4px; }
   .reminds-badges{ display:flex; flex-wrap:wrap; gap:6px; margin-top:2px; }
   .reminds-badge{
     display:inline-flex;
@@ -2871,6 +2871,8 @@ const BTF_VERSION = '1c2db68';
   /* FRIEND FEED */
   .feed-modal{ max-width:520px; }
   .feed-list{ max-height:60vh; overflow-y:auto; margin:8px 0; }
+  .feed-add-mv-btn{ display:block; width:100%; margin:0 0 12px; padding:10px 14px; border-radius:8px; border:none; background:var(--ink); color:var(--on-ink); font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:13.5px; cursor:pointer; }
+  .feed-add-mv-btn:hover{ background:var(--ink-2); }
   .feed-empty{ font-size:13px; color:var(--on-paper); opacity:0.6; text-align:center; padding:24px 0; }
   .feed-pager{ display:flex; align-items:center; justify-content:center; gap:6px; flex-wrap:wrap; margin:14px 0 4px; }
   .feed-pager-btn{ font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:12.5px; padding:7px 12px; border-radius:8px; border:1px solid rgba(var(--on-paper-rgb),0.25); background:transparent; color:var(--on-paper); cursor:pointer; transition:background .15s ease, border-color .15s ease; }
@@ -3343,16 +3345,6 @@ const BTF_VERSION = '1c2db68';
   border-color:var(--gold,#eedd95);
   background:color-mix(in srgb, var(--star,#d5873f) 26%, transparent);
 }
-#siteMvBtn{
-  color:var(--teal,#2A9D8F);
-  border-color:var(--teal,#2A9D8F);
-  background:color-mix(in srgb, var(--teal,#2A9D8F) 14%, transparent);
-}
-#siteMvBtn:hover{
-  color:var(--gold,#eedd95);
-  border-color:var(--gold,#eedd95);
-  background:color-mix(in srgb, var(--teal,#2A9D8F) 26%, transparent);
-}
 .mv-hint{ font-size:12px; line-height:1.5; margin:6px 0 0; color:rgba(var(--on-paper-rgb),0.6); }
 .mv-info-btn{ cursor:pointer; font-size:11px; font-weight:600; color:var(--teal); text-decoration:underline; }
 .mv-para{ font-size:14px; line-height:1.7; margin:0 0 14px; color:rgba(var(--on-paper-rgb),0.85); }
@@ -3518,10 +3510,11 @@ body.mode-simple [data-editor-tab^="back-"], body.mode-simple [data-editor-panel
     <span id="syncStatus" class="sync-status"></span>
     <div class="header-actions">
       <div class="view-tabs nav-tabs" id="navTabs" aria-label="Main sections">
-        <button class="view-tab" id="feedBtn">📰 Feed</button>
         <button class="view-tab" id="sotdBtn">🎵 Song of the Day</button>
+        <button class="view-tab" id="feedBtn">📰 Feed</button>
         <button class="view-tab" id="leaderboardBtn">🏆 Leaderboards</button>
         <button class="view-tab" id="discoverBtn">🔎 Friends</button>
+        <button class="view-tab" id="themeBtn">🎨 Theme</button>
       </div>
       <div class="header-icons">
         <button class="icon-btn" id="notifBtn" title="Notifications" aria-label="Notifications">🔔<span class="msg-btn-badge" id="notifBadge" style="display:none;"></span></button>
@@ -3533,12 +3526,9 @@ body.mode-simple [data-editor-tab^="back-"], body.mode-simple [data-editor-panel
             <button class="theme-btn" id="statsBtn">📊 Stats</button>
             <button class="theme-btn" id="modeBtn">🧠 Nerd mode</button>
             <div class="more-menu-sep"></div>
-            <button class="theme-btn" id="editStickersBtn">🎨 Stickers</button>
-            <button class="theme-btn" id="themeBtn">🎨 Theme</button>
             <button class="theme-btn" id="songDbBtn">📀 Song Database</button>
             <button class="theme-btn" id="testerBtn">🧪 Tester</button>
             <button class="theme-btn" id="discordBtn">Discord</button>
-            <button class="theme-btn" id="siteMvBtn">🎬 Fan Music Videos</button>
             <div class="more-menu-sep"></div>
             <button class="theme-btn" id="logoutBtn">Log out</button>
           </div>
@@ -4011,11 +4001,12 @@ body.mode-simple [data-editor-tab^="back-"], body.mode-simple [data-editor-panel
       <button type="button" class="mixtape-period-btn active" id="mixtapeWeekBtn" aria-pressed="true">This week</button>
       <button type="button" class="mixtape-period-btn" id="mixtapeMonthBtn" aria-pressed="false">This month</button>
       <button type="button" class="mixtape-period-btn" id="mixtapeDiscoverBtn" aria-pressed="false" title="Recently added by everyone on bayoutonefm, not just friends">🌐 Discover</button>
-      <button type="button" class="mixtape-period-btn" id="mixtapeMvBtn" aria-pressed="false" title="Fan-made music videos uploaded by everyone on bayoutonefm">🎬 Music Videos</button>
+      <button type="button" class="mixtape-period-btn" id="mixtapeMvBtn" aria-pressed="false" title="Fan-made music videos uploaded by everyone on bayoutonefm">🎬 Fan Music Videos</button>
     </div>
     <p class="mixtape-sub" id="feedModeSub" style="display:none;">New music added by everyone on bayoutonefm — not just your friends.</p>
-    <p class="mixtape-sub" id="feedMvSub" style="display:none;">Fan-made music videos from anyone on bayoutonefm — tap a card to watch. Make your own with the 🎬 Fan Music Videos button.</p>
+    <p class="mixtape-sub" id="feedMvSub" style="display:none;">Fan-made music videos from anyone on bayoutonefm — tap a card to watch, or add your own.</p>
     <p class="mixtape-count" id="feedCount"></p>
+    <button type="button" class="feed-add-mv-btn" id="feedAddMvBtn" style="display:none;">🎬 Add your music video</button>
     <div class="feed-list" id="feedList"></div>
     <div class="modal-actions">
       <button class="btn-cancel" id="feedCloseBtn">Close</button>
@@ -6128,6 +6119,11 @@ function openSiteMv(){
 document.getElementById('siteMvCloseBtn').addEventListener('click', ()=>{
   document.getElementById('siteMvOverlay').classList.remove('open');
 });
+document.getElementById('feedAddMvBtn').addEventListener('click', ()=>{
+  trackEvent('feed_add_music_video');
+  document.getElementById('feedOverlay').classList.remove('open');
+  openSiteMv();
+});
 (function(){
   const wrap = document.getElementById('profileWrap');
   const menu = document.getElementById('profileMenu');
@@ -6484,6 +6480,8 @@ function setFeedModeUI(mode){
   document.getElementById('feedFriendsSub').style.display = (mode==='discover'||mode==='mv') ? 'none' : '';
   document.getElementById('feedModeSub').style.display = mode==='discover' ? '' : 'none';
   document.getElementById('feedMvSub').style.display = mode==='mv' ? '' : 'none';
+  const addMv = document.getElementById('feedAddMvBtn');
+  if(addMv) addMv.style.display = mode==='mv' ? '' : 'none';
 }
 document.getElementById('mixtapeWeekBtn').addEventListener('click', ()=>{
   trackEvent('feed_timeframe', {tf:'week'});
@@ -17228,7 +17226,7 @@ async function loadMusicVideoFeed(){
     }
     const everyone = profiles.filter(p => p.user_id !== currentUserId && p.username);
     if(everyone.length === 0){
-      emptyState('You\'re the first one here — when other people on bayoutonefm add music videos, they\'ll show up here. Make your own with the 🎬 Fan Music Videos button!');
+      emptyState('You\'re the first one here — when other people on bayoutonefm add music videos, they\'ll show up here. Make your own with the 🎬 Add your music video button!');
       return;
     }
     const results = await Promise.all(everyone.map(async p=>{

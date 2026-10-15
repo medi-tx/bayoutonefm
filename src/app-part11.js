@@ -437,7 +437,7 @@ async function loadMusicVideoFeed(){
     }
     const everyone = profiles.filter(p => p.user_id !== currentUserId && p.username);
     if(everyone.length === 0){
-      emptyState('You\'re the first one here — when other people on bayoutonefm add music videos, they\'ll show up here. Make your own with the 🎬 Fan Music Videos button!');
+      emptyState('You\'re the first one here — when other people on bayoutonefm add music videos, they\'ll show up here. Make your own with the 🎬 Add your music video button!');
       return;
     }
     const results = await Promise.all(everyone.map(async p=>{
