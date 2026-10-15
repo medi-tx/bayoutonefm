@@ -33,7 +33,7 @@
 const SUPABASE_URL = 'https://aaqlnjdooeydtaihhdia.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
 
-const BTF_VERSION = 'e692031';
+const BTF_VERSION = '86853d7';
 
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
@@ -3395,8 +3395,8 @@ body.mode-simple [data-editor-tab^="back-"], body.mode-simple [data-editor-panel
 @media (max-width:620px){
   .header-actions{ width:100%; }
   .view-bar{ margin-bottom:22px; }
-  .nav-tabs{ display:flex; flex-wrap:wrap; overflow:visible; width:100%; }
-  .nav-tabs .view-tab{ flex:1 1 auto; justify-content:center; text-align:center; }
+  .view-tabs{ display:flex; flex-wrap:wrap; overflow:visible; width:100%; }
+  .view-tabs .view-tab{ flex:1 1 auto; justify-content:center; text-align:center; }
 }
 </style>
 </head>
@@ -6126,6 +6126,8 @@ function syncModeBtn(){
   const ov = document.getElementById('modeOverlay');
   window.maybeOpenModeChooser = function(){
     if(hasMode || !ov) return;
+    hasMode = true;
+    try{ localStorage.setItem('bayoutonefm-mode', siteMode); }catch(e){}
     ov.classList.add('open');
     trackEvent('open_mode_chooser');
   };

@@ -1386,6 +1386,8 @@ function syncModeBtn(){
   const ov = document.getElementById('modeOverlay');
   window.maybeOpenModeChooser = function(){
     if(hasMode || !ov) return;
+    hasMode = true;
+    try{ localStorage.setItem('bayoutonefm-mode', siteMode); }catch(e){}
     ov.classList.add('open');
     trackEvent('open_mode_chooser');
   };
