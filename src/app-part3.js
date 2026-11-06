@@ -1097,7 +1097,13 @@ function renderEditsLog(){
   const entries = [];
   songs.forEach(s=>{
     (s.edits || []).forEach(ed=>{
-      if(ed && ed.at) entries.push({ song:s, edit:ed });
+      if(!ed || !ed.at) return;
+      const changes = (ed.changes || []).map(c=>({
+        change:c,
+        oldText: editValueText(c.field, c.old),
+        newText: editValueText(c.field, c.now)
+      })).filter(x => !(x.oldText === '—' && x.newText === '—'));
+      if(changes.length) entries.push({ song:s, edit:ed, changes });
     });
   });
   entries.sort((a,b)=> (b.edit.at || 0) - (a.edit.at || 0));
@@ -1132,14 +1138,12 @@ function renderEditsLog(){
   }).forEach(k=>{
     const items = groups[k];
     html += `<div class="timeline-day"><p class="timeline-day-label">${escapeHtml(niceDay(items[0].edit.at))}<span class="timeline-day-count">${items.length} ${items.length===1?'edit':'edits'}</span></p><div class="timeline-items">`;
-    items.forEach(({song, edit})=>{
+    items.forEach(({song, edit, changes: visibleChanges})=>{
       const time = new Date(edit.at).toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'});
       const artist = formatArtists(song.artists);
-      const changes = (edit.changes || []).map(c=>{
-        const oldText = editValueText(c.field, c.old);
-        const newText = editValueText(c.field, c.now);
+      const changes = visibleChanges.map(({change, oldText, newText})=>{
         return `<div class="edits-entry-change">`
-          + `<span class="edits-entry-field">${escapeHtml(editFieldLabel(c.field))}</span>`
+          + `<span class="edits-entry-field">${escapeHtml(editFieldLabel(change.field))}</span>`
           + `<span class="edits-entry-old" title="${escapeAttr(oldText)}">${escapeHtml(oldText)}</span>`
           + `<span class="edits-entry-arrow">→</span>`
           + `<span class="edits-entry-new" title="${escapeAttr(newText)}">${escapeHtml(newText)}</span>`
@@ -1151,7 +1155,7 @@ function renderEditsLog(){
         + (artist ? `<span class="edits-entry-artist">${escapeHtml(artist)}</span>` : '')
         + `<span class="edits-entry-time" style="margin-left:auto;">${escapeHtml(time)}</span>`
         + `</div>`
-        + `<div class="edits-entry-changes">${changes || '<span class="edits-entry-time">No field details recorded</span>'}</div>`
+        + `<div class="edits-entry-changes">${changes}</div>`
         + `</div>`;
     });
     html += '</div></div>';
