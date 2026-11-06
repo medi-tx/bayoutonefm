@@ -30,7 +30,6 @@
     { overlay:'overlay', target:'#tierPicker', title:'Add your first song!', body:'Tiers power your tier board and leaderboards. Pick a tier by hand here and the score fills itself in — either way works.' },
     { overlay:'overlay', target:'#f-stars-lyrics', title:'Category ratings', body:'Give it up to <b>5 stars</b> for <b>🎤 Lyrics</b>, <b>🎶 Vocals</b>, and <b>🔁 Replay-ability</b> — friends see them on the back of your song cards.' },
     { overlay:'overlay', target:'#f-vibe-energy', title:'Song vibes', body:'Slide <b>⚡ Energy</b> (chill ↔ electric), <b>🌗 Mood</b> (stormy ↔ sunny), and <b>🕰️ Nostalgia</b> (new ↔ familiar) — they show a song\u2019s feel at a glance.' },
-    { overlay:'overlay', target:'#f-why', title:'Add your first song!', body:'The opinions are the heart of it — write why you love it, how it hits, what it reminds you of. That part only comes from you.' },
     { overlay:'overlay', target:'#saveBtn', title:'Add your first song!', body:'Hit <b>Save song</b> and your cataloguex has its first entry. Welcome — now make it yours.' },
   ];
 
@@ -175,6 +174,7 @@
     showArchived = false;
     viewingTierBoard = false;
     viewingTimeline = false;
+    viewingEditsLog = false;
     if(typeof updateViewUI === 'function'){ try{ updateViewUI(); }catch(e){} }
     if(typeof render === 'function'){ try{ render(); }catch(e){} }
     slides = TOUR_SLIDES.concat(ADD_MUSIC_SLIDES).concat(AFTER_FIRST_SLIDES);

@@ -19,26 +19,6 @@ let currentTier = null;
 let showArchived = false;
 let viewingTierBoard = false;
 
-/* ---- SITE MODE (Simple vs Nerd) ---- */
-const MODE_KEY = 'bayoutonefm-mode';
-let siteMode = (function(){ try{ const m = localStorage.getItem(MODE_KEY); return m === 'nerd' ? 'nerd' : 'simple'; }catch(e){ return 'simple'; } })();
-function isNerd(){ return siteMode === 'nerd'; }
-function isSimple(){ return !isNerd(); }
-function applyModeToBody(){
-  document.body.classList.toggle('mode-nerd', isNerd());
-  document.body.classList.toggle('mode-simple', isSimple());
-}
-function setSiteMode(mode){
-  siteMode = (mode === 'nerd') ? 'nerd' : 'simple';
-  try{ localStorage.setItem(MODE_KEY, siteMode); }catch(e){}
-  applyModeToBody();
-  if(typeof syncModeBtn === 'function') syncModeBtn();
-  if(typeof render === 'function') render();
-  document.querySelectorAll('.card.flipped').forEach(function(c){ c.classList.remove('flipped'); });
-  trackEvent('site_mode', { mode: siteMode });
-}
-applyModeToBody();
-
 /* ---- FEATURE USAGE TRACKING ---- */
 const ANALYTICS_KEY = 'bayoutonefm-analytics';
 let analyticsLog = [];
@@ -51,6 +31,7 @@ function trackEvent(feature, detail){
   try{ analyticsLog = JSON.parse(localStorage.getItem(ANALYTICS_KEY)||'[]'); }catch(e){ analyticsLog = []; }
 })();
 let viewingTimeline = false;
+let viewingEditsLog = false;
 let multiMode = 'cluster'; // 'cluster' or 'album'
 let currentMultiTier = null;
 let clusterFilterId = null;

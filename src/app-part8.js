@@ -259,7 +259,6 @@
     if(flipCard){
       e.preventDefault();
       e.stopPropagation();
-      if(!isNerd()) return;
       flipCard.classList.toggle('flipped');
       return;
     }

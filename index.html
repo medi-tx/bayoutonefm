@@ -33,7 +33,7 @@
 const SUPABASE_URL = 'https://aaqlnjdooeydtaihhdia.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
 
-const BTF_VERSION = '364aae9';
+const BTF_VERSION = '3c736d0';
 
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
@@ -8070,11 +8070,12 @@ function finishSave(data){
     if(idx>-1){
       const old = songs[idx];
       const tracked = ['title','artists','album','year','genres','tags','quickThought','credit','recordLabel','duration','producer','songwriters','bpm','musicKey','spotifyUrl','appleMusicUrl','youtubeMusicUrl','tidalUrl','releaseDate','artistWebsite','musicVideoUrl','coverArt','remindsOf','tier','trackNumber','score','stars','vibeEnergy','vibeMood','vibeNostalgia','explicit','favorited'];
+      const normalize = v => (v === undefined || v === null || v === '' || (Array.isArray(v) && v.length === 0)) ? null : v;
       const changes = tracked.filter(k=>{
-        const a = JSON.stringify(old[k]);
-        const b = JSON.stringify(data[k]);
+        const a = JSON.stringify(normalize(old[k]));
+        const b = JSON.stringify(normalize(data[k]));
         return a !== b;
-      }).map(k=>({ field:k, old:old[k], now:data[k] }));
+      }).map(k=>({ field:k, old:normalize(old[k]), now:normalize(data[k]) }));
       if(changes.length){
         if(!old.edits) old.edits = [];
         old.edits.push({ at: Date.now(), changes });

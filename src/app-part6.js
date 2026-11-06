@@ -85,7 +85,6 @@ function showApp(){
   document.getElementById('appWrap').style.display = '';
   var sl = document.getElementById('stickerLayer');
   if(sl) sl.style.display = '';
-  if(typeof maybeOpenModeChooser === 'function') maybeOpenModeChooser();
 }
 function showRecoveryScreen(){
   document.getElementById('authScreen').style.display = 'none';
@@ -1163,6 +1162,7 @@ async function loadAppForUser(user){
     if(savedMode === 'archive') showArchived = true;
     else if(savedMode === 'tierboard') viewingTierBoard = true;
     else if(savedMode === 'timeline') viewingTimeline = true;
+    else if(savedMode === 'edits') viewingEditsLog = true;
   }catch(e){}
   updateViewUI();
   await loadStickers();
