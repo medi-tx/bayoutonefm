@@ -2950,21 +2950,21 @@
   .edits-toggle:hover{ color:var(--on-paper); }
   .edits-log{ max-height:0; overflow:hidden; transition:max-height 0.25s ease; }
   .edits-log.open{ max-height:500px; overflow-y:auto; }
-  .edits-entry{ font-size:11px; color:rgba(var(--on-paper-rgb),0.7); padding:5px 0; border-top:1px solid rgba(var(--on-paper-rgb),0.08); }
+  .edits-entry{ font-size:11px; color:rgba(var(--on-ink-rgb),0.82); padding:5px 0; border-top:1px solid rgba(var(--on-ink-rgb),0.12); }
   .edits-entry:first-child{ border-top:none; }
-  .edits-entry-time{ color:rgba(var(--on-paper-rgb),0.45); font-size:10px; margin-bottom:2px; }
+  .edits-entry-time{ color:rgba(var(--on-ink-rgb),0.55); font-size:10px; margin-bottom:2px; }
   .edits-entry-change{ display:flex; gap:5px; align-items:baseline; flex-wrap:wrap; }
   .edits-entry-field{ font-weight:600; color:var(--teal); text-transform:capitalize; flex-shrink:0; }
-  .edits-entry-old{ text-decoration:line-through; opacity:0.5; max-width:40%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .edits-entry-arrow{ opacity:0.35; flex-shrink:0; }
-  .edits-entry-new{ color:var(--on-paper); max-width:40%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .edits-entry-old{ text-decoration:line-through; opacity:0.6; max-width:40%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .edits-entry-arrow{ opacity:0.55; flex-shrink:0; }
+  .edits-entry-new{ color:var(--on-ink); max-width:40%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .edits-log-view{ max-width:720px; margin:0 auto; padding:6px 4px 40px; }
-  .edits-log-view .timeline-day-count{ color:rgba(var(--on-paper-rgb),0.5); }
+  .edits-log-view .timeline-day-count{ color:rgba(var(--on-ink-rgb),0.6); }
   .edits-entry[data-id]{ cursor:pointer; border-radius:8px; padding:5px 8px; transition:background .15s ease; }
-  .edits-entry[data-id]:hover{ background:rgba(var(--on-paper-rgb),0.06); }
+  .edits-entry[data-id]:hover{ background:rgba(var(--on-ink-rgb),0.08); }
   .edits-entry-head{ display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; margin-bottom:2px; }
-  .edits-entry-song{ font-family:'Fraunces', serif; font-weight:700; font-size:14px; color:var(--on-paper); }
-  .edits-entry-artist{ font-family:'IBM Plex Mono', monospace; font-size:10px; color:rgba(var(--on-paper-rgb),0.55); }
+  .edits-entry-song{ font-family:'Fraunces', serif; font-weight:700; font-size:14px; color:var(--on-ink); }
+  .edits-entry-artist{ font-family:'IBM Plex Mono', monospace; font-size:10px; color:rgba(var(--on-ink-rgb),0.65); }
   .edits-entry-changes{ display:flex; flex-direction:column; gap:2px; }
 
   /* YEAR IN REVIEW */
