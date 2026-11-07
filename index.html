@@ -33,7 +33,7 @@
 const SUPABASE_URL = 'https://aaqlnjdooeydtaihhdia.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
 
-const BTF_VERSION = '3e8dc0a';
+const BTF_VERSION = 'a093d59';
 
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
@@ -8441,20 +8441,20 @@ document.getElementById('grid').addEventListener('click', e=>{
 });
 
 function updateViewUI(){
+  const libBtn = document.getElementById('viewLibraryBtn');
   const archBtn = document.getElementById('toggleArchive');
   const tierBtn = document.getElementById('toggleTierBoard');
   const timeBtn = document.getElementById('toggleTimeline');
   const editsBtn = document.getElementById('toggleEditsLog');
-  archBtn.textContent = showArchived ? '← Back to cataloguex' : 'View archive';
+  const onLibrary = !showArchived && !viewingTierBoard && !viewingTimeline && !viewingEditsLog;
+  libBtn.classList.toggle('active', onLibrary);
+  libBtn.setAttribute('aria-pressed', onLibrary ? 'true' : 'false');
   archBtn.classList.toggle('active', showArchived);
   archBtn.setAttribute('aria-pressed', showArchived ? 'true' : 'false');
-  tierBtn.textContent = viewingTierBoard ? '← Back to cataloguex' : '🏆 Tier board';
   tierBtn.classList.toggle('active', viewingTierBoard);
   tierBtn.setAttribute('aria-pressed', viewingTierBoard ? 'true' : 'false');
-  timeBtn.textContent = viewingTimeline ? '← Back to cataloguex' : '🕰 Timeline';
   timeBtn.classList.toggle('active', viewingTimeline);
   timeBtn.setAttribute('aria-pressed', viewingTimeline ? 'true' : 'false');
-  editsBtn.textContent = viewingEditsLog ? '← Back to cataloguex' : '📝 Edits log';
   editsBtn.classList.toggle('active', viewingEditsLog);
   editsBtn.setAttribute('aria-pressed', viewingEditsLog ? 'true' : 'false');
 
@@ -8494,6 +8494,16 @@ function saveViewMode(){
   const mode = showArchived ? 'archive' : viewingTierBoard ? 'tierboard' : viewingTimeline ? 'timeline' : viewingEditsLog ? 'edits' : 'cataloguex';
   localStorage.setItem('bayoutonefm-view-mode', mode);
 }
+document.getElementById('viewLibraryBtn').addEventListener('click', ()=>{
+  trackEvent('view_library');
+  showArchived = false;
+  viewingTierBoard = false;
+  viewingTimeline = false;
+  viewingEditsLog = false;
+  saveViewMode();
+  updateViewUI();
+  render();
+});
 document.getElementById('toggleArchive').addEventListener('click', ()=>{
   trackEvent('toggle_archive');
   showArchived = !showArchived;
