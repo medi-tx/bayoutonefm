@@ -3775,7 +3775,7 @@ function updateViewUI(){
   document.getElementById('filterMood').style.display = (viewingTierBoard || viewingTimeline || viewingEditsLog) ? 'none' : '';
   document.getElementById('sortBy').style.display = (viewingTierBoard || viewingTimeline || viewingEditsLog) ? 'none' : '';
   document.getElementById('search').style.display = (viewingTierBoard || viewingTimeline || viewingEditsLog) ? 'none' : '';
-  archBtn.style.display = (viewingTierBoard || viewingTimeline || viewingEditsLog) ? 'none' : '';
+  archBtn.style.display = '';
   tierBtn.style.display = (showArchived || viewingTimeline || viewingEditsLog) ? 'none' : '';
   clusterFilterId = null;
   remindsFilterId = null;

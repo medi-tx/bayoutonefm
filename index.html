@@ -33,7 +33,7 @@
 const SUPABASE_URL = 'https://aaqlnjdooeydtaihhdia.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
 
-const BTF_VERSION = 'a093d59';
+const BTF_VERSION = 'c7022b4';
 
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
@@ -8469,7 +8469,7 @@ function updateViewUI(){
   document.getElementById('filterMood').style.display = (viewingTierBoard || viewingTimeline || viewingEditsLog) ? 'none' : '';
   document.getElementById('sortBy').style.display = (viewingTierBoard || viewingTimeline || viewingEditsLog) ? 'none' : '';
   document.getElementById('search').style.display = (viewingTierBoard || viewingTimeline || viewingEditsLog) ? 'none' : '';
-  archBtn.style.display = (viewingTierBoard || viewingTimeline || viewingEditsLog) ? 'none' : '';
+  archBtn.style.display = '';
   tierBtn.style.display = (showArchived || viewingTimeline || viewingEditsLog) ? 'none' : '';
   clusterFilterId = null;
   remindsFilterId = null;
