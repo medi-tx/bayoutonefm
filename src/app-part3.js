@@ -5876,14 +5876,15 @@ document.addEventListener('click', e=>{
   e.stopPropagation();
   e.preventDefault();
 }, true);
-document.getElementById('overlay').addEventListener('click', e=>{
-  if(e.target.id !== 'overlay') return;
-  closeModal();
-});
+// The add/edit song card is a form. Clicking the dark area around it must never throw
+// away what you've typed - use Save, Cancel or the modal's own close button instead.
 document.querySelectorAll('.overlay').forEach(ov=>{
   if(ov.id === 'overlay' || ov.id === 'termsGateOverlay' || ov.id === 'onboardingOverlay' || ov.id === 'spotifyImportOverlay') return;
   ov.addEventListener('click', e=>{
     if(e.target !== ov) return;
+    // Don't close a popup that contains a typing field - the click may have been aimed
+    // beside the form and we must not discard what's already been typed into it.
+    if(__overlayHasTyping(ov)) return;
     ov.classList.remove('open');
   });
 });
