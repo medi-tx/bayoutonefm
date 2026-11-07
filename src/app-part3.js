@@ -3776,7 +3776,7 @@ function updateViewUI(){
   document.getElementById('sortBy').style.display = (viewingTierBoard || viewingTimeline || viewingEditsLog) ? 'none' : '';
   document.getElementById('search').style.display = (viewingTierBoard || viewingTimeline || viewingEditsLog) ? 'none' : '';
   archBtn.style.display = '';
-  tierBtn.style.display = (showArchived || viewingTimeline || viewingEditsLog) ? 'none' : '';
+  tierBtn.style.display = '';
   clusterFilterId = null;
   remindsFilterId = null;
 }
