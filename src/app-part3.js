@@ -2166,6 +2166,7 @@ async function drawSongShareCard(opts){
     if(card) frontEl = card;
   }
   if(window.html2canvas && frontEl){
+    let captured = false;
     try{
       frontEl.classList.add('share-capture');
       frontEl.scrollIntoView({behavior:'auto', block:'center', inline:'center'});
@@ -2175,11 +2176,16 @@ async function drawSongShareCard(opts){
         new Promise((_,rej)=> setTimeout(()=>rej(new Error('html2canvas timeout')), 5000))
       ]);
       applySheetToTarget('shareCanvas', c);
+      captured = true;
     }catch(e){ console.warn('html2canvas front failed, falling back:', e); }
     finally{ frontEl.classList.remove('share-capture'); }
-    const backCv = document.getElementById('shareCanvasBack');
-    if(backCv) await drawSongBackShareCard(opts, 'shareCanvasBack');
-    return;
+    // html2canvas can't parse some modern CSS (e.g. color-mix()). Without drawing the
+    // canvas version here the Front preview is left completely blank.
+    if(captured){
+      const backCv = document.getElementById('shareCanvasBack');
+      if(backCv) await drawSongBackShareCard(opts, 'shareCanvasBack');
+      return;
+    }
   }
   const W = 1080, H = 1350;
   cv.width = W; cv.height = H;
