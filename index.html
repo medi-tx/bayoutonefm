@@ -33,7 +33,7 @@
 const SUPABASE_URL = 'https://aaqlnjdooeydtaihhdia.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_90hp8v69T6JrZKTQnKDIEA_Ku0J7eh0';
 
-const BTF_VERSION = '82bc88d';
+const BTF_VERSION = 'd5ec593';
 
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
@@ -6783,23 +6783,6 @@ async function drawShareCard(opts){
   ctx.fillStyle='#eedd95'; ctx.fillText('Join bayoutonefm today to share your own music', W/2, H - 96);
   ctx.textAlign = 'left';
 }
-function cardWrapText(ctx, text, maxW, font){
-  ctx.font = font;
-  const words = String(text||'').split(/\s+/).filter(Boolean);
-  const lines = [];
-  let cur = '';
-  for(const w of words){
-    const test = cur ? cur + ' ' + w : w;
-    if(cur && ctx.measureText(test).width > maxW){
-      lines.push(cur);
-      cur = w;
-    } else {
-      cur = test;
-    }
-  }
-  if(cur) lines.push(cur);
-  return lines.slice(0, 4);
-}
 function cardBase(ctx, W, H, username){
   const t = loadTheme();
   const g = ctx.createLinearGradient(0,0,W,H);
@@ -6850,184 +6833,86 @@ function applySheetToTarget(targetId, src){
   cv.width = norm.width; cv.height = norm.height;
   cv.getContext('2d').drawImage(norm, 0, 0);
 }
+// html2canvas 1.4.1 chokes on the `color(srgb ...)` values Chrome computes for
+// color-mix() (used by the card's tag chips), which made the Front capture fail and
+// silently swap in the old hand-drawn card. Convert those values in the cloned DOM
+// so the shared image is a direct capture of the real card instead.
+function shareCaptureSafeColor(value){
+  if(typeof value !== 'string' || value.indexOf('color(') === -1) return value;
+  return value.replace(/color\(\s*srgb\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)(?:\s*\/\s*([\d.]+%?))?\s*\)/gi, function(_m,r,g,b,a){
+    const byte = n => Math.round(Math.max(0, Math.min(1, parseFloat(n))) * 255);
+    const alpha = !a ? 1 : (a.indexOf('%') !== -1 ? parseFloat(a)/100 : parseFloat(a));
+    return 'rgba(' + byte(r) + ',' + byte(g) + ',' + byte(b) + ',' + alpha + ')';
+  });
+}
+function shareCaptureOnClone(clonedDoc, selector){
+  const root = clonedDoc.querySelector(selector);
+  if(!root) return;
+  const nodes = [root].concat([].slice.call(root.querySelectorAll('*')));
+  nodes.forEach(el=>{
+    const cs = clonedDoc.defaultView.getComputedStyle(el);
+    for(let i=0;i<cs.length;i++){
+      const prop = cs[i], val = cs.getPropertyValue(prop);
+      if(val.indexOf('color(') === -1) continue;
+      const safe = shareCaptureSafeColor(val);
+      if(safe !== val) el.style.setProperty(prop, safe, 'important');
+    }
+  });
+}
 async function drawSongShareCard(opts){
-  const cv = document.getElementById('shareCanvas');
   const s = opts.song || {};
   function escapeCss(x){ try{return CSS.escape(x); }catch(e){ return String(x).replace(/"|\\/g,''); } }
-  let frontEl = null;
-  if(s.id){
-    const card = document.querySelector('.card[data-id="' + escapeCss(s.id) + '"]');
-    if(card) frontEl = card;
+  const selector = '.card[data-id="' + escapeCss(s.id || '') + '"]';
+  const card = s.id ? document.querySelector(selector) : null;
+  if(!window.html2canvas || !card) throw new Error('Song card is not available to capture');
+  card.classList.add('share-capture');
+  try{
+    card.scrollIntoView({behavior:'auto', block:'center', inline:'center'});
+    await new Promise(r=>setTimeout(r,150));
+    const c = await Promise.race([
+      html2canvas(card, {
+        backgroundColor: loadTheme().paper || '#eedd95',
+        scale: 2, useCORS: true,
+        ignoreElements: (el)=> !!(el && el.tagName === 'VIDEO'),
+        onclone: (clonedDoc)=> shareCaptureOnClone(clonedDoc, selector)
+      }),
+      new Promise((_,rej)=> setTimeout(()=>rej(new Error('html2canvas timeout')), 8000))
+    ]);
+    applySheetToTarget('shareCanvas', c);
+  } finally {
+    card.classList.remove('share-capture');
   }
-  if(window.html2canvas && frontEl){
-    let captured = false;
-    try{
-      frontEl.classList.add('share-capture');
-      frontEl.scrollIntoView({behavior:'auto', block:'center', inline:'center'});
-      await new Promise(r=>setTimeout(r,150));
-      const c = await Promise.race([
-        html2canvas(frontEl, { backgroundColor: loadTheme().paper || '#eedd95', scale: 2, useCORS: true, ignoreElements: (el)=> !!(el && el.tagName === 'VIDEO') }),
-        new Promise((_,rej)=> setTimeout(()=>rej(new Error('html2canvas timeout')), 5000))
-      ]);
-      applySheetToTarget('shareCanvas', c);
-      captured = true;
-    }catch(e){ console.warn('html2canvas front failed, falling back:', e); }
-    finally{ frontEl.classList.remove('share-capture'); }
-    // html2canvas can't parse some modern CSS (e.g. color-mix()). Without drawing the
-    // canvas version here the Front preview is left completely blank.
-    if(captured){
-      const backCv = document.getElementById('shareCanvasBack');
-      if(backCv) await drawSongBackShareCard(opts, 'shareCanvasBack');
-      return;
-    }
-  }
-  const W = 1080, H = 1350;
-  cv.width = W; cv.height = H;
-  const ctx = cv.getContext('2d');
-  const t = loadTheme();
-  cardBase(ctx, W, H, opts.username);
-  ctx.fillStyle = t.lilac || '#8E44AD';
-  ctx.fillRect(0, 0, W, 3);
-  const coverS = 360;
-  const coverX = (W - coverS)/2, coverY = 420;
-  const img = await loadCardImage(s.coverArt);
-  cardRoundRect(ctx, coverX, coverY, coverS, coverS, 24);
-  if(img){
-    ctx.save();
-    cardRoundRect(ctx, coverX, coverY, coverS, coverS, 24);
-    ctx.clip();
-    ctx.drawImage(img, coverX, coverY, coverS, coverS);
-    ctx.restore();
-  } else {
-    ctx.fillStyle = t.ink || '#12141c';
-    ctx.fill();
-    ctx.fillStyle = t.paper || '#eedd95';
-    ctx.font = '700 180px Georgia, serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText((s.title||'?').charAt(0).toUpperCase(), W/2, coverY + coverS/2);
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'alphabetic';
-  }
-  ctx.fillStyle = t.paper || '#eedd95';
-  ctx.font = '700 64px "Space Grotesk", sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText(cardTruncate(ctx, s.title || 'Untitled', W - 176, ctx.font), W/2, coverY + coverS + 96);
-  ctx.fillStyle = t.paper ? t.paper + 'D9' : 'rgba(238,221,149,0.85)';
-  ctx.font = '500 34px "Space Grotesk", sans-serif';
-  ctx.fillText(cardTruncate(ctx, formatArtists(s.artists), W - 176, ctx.font), W/2, coverY + coverS + 146);
-  const detailBits = [s.album, s.year].filter(Boolean).join(' · ');
-  if(detailBits){
-    ctx.fillStyle = t.paper ? t.paper + '99' : 'rgba(238,221,149,0.6)';
-    ctx.font = '500 26px "Space Grotesk", sans-serif';
-    ctx.fillText(cardTruncate(ctx, detailBits, W - 176, ctx.font), W/2, coverY + coverS + 194);
-  }
-  if(s.genres && s.genres.length){
-    const genresStr = s.genres.slice(0,3).join('  ·  ');
-    ctx.fillStyle = t.gold || 'rgba(180,185,243,0.9)';
-    ctx.font = '600 22px "IBM Plex Mono", monospace';
-    ctx.fillText(cardTruncate(ctx, genresStr, W - 176, ctx.font), W/2, coverY + coverS + 240);
-  }
-  const tier = s.tier || '';
-  const chipCol = { S: t.teal || '#E63946', A: t.rose || '#2A9D8F', B: t.lilac || '#8E44AD', C: t.sage || '#264653', '★': t.gold || '#d5873f' }[tier] || t.paper || '#d5873f';
-  ctx.fillStyle = chipCol;
-  cardRoundRect(ctx, W/2 - 44, coverY + coverS + 262, 88, 48, 12);
-  ctx.fill();
-  ctx.fillStyle = t.ink || '#11131b';
-  ctx.font = '700 26px "IBM Plex Mono", monospace';
-  ctx.fillText(tier || '—', W/2, coverY + coverS + 295);
-  if(s.quickThought){
-    const lines = cardWrapText(ctx, '\u201c' + s.quickThought + '\u201d', W - 260, 'italic 500 28px Georgia, serif');
-    ctx.fillStyle = t.paper ? t.paper + 'BF' : 'rgba(238,221,149,0.75)';
-    ctx.font = 'italic 500 28px Georgia, serif';
-    lines.forEach((ln,i)=>{ ctx.fillText(cardTruncate(ctx, ln, W - 260, ctx.font), W/2, coverY + coverS + 348 + i*40); });
-  }
-  ctx.fillStyle='#eedd95'; ctx.fillText('Join bayoutonefm today to share your own music', W/2, H - 96);
-  ctx.textAlign = 'left';
-  const frontSnap = cv.toDataURL('image/png');
   const backCv = document.getElementById('shareCanvasBack');
   if(backCv) await drawSongBackShareCard(opts, 'shareCanvasBack');
-  const normImg = new Image();
-  normImg.onload = function(){ applySheetToTarget('shareCanvas', normImg); };
-  normImg.src = frontSnap;
 }
 
 async function drawSongBackShareCard(opts, cvId){
-  const cv = document.getElementById(cvId || 'shareCanvas');
+  const targetId = cvId || 'shareCanvasBack';
   const s = opts.song || {};
   function escapeCss(x){ try{return CSS.escape(x); }catch(e){ return String(x).replace(/"|\\/g,''); } }
-  let backEl = null;
-  let backingCard = null;
-  if(s.id){
-    backingCard = document.querySelector('.card[data-id="' + escapeCss(s.id) + '"]');
-    if(backingCard) backEl = backingCard;
-  }
-  if(window.html2canvas && backEl){
-    const wasFlipped = backingCard.classList.contains('flipped');
-    backingCard.classList.add('flipped');
-    backingCard.classList.add('share-capture-back');
-    try{
-      backEl.scrollIntoView({behavior:'auto', block:'center', inline:'center'});
-      await new Promise(r=>setTimeout(r,180));
-      const c = await Promise.race([
-        html2canvas(backEl, { backgroundColor: loadTheme().paper || '#eedd95', scale: 2, useCORS: true, ignoreElements: (el)=> !!(el && el.tagName === 'VIDEO') }),
-        new Promise((_,rej)=> setTimeout(()=>rej(new Error('html2canvas timeout')), 5000))
-      ]);
-      applySheetToTarget(cvId, c);
-      return;
-    }catch(e){ console.warn('html2canvas back failed, falling back:', e); }
-    finally{
-      if(!wasFlipped) backingCard.classList.remove('flipped');
-      backingCard.classList.remove('share-capture-back');
-    }
-  }
-  const W = 1080, H = 1350;
-  cv.width = W; cv.height = H;
-  const ctx = cv.getContext('2d');
-  cardBase(ctx, W, H, opts.username);
-  const tb = loadTheme();
-  ctx.fillStyle = tb.lilac || '#8E44AD';
-  ctx.fillRect(0, 0, W, 3);
-  ctx.fillStyle = '#eedd95';
-  ctx.font = '700 42px "Space Grotesk", sans-serif';
-  ctx.textAlign = 'left';
-  ctx.fillText((s.title||'Untitled'), 88, 220);
-  ctx.font = '500 22px "Space Grotesk", sans-serif';
-  const fields = [
-    ['Track #', trackNoDisplay(s)],
-    ['Record label', s.recordLabel || ''],
-    ['Release date', s.releaseDate || ''],
-    ['Producers', s.producer || ''],
-    ['Songwriters', s.songwriters || ''],
-    ['BPM', s.bpm ? String(s.bpm) : ''],
-    ['Key', s.musicKey ? s.musicKey + (musicKeyToCamelot(s.musicKey)? ' ('+musicKeyToCamelot(s.musicKey)+')':'') : ''],
-    ['Duration', s.duration || '']
-  ];
-  let y = 280;
-  ctx.fillStyle = 'rgba(238,221,149,0.9)';
-  fields.forEach(([label, val])=>{
-    if(!val) return;
-    ctx.font = '600 16px "IBM Plex Mono", monospace';
-    ctx.fillText(label + ':', 88, y);
-    ctx.font = '500 16px "Space Grotesk", sans-serif';
-    ctx.fillText(String(val), 220, y);
-    y += 34;
-  });
-  if(s.genres && s.genres.length){
-    ctx.font = '500 16px "Space Grotesk", sans-serif';
-    ctx.fillText('Genres: ' + s.genres.join(', '), 88, y + 8);
-  }
+  const selector = '.card[data-id="' + escapeCss(s.id || '') + '"]';
+  const card = s.id ? document.querySelector(selector) : null;
+  if(!window.html2canvas || !card) throw new Error('Song card back is not available to capture');
+  const wasFlipped = card.classList.contains('flipped');
+  card.classList.add('flipped');
+  card.classList.add('share-capture-back');
   try{
-    const logo = await new Promise(res=>{ const im = new Image(); im.onload = ()=>res(im); im.onerror = ()=>res(null); im.src = window.BRAND_LOGO || ''; });
-    if(logo && logo.naturalWidth){
-      const lh = 60, lw = logo.naturalWidth * lh / logo.naturalHeight;
-      ctx.drawImage(logo, (W - lw)/2, H - 96 - lh, lw, lh);
-    }
-  }catch(e){}
-  const backSnap = cv.toDataURL('image/png');
-  const img = new Image();
-  img.onload = function(){ applySheetToTarget(cv.id, img); };
-  img.src = backSnap;
+    card.scrollIntoView({behavior:'auto', block:'center', inline:'center'});
+    await new Promise(r=>setTimeout(r,180));
+    const c = await Promise.race([
+      html2canvas(card, {
+        backgroundColor: loadTheme().paper || '#eedd95',
+        scale: 2, useCORS: true,
+        ignoreElements: (el)=> !!(el && el.tagName === 'VIDEO'),
+        onclone: (clonedDoc)=> shareCaptureOnClone(clonedDoc, selector)
+      }),
+      new Promise((_,rej)=> setTimeout(()=>rej(new Error('html2canvas timeout')), 8000))
+    ]);
+    applySheetToTarget(targetId, c);
+  } finally {
+    if(!wasFlipped) card.classList.remove('flipped');
+    card.classList.remove('share-capture-back');
+  }
 }
 
 async function drawTierShareCard(opts){
